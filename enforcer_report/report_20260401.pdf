@@ -1,0 +1,82 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+2 0 obj
+<< /Length 1567 >>
+stream
+BT
+/F1 11 Tf
+50 780 Td
+14 TL
+(Data Contract Enforcer Report) Tj
+T*
+(Generated at: 2026-04-01T21:00:28Z) Tj
+T*
+(Data Health Score: 60 - Health score dropped to 60/100 due to actionable contract failures.) Tj
+T*
+() Tj
+T*
+(Violations This Week:) Tj
+T*
+(- System issue in extracted_facts.confidence.range: the extracted_facts.confidence field failed validation wit) Tj
+T*
+(- System issue in traces.total_tokens_add_up: the total_tokens field failed validation with status FAIL. No do) Tj
+T*
+(- System issue in ai.prompt_input_validation: the content_preview field failed validation with status WARN. Do) Tj
+T*
+() Tj
+T*
+(Schema Changes Detected:) Tj
+T*
+(- doc_id: COMPATIBLE - doc_id: no material change) Tj
+T*
+(- entities: COMPATIBLE - entities: no material change) Tj
+T*
+(- extracted_at: COMPATIBLE - extracted_at: no material change) Tj
+T*
+(- extracted_facts: COMPATIBLE - extracted_facts: no material change) Tj
+T*
+(- extracted_facts.confidence: BREAKING - extracted_facts.confidence: maximum changed 1.0 -> 92.0) Tj
+T*
+() Tj
+T*
+(AI System Risk Assessment:) Tj
+T*
+({"embedding_drift": {"drift_score": 0.0052, "interpretation": "semantic content stable", "status": "PASS", "th) Tj
+T*
+() Tj
+T*
+(Recommended Actions:) Tj
+T*
+(- Update create_violation.py to restore contract compliance for extracted_facts.confidence and rerun validatio) Tj
+T*
+(- Update create_violation.py to restore contract compliance for total_tokens and rerun validation.) Tj
+T*
+(- Update artifacts/week3/outputs/extractions.jsonl to restore contract compliance for content_preview and reru) Tj
+T*
+ET
+endstream
+endobj
+3 0 obj
+<< /Type /Page /Parent 4 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R >> >> /Contents 2 0 R >>
+endobj
+4 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+5 0 obj
+<< /Type /Catalog /Pages 4 0 R >>
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000079 00000 n 
+0000001698 00000 n 
+0000001824 00000 n 
+0000001881 00000 n 
+trailer
+<< /Size 6 /Root 5 0 R >>
+startxref
+1930
+%%EOF
