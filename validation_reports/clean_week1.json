@@ -1,8 +1,8 @@
 {
-  "report_id": "9fa2b1b5-1bc2-425e-945c-b1a7ec6d0980",
-  "snapshot_id": "d0d7ca75fd333911ee1c4583f08e105eb12f58221db836335cde623e78a37da3",
-  "run_timestamp": "2026-04-01T10:25:15Z",
-  "generated_at": "2026-04-01T10:25:15Z",
+  "report_id": "a7fd0d25-c114-477b-8d87-edc18ac0266e",
+  "snapshot_id": "2e70511258ea5dc70fe80f26c3370c32912c5e75b62ab737050762bc48b53fc2",
+  "run_timestamp": "2026-04-01T22:11:47Z",
+  "generated_at": "2026-04-01T22:11:47Z",
   "contract_id": "week1-intent-records",
   "dataset": "week1_intents",
   "data_path": "outputs/week1/intent_records.jsonl",
@@ -365,10 +365,10 @@
       "status": "PASS",
       "severity": "HIGH",
       "expected": [
-        "393a7331-8806-58e8-bc14-1f78e1f6e94e",
-        "6a50adee-66b4-5e47-b7a1-fd7253fce09b",
-        "8082b954-e160-5aa7-8414-87862bfd2dbb",
-        "8ebea302-54b9-559b-8a81-407e77c3a812"
+        "5e99b93d-7c6c-4c1d-9b47-e08c890afcf3",
+        "66febdab-f37d-4d3f-9d88-f0199bff33dc",
+        "67ac29ec-106e-493c-b5ea-922796206bed",
+        "d5aa5b70-5559-486d-861c-6bebbed7b1a9"
       ],
       "actual_value": "all conforming",
       "records_failing": 0,

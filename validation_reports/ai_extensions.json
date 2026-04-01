@@ -1,16 +1,16 @@
 {
-  "generated_at": "2026-04-01T10:27:58Z",
+  "generated_at": "2026-04-01T22:11:50Z",
   "mode": "all",
   "embedding_drift": {
     "status": "PASS",
-    "drift_score": 0.0052,
+    "drift_score": 0.0051,
     "threshold": 0.15,
     "interpretation": "semantic content stable"
   },
   "prompt_input_validation": {
     "status": "WARN",
-    "valid_records": 42,
-    "quarantined_records": 8
+    "valid_records": 41,
+    "quarantined_records": 9
   },
   "llm_output_schema_rate": {
     "status": "PASS",

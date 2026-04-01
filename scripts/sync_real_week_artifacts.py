@@ -123,7 +123,7 @@ def sync_week1() -> None:
             governance_tags.append("trace-backed")
         records.append(
             {
-                "intent_id": stable_uuid(f"week1:{intent_id}"),
+                "intent_id": str(uuid.uuid4()),
                 "description": intent.get("description", intent.get("title", "")),
                 "code_refs": code_refs,
                 "governance_tags": governance_tags,

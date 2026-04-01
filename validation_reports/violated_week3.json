@@ -1,21 +1,21 @@
 {
-  "report_id": "7a97b5f7-ffc9-4022-a053-2e4ae70ef239",
+  "report_id": "5f670db5-7479-4fdd-b2d6-51877ba45275",
   "snapshot_id": "1ec10581364129d944ae2856a55cfa0635a9f688044520e5688fe34904d6cf79",
-  "run_timestamp": "2026-04-01T13:07:19Z",
-  "generated_at": "2026-04-01T13:07:19Z",
+  "run_timestamp": "2026-04-01T22:11:49Z",
+  "generated_at": "2026-04-01T22:11:49Z",
   "contract_id": "week3-document-refinery-extractions",
   "dataset": "week3_extractions",
   "data_path": "outputs/week3/extractions_violated.jsonl",
   "record_count": 50,
-  "total_checks": 39,
-  "passed": 37,
-  "failed": 2,
+  "total_checks": 49,
+  "passed": 46,
+  "failed": 3,
   "warned": 0,
   "errored": 0,
   "summary": {
-    "PASS": 37,
+    "PASS": 46,
     "WARN": 0,
-    "FAIL": 2,
+    "FAIL": 3,
     "ERROR": 0
   },
   "results": [
@@ -475,6 +475,187 @@
       "samples": [],
       "sample_failing": [],
       "message": "Observed type must match contract type."
+    },
+    {
+      "check_id": "week3.doc_id_uuid",
+      "check_type": "contract_clause",
+      "column_name": "doc_id",
+      "status": "PASS",
+      "severity": "CRITICAL",
+      "expected": {
+        "format": "uuid"
+      },
+      "actual_value": "all conforming",
+      "records_failing": 0,
+      "samples": [],
+      "sample_failing": [],
+      "message": "Each extraction record must carry a stable UUID document identifier."
+    },
+    {
+      "check_id": "week3.extracted_at_datetime",
+      "check_type": "contract_clause",
+      "column_name": "extracted_at",
+      "status": "PASS",
+      "severity": "CRITICAL",
+      "expected": {
+        "format": "date-time"
+      },
+      "actual_value": "all conforming",
+      "records_failing": 0,
+      "samples": [],
+      "sample_failing": [],
+      "message": "Extraction timestamps must be valid UTC date-times for traceability and replay."
+    },
+    {
+      "check_id": "week3.fact_id_uuid",
+      "check_type": "contract_clause",
+      "column_name": "extracted_facts.fact_id",
+      "status": "PASS",
+      "severity": "CRITICAL",
+      "expected": {
+        "format": "uuid"
+      },
+      "actual_value": "all conforming",
+      "records_failing": 0,
+      "samples": [],
+      "sample_failing": [],
+      "message": "Every extracted fact must expose a UUID fact identifier."
+    },
+    {
+      "check_id": "week3.confidence_unit_scale",
+      "check_type": "contract_clause",
+      "column_name": "extracted_facts.confidence",
+      "status": "FAIL",
+      "severity": "CRITICAL",
+      "expected": {
+        "minimum": 0.0,
+        "maximum": 1.0
+      },
+      "actual_value": {
+        "min": 84.0,
+        "max": 86.0
+      },
+      "records_failing": 342,
+      "samples": [
+        "86.0",
+        "86.0",
+        "86.0",
+        "86.0",
+        "86.0"
+      ],
+      "sample_failing": [
+        "86.0",
+        "86.0",
+        "86.0",
+        "86.0",
+        "86.0"
+      ],
+      "message": "Confidence values must stay on the 0.0 to 1.0 unit interval and never drift to percentages."
+    },
+    {
+      "check_id": "week3.page_ref_positive",
+      "check_type": "contract_clause",
+      "column_name": "extracted_facts.page_ref",
+      "status": "PASS",
+      "severity": "CRITICAL",
+      "expected": {
+        "minimum": 1,
+        "maximum": null
+      },
+      "actual_value": {
+        "min": 1.0,
+        "max": 25.0
+      },
+      "records_failing": 0,
+      "samples": [],
+      "sample_failing": [],
+      "message": "Each extracted fact must point to a positive page number in the source document."
+    },
+    {
+      "check_id": "week3.source_excerpt_present",
+      "check_type": "contract_clause",
+      "column_name": "extracted_facts.source_excerpt",
+      "status": "PASS",
+      "severity": "CRITICAL",
+      "expected": {
+        "minimum_length": 1
+      },
+      "actual_value": "all conforming",
+      "records_failing": 0,
+      "samples": [],
+      "sample_failing": [],
+      "message": "Facts must preserve a non-empty source excerpt to support audit review."
+    },
+    {
+      "check_id": "week3.source_hash_sha256",
+      "check_type": "contract_clause",
+      "column_name": "source_hash",
+      "status": "PASS",
+      "severity": "CRITICAL",
+      "expected": {
+        "pattern": "^[0-9a-f]{64}$"
+      },
+      "actual_value": "all conforming",
+      "records_failing": 0,
+      "samples": [],
+      "sample_failing": [],
+      "message": "Source hashes must be SHA-256 digests to support immutable provenance checks."
+    },
+    {
+      "check_id": "week3.processing_time_positive",
+      "check_type": "contract_clause",
+      "column_name": "processing_time_ms",
+      "status": "PASS",
+      "severity": "CRITICAL",
+      "expected": {
+        "minimum": 1,
+        "maximum": null
+      },
+      "actual_value": {
+        "min": 200.0,
+        "max": 216013.0
+      },
+      "records_failing": 0,
+      "samples": [],
+      "sample_failing": [],
+      "message": "Processing duration must be recorded as a positive millisecond value."
+    },
+    {
+      "check_id": "week3.source_path_lineage",
+      "check_type": "contract_clause",
+      "column_name": "source_path",
+      "status": "PASS",
+      "severity": "MEDIUM",
+      "expected": {
+        "pattern": ".*/(artifacts/)?week3/.refinery/(extracted|chunks)/.+"
+      },
+      "actual_value": "all conforming",
+      "records_failing": 0,
+      "samples": [],
+      "sample_failing": [],
+      "message": "Source paths should resolve to refinery chunk or extraction artifacts rather than arbitrary files."
+    },
+    {
+      "check_id": "week3.token_counts_non_negative",
+      "check_type": "contract_clause",
+      "column_name": "token_count.input,token_count.output",
+      "status": "PASS",
+      "severity": "MEDIUM",
+      "expected": {
+        "minimum": 0,
+        "maximum": null
+      },
+      "actual_value": {
+        "checked_fields": [
+          "token_count.input",
+          "token_count.output"
+        ],
+        "count": 100
+      },
+      "records_failing": 0,
+      "samples": [],
+      "sample_failing": [],
+      "message": "Recorded token counters must never be negative even for OCR-derived runs."
     },
     {
       "check_id": "week3.entity_refs_exist",

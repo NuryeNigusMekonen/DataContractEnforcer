@@ -3,7 +3,7 @@ apiVersion: v3.0.0
 id: week5-event-records
 contract_id: week5-event-records
 dataset: week5_events
-generated_at: '2026-04-01T18:32:45Z'
+generated_at: '2026-04-01T22:11:46Z'
 source_path: outputs/week5/events.jsonl
 record_count: 1847
 info:

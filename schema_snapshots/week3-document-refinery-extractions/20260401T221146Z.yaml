@@ -3,19 +3,19 @@ apiVersion: v3.0.0
 id: week3-document-refinery-extractions
 contract_id: week3-document-refinery-extractions
 dataset: week3_extractions
-generated_at: '2026-04-01T22:11:50Z'
-source_path: outputs/week3/extractions_violated.jsonl
+generated_at: '2026-04-01T22:11:46Z'
+source_path: outputs/week3/extractions.jsonl
 record_count: 50
 info:
   title: Week 3 Document Refinery Extraction Records
   version: 1.0.0
   owner: trp1-week7
   description: Auto-generated contract for week 3 document refinery extraction records
-    sourced from outputs/week3/extractions_violated.jsonl.
+    sourced from outputs/week3/extractions.jsonl.
 servers:
   local:
     type: local
-    path: outputs/week3/extractions_violated.jsonl
+    path: outputs/week3/extractions.jsonl
     format: jsonl
 terms:
   usage: Internal inter-system data contract. Do not publish externally.
@@ -38,7 +38,7 @@ schema: &id001
     type: number
     required: true
     minimum: 0.0
-    maximum: 86.0
+    maximum: 1.0
     description: Confidence must remain on a 0.0-1.0 scale.
   extracted_facts.entity_refs:
     type: string

@@ -3,7 +3,7 @@ apiVersion: v3.0.0
 id: week4-lineage-snapshots
 contract_id: week4-lineage-snapshots
 dataset: week4_lineage
-generated_at: '2026-04-01T10:25:03Z'
+generated_at: '2026-04-01T22:11:46Z'
 source_path: outputs/week4/lineage_snapshots.jsonl
 record_count: 1
 info:
@@ -97,9 +97,11 @@ schema: &id001
     enum:
     - 6d75c325-c364-5a5d-afe2-fa65b4d470ac
 fields: *id001
+clauses: []
 quality:
   type: GeneratedChecks
-  minimum_clause_count: 15
+  minimum_clause_count: 8
+  semantic_clause_count: 0
 cross_checks:
 - id: week4.edges_reference_nodes
   type: record_rule

@@ -3,7 +3,7 @@ apiVersion: v3.0.0
 id: langsmith-trace-records
 contract_id: langsmith-trace-records
 dataset: traces
-generated_at: '2026-04-01T10:26:49Z'
+generated_at: '2026-04-01T22:11:47Z'
 source_path: outputs/traces/runs.jsonl
 record_count: 12
 info:
@@ -171,9 +171,11 @@ schema: &id001
     required: true
     minimum: 0
 fields: *id001
+clauses: []
 quality:
   type: GeneratedChecks
-  minimum_clause_count: 35
+  minimum_clause_count: 8
+  semantic_clause_count: 0
 cross_checks:
 - id: traces.end_after_start
   type: record_rule

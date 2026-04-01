@@ -1,26 +1,26 @@
 {
-  "generated_at": "2026-04-01T21:00:28Z",
+  "generated_at": "2026-04-01T22:11:50Z",
   "period": "2026-03-25 to 2026-04-01",
-  "data_health_score": 60,
-  "health_narrative": "Health score dropped to 60/100 due to actionable contract failures.",
+  "data_health_score": 39,
+  "health_narrative": "Health score dropped to 39/100 due to actionable contract failures.",
   "top_violations": [
     "System issue in extracted_facts.confidence.range: the extracted_facts.confidence field failed validation with status FAIL. No downstream nodes were identified. Affected records: 350.",
-    "System issue in traces.total_tokens_add_up: the total_tokens field failed validation with status FAIL. No downstream nodes were identified. Affected records: 4.",
-    "System issue in ai.prompt_input_validation: the content_preview field failed validation with status WARN. Downstream impact reaches week3-document-refinery, week7-ai-contract-extension. Affected records: 9."
+    "System issue in extracted_facts.confidence.range: the extracted_facts.confidence field failed validation with status FAIL. No downstream nodes were identified. Affected records: 342.",
+    "System issue in week3.confidence_unit_scale: the extracted_facts.confidence field failed validation with status FAIL. No downstream nodes were identified. Affected records: 342."
   ],
   "total_violations_by_severity": {
-    "CRITICAL": 2,
+    "CRITICAL": 5,
     "HIGH": 0,
-    "MEDIUM": 3,
+    "MEDIUM": 5,
     "LOW": 0
   },
-  "violation_count": 5,
+  "violation_count": 10,
   "schema_changes_detected": [
     "doc_id: COMPATIBLE - doc_id: no material change",
     "entities: COMPATIBLE - entities: no material change",
     "extracted_at: COMPATIBLE - extracted_at: no material change",
     "extracted_facts: COMPATIBLE - extracted_facts: no material change",
-    "extracted_facts.confidence: BREAKING - extracted_facts.confidence: maximum changed 1.0 -> 92.0",
+    "extracted_facts.confidence: BREAKING - extracted_facts.confidence: maximum changed 1.0 -> 86.0",
     "extracted_facts.entity_refs: COMPATIBLE - extracted_facts.entity_refs: no material change",
     "extracted_facts.fact_id: COMPATIBLE - extracted_facts.fact_id: no material change",
     "extracted_facts.page_ref: COMPATIBLE - extracted_facts.page_ref: no material change",
@@ -28,18 +28,18 @@
     "extracted_facts.text: COMPATIBLE - extracted_facts.text: no material change"
   ],
   "ai_system_risk_assessment": {
-    "generated_at": "2026-04-01T10:27:58Z",
+    "generated_at": "2026-04-01T22:11:50Z",
     "mode": "all",
     "embedding_drift": {
       "status": "PASS",
-      "drift_score": 0.0052,
+      "drift_score": 0.0051,
       "threshold": 0.15,
       "interpretation": "semantic content stable"
     },
     "prompt_input_validation": {
       "status": "WARN",
-      "valid_records": 42,
-      "quarantined_records": 8
+      "valid_records": 41,
+      "quarantined_records": 9
     },
     "llm_output_schema_rate": {
       "status": "PASS",
@@ -52,7 +52,7 @@
   },
   "recommendations": [
     "Update create_violation.py to restore contract compliance for extracted_facts.confidence and rerun validation.",
-    "Update create_violation.py to restore contract compliance for total_tokens and rerun validation.",
-    "Update artifacts/week3/outputs/extractions.jsonl to restore contract compliance for content_preview and rerun validation."
+    "Update create_violation.py to restore contract compliance for extracted_facts.confidence and rerun validation.",
+    "Update create_violation.py to restore contract compliance for extracted_facts.confidence and rerun validation."
   ]
 }

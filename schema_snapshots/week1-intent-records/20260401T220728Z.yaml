@@ -3,7 +3,7 @@ apiVersion: v3.0.0
 id: week1-intent-records
 contract_id: week1-intent-records
 dataset: week1_intents
-generated_at: '2026-04-01T22:11:46Z'
+generated_at: '2026-04-01T22:07:28Z'
 source_path: outputs/week1/intent_records.jsonl
 record_count: 4
 info:
@@ -74,10 +74,10 @@ schema: &id001
     required: true
     format: uuid
     enum:
-    - 5e99b93d-7c6c-4c1d-9b47-e08c890afcf3
-    - 66febdab-f37d-4d3f-9d88-f0199bff33dc
-    - 67ac29ec-106e-493c-b5ea-922796206bed
-    - d5aa5b70-5559-486d-861c-6bebbed7b1a9
+    - 8472e4e6-bb63-4589-bbac-62d330efd8ff
+    - 84bc7744-52c6-4465-b2e5-059704c4c806
+    - 14a32b6b-7463-4016-9426-f31df7c393b4
+    - b7b9f4b0-6257-4ad5-b7e8-ace6cac42070
 fields: *id001
 clauses: []
 quality:

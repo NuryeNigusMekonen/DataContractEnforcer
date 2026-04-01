@@ -23,3 +23,10 @@ artifacts/
 outputs_tmp/
 enforcer_report/
 artifacts/week3/.refinery/vector/
+.Cartography/
+.orchestration/
+.refinery/
+.orchestration
+.refinery
+.cartography
+rubrics

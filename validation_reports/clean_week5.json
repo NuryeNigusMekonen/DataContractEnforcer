@@ -1,19 +1,19 @@
 {
-  "report_id": "3b7bf09a-912c-4ed8-8e6b-98e65e4199b6",
+  "report_id": "94512587-c3f7-4ee1-ac7f-4a26db8ca984",
   "snapshot_id": "33c638ba969025286db1af918bdf2bada606442527108d12bb9616db66096c59",
-  "run_timestamp": "2026-04-01T10:26:57Z",
-  "generated_at": "2026-04-01T10:26:57Z",
+  "run_timestamp": "2026-04-01T22:11:49Z",
+  "generated_at": "2026-04-01T22:11:49Z",
   "contract_id": "week5-event-records",
   "dataset": "week5_events",
   "data_path": "outputs/week5/events.jsonl",
   "record_count": 1847,
-  "total_checks": 315,
-  "passed": 315,
+  "total_checks": 327,
+  "passed": 327,
   "failed": 0,
   "warned": 0,
   "errored": 0,
   "summary": {
-    "PASS": 315,
+    "PASS": 327,
     "WARN": 0,
     "FAIL": 0,
     "ERROR": 0
@@ -3599,6 +3599,218 @@
       "samples": [],
       "sample_failing": [],
       "message": "Numeric range must remain within contract bounds."
+    },
+    {
+      "check_id": "week5.event_id_uuid",
+      "check_type": "contract_clause",
+      "column_name": "event_id",
+      "status": "PASS",
+      "severity": "CRITICAL",
+      "expected": {
+        "format": "uuid"
+      },
+      "actual_value": "all conforming",
+      "records_failing": 0,
+      "samples": [],
+      "sample_failing": [],
+      "message": "Each event must expose a stable UUID event identifier."
+    },
+    {
+      "check_id": "week5.aggregate_id_uuid",
+      "check_type": "contract_clause",
+      "column_name": "aggregate_id",
+      "status": "PASS",
+      "severity": "CRITICAL",
+      "expected": {
+        "format": "uuid"
+      },
+      "actual_value": "all conforming",
+      "records_failing": 0,
+      "samples": [],
+      "sample_failing": [],
+      "message": "Each event must link back to a UUID aggregate identifier."
+    },
+    {
+      "check_id": "week5.aggregate_type_enum",
+      "check_type": "contract_clause",
+      "column_name": "aggregate_type",
+      "status": "PASS",
+      "severity": "CRITICAL",
+      "expected": {
+        "allowed": [
+          "LoanApplication",
+          "AgentSession",
+          "DocumentPackage",
+          "ComplianceRecord",
+          "AuditLedger"
+        ]
+      },
+      "actual_value": "all conforming",
+      "records_failing": 0,
+      "samples": [],
+      "sample_failing": [],
+      "message": "Aggregate types must stay within the modeled bounded context set."
+    },
+    {
+      "check_id": "week5.event_type_pascal_case",
+      "check_type": "contract_clause",
+      "column_name": "event_type",
+      "status": "PASS",
+      "severity": "CRITICAL",
+      "expected": {
+        "pattern": "^[A-Z][A-Za-z0-9]*$"
+      },
+      "actual_value": "all conforming",
+      "records_failing": 0,
+      "samples": [],
+      "sample_failing": [],
+      "message": "Event names should remain PascalCase so downstream schema routing stays deterministic."
+    },
+    {
+      "check_id": "week5.occurred_at_datetime",
+      "check_type": "contract_clause",
+      "column_name": "occurred_at",
+      "status": "PASS",
+      "severity": "CRITICAL",
+      "expected": {
+        "format": "date-time"
+      },
+      "actual_value": "all conforming",
+      "records_failing": 0,
+      "samples": [],
+      "sample_failing": [],
+      "message": "Business occurrence timestamps must be valid date-times."
+    },
+    {
+      "check_id": "week5.recorded_at_not_before_occurred_at",
+      "check_type": "contract_clause",
+      "column_name": "occurred_at,recorded_at",
+      "status": "PASS",
+      "severity": "CRITICAL",
+      "expected": {
+        "<=": [
+          "occurred_at",
+          "recorded_at"
+        ]
+      },
+      "actual_value": "all conforming",
+      "records_failing": 0,
+      "samples": [],
+      "sample_failing": [],
+      "message": "Ledger write time must not precede the business event time."
+    },
+    {
+      "check_id": "week5.sequence_number_positive",
+      "check_type": "contract_clause",
+      "column_name": "sequence_number",
+      "status": "PASS",
+      "severity": "CRITICAL",
+      "expected": {
+        "minimum": 1,
+        "maximum": null
+      },
+      "actual_value": {
+        "min": 1.0,
+        "max": 50.0
+      },
+      "records_failing": 0,
+      "samples": [],
+      "sample_failing": [],
+      "message": "Sequence numbers must start at 1 and stay positive."
+    },
+    {
+      "check_id": "week5.sequence_monotonic_per_aggregate",
+      "check_type": "contract_clause",
+      "column_name": "sequence_number",
+      "status": "PASS",
+      "severity": "CRITICAL",
+      "expected": {
+        "group_by": [
+          "aggregate_id"
+        ],
+        "rule": "contiguous_from_1"
+      },
+      "actual_value": "all conforming",
+      "records_failing": 0,
+      "samples": [],
+      "sample_failing": [],
+      "message": "Sequence numbers must be monotonic within each aggregate stream."
+    },
+    {
+      "check_id": "week5.schema_version_supported",
+      "check_type": "contract_clause",
+      "column_name": "schema_version",
+      "status": "PASS",
+      "severity": "CRITICAL",
+      "expected": {
+        "allowed": [
+          "1.0",
+          "2.0"
+        ]
+      },
+      "actual_value": "all conforming",
+      "records_failing": 0,
+      "samples": [],
+      "sample_failing": [],
+      "message": "Schema versions must stay within supported major.minor contract versions."
+    },
+    {
+      "check_id": "week5.correlation_id_uuid",
+      "check_type": "contract_clause",
+      "column_name": "metadata.correlation_id",
+      "status": "PASS",
+      "severity": "CRITICAL",
+      "expected": {
+        "format": "uuid"
+      },
+      "actual_value": "all conforming",
+      "records_failing": 0,
+      "samples": [],
+      "sample_failing": [],
+      "message": "Each event must retain a correlation id for cross-service tracing."
+    },
+    {
+      "check_id": "week5.application_submission_amount_positive",
+      "check_type": "contract_clause",
+      "column_name": "payload.requested_amount_usd",
+      "status": "PASS",
+      "severity": "CRITICAL",
+      "expected": {
+        "when": {
+          "field": "event_type",
+          "equals": "ApplicationSubmitted"
+        },
+        "minimum": 0.01,
+        "maximum": null
+      },
+      "actual_value": "all conforming",
+      "records_failing": 0,
+      "samples": [],
+      "sample_failing": [],
+      "message": "ApplicationSubmitted events must carry a positive requested amount."
+    },
+    {
+      "check_id": "week5.document_events_reference_pdf",
+      "check_type": "contract_clause",
+      "column_name": "payload.document_path",
+      "status": "PASS",
+      "severity": "MEDIUM",
+      "expected": {
+        "when": {
+          "field": "event_type",
+          "in": [
+            "DocumentUploadRequested",
+            "DocumentUploaded",
+            "DocumentAdded"
+          ]
+        },
+        "pattern": ".+\\.pdf$"
+      },
+      "actual_value": "all conforming",
+      "records_failing": 0,
+      "samples": [],
+      "sample_failing": [],
+      "message": "Document-related events should reference PDF assets so extraction lineage can be reproduced."
     },
     {
       "check_id": "week5.recorded_after_occurred",

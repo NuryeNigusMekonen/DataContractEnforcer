@@ -3,7 +3,7 @@ apiVersion: v3.0.0
 id: week2-verdict-records
 contract_id: week2-verdict-records
 dataset: week2_verdicts
-generated_at: '2026-04-01T10:26:49Z'
+generated_at: '2026-04-01T22:11:46Z'
 source_path: outputs/week2/verdicts.jsonl
 record_count: 3
 info:
@@ -329,9 +329,11 @@ schema: &id001
     - b0d38319-c2db-5f23-b301-fffe98eaca9e
     - 846b14d6-d19e-5f0d-a1ee-19d67c78bd48
 fields: *id001
+clauses: []
 quality:
   type: GeneratedChecks
-  minimum_clause_count: 44
+  minimum_clause_count: 8
+  semantic_clause_count: 0
 cross_checks:
 - id: week2.overall_score_weighted_mean
   type: record_rule
