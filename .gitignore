@@ -1,0 +1,22 @@
+# Python cache and virtualenvs
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.cache/
+# Local environment files
+.env
+.env.*
+.python-version
+# Editor and OS noise
+.DS_Store
+.idea/
+.vscode/
+
+# Local runtime helpers
+.codex
+outputs_tmp/
