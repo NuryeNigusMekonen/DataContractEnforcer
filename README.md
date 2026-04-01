@@ -1,13 +1,13 @@
 # Data Contract Enforcer
 
-This repository contains a runnable week 7 implementation of the TRP1 Data Contract Enforcer. The runtime `outputs/` tree is rebuilt from the canonical artifacts under `artifacts/week1` through `artifacts/week7`, and the trace export under `outputs/traces` is a realistic local sample with clean and violated runs for the AI-contract flow.
+This repository contains a runnable implementation of the Data Contract Enforcer. The runtime `outputs/` tree is rebuilt from the canonical artifacts under `artifacts/week1` through `artifacts/week7`, and the trace export under `outputs/traces` is a realistic local sample with clean and violated runs for the AI-contract flow.
 
 ## Prerequisites
 
-1. Install `uv` if needed:
+1. Install dependencies:
 
 ```bash
-uv --version
+python3 -m pip install -r requirements.txt
 ```
 
 2. Confirm Python 3.11+:
@@ -16,22 +16,10 @@ uv --version
 python3 --version
 ```
 
-3. Sync the project environment from `pyproject.toml` and `uv.lock`:
-
-```bash
-uv sync
-```
-
-4. Rebuild the canonical runtime views from the source artifacts:
+3. Rebuild the canonical runtime views from the source artifacts:
 
 ```bash
 python3 scripts/sync_real_week_artifacts.py
-```
-
-Legacy fallback:
-
-```bash
-python3 -m pip install -r requirements.txt
 ```
 
 ## How To Run
