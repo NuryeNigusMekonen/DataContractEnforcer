@@ -1,0 +1,184 @@
+kind: DataContract
+apiVersion: v3.0.0
+id: week3-document-refinery-extractions
+contract_id: week3-document-refinery-extractions
+dataset: week3_extractions
+generated_at: '2026-04-01T18:37:22Z'
+source_path: outputs/week3/extractions.jsonl
+record_count: 50
+info:
+  title: Week 3 Document Refinery Extraction Records
+  version: 1.0.0
+  owner: trp1-week7
+  description: Auto-generated contract for week 3 document refinery extraction records
+    sourced from outputs/week3/extractions.jsonl.
+servers:
+  local:
+    type: local
+    path: outputs/week3/extractions.jsonl
+    format: jsonl
+terms:
+  usage: Internal inter-system data contract. Do not publish externally.
+schema: &id001
+  doc_id:
+    type: string
+    required: true
+    format: uuid
+  entities:
+    type: string
+    required: false
+  extracted_at:
+    type: string
+    required: true
+    format: date-time
+  extracted_facts:
+    type: string
+    required: false
+  extracted_facts.confidence:
+    type: number
+    required: true
+    minimum: 0.0
+    maximum: 1.0
+    description: Confidence must remain on a 0.0-1.0 scale.
+  extracted_facts.entity_refs:
+    type: string
+    required: false
+  extracted_facts.fact_id:
+    type: string
+    required: true
+    format: uuid
+  extracted_facts.page_ref:
+    type: integer
+    required: true
+  extracted_facts.source_excerpt:
+    type: string
+    required: true
+  extracted_facts.text:
+    type: string
+    required: true
+  extraction_model:
+    type: string
+    required: true
+    enum:
+    - strategy_b_layout_docling
+    - strategy_c_local_ocr
+    - chunk-derived-chunk-view
+  processing_time_ms:
+    type: integer
+    required: true
+    minimum: 1
+  source_hash:
+    type: string
+    required: true
+    pattern: ^[0-9a-f]{64}$
+  source_path:
+    type: string
+    required: true
+  token_count.input:
+    type: integer
+    required: true
+  token_count.output:
+    type: integer
+    required: true
+fields: *id001
+clauses:
+- id: week3.doc_id_uuid
+  category: identifier
+  severity: error
+  description: Each extraction record must carry a stable UUID document identifier.
+  rule:
+    type: field_format
+    field: doc_id
+    format: uuid
+- id: week3.extracted_at_datetime
+  category: temporal
+  severity: error
+  description: Extraction timestamps must be valid UTC date-times for traceability
+    and replay.
+  rule:
+    type: field_format
+    field: extracted_at
+    format: date-time
+- id: week3.fact_id_uuid
+  category: identifier
+  severity: error
+  description: Every extracted fact must expose a UUID fact identifier.
+  rule:
+    type: field_format
+    field: extracted_facts.fact_id
+    format: uuid
+- id: week3.confidence_unit_scale
+  category: quality
+  severity: error
+  description: Confidence values must stay on the 0.0 to 1.0 unit interval and never
+    drift to percentages.
+  rule:
+    type: numeric_range
+    field: extracted_facts.confidence
+    minimum: 0.0
+    maximum: 1.0
+- id: week3.page_ref_positive
+  category: provenance
+  severity: error
+  description: Each extracted fact must point to a positive page number in the source
+    document.
+  rule:
+    type: numeric_range
+    field: extracted_facts.page_ref
+    minimum: 1
+- id: week3.source_excerpt_present
+  category: provenance
+  severity: error
+  description: Facts must preserve a non-empty source excerpt to support audit review.
+  rule:
+    type: string_length
+    field: extracted_facts.source_excerpt
+    minimum: 1
+- id: week3.source_hash_sha256
+  category: integrity
+  severity: error
+  description: Source hashes must be SHA-256 digests to support immutable provenance
+    checks.
+  rule:
+    type: field_pattern
+    field: source_hash
+    pattern: ^[0-9a-f]{64}$
+- id: week3.processing_time_positive
+  category: operational
+  severity: error
+  description: Processing duration must be recorded as a positive millisecond value.
+  rule:
+    type: numeric_range
+    field: processing_time_ms
+    minimum: 1
+- id: week3.source_path_lineage
+  category: lineage
+  severity: warn
+  description: Source paths should resolve to refinery chunk or extraction artifacts
+    rather than arbitrary files.
+  rule:
+    type: field_pattern
+    field: source_path
+    pattern: .*/(artifacts/)?week3/.refinery/(extracted|chunks)/.+
+- id: week3.token_counts_non_negative
+  category: operational
+  severity: warn
+  description: Recorded token counters must never be negative even for OCR-derived
+    runs.
+  rule:
+    type: multi_field_numeric_range
+    fields:
+    - token_count.input
+    - token_count.output
+    minimum: 0
+quality:
+  type: GeneratedChecks
+  minimum_clause_count: 10
+  semantic_clause_count: 10
+cross_checks:
+- id: week3.entity_refs_exist
+  type: record_rule
+  field: extracted_facts.entity_refs
+lineage:
+  upstream: []
+  downstream: []

@@ -1,0 +1,217 @@
+{
+  "written_at": "2026-03-31T01:44:29Z",
+  "columns": {
+    "payload.requested_amount_usd": {
+      "mean": 3417597.832758621,
+      "stddev": 1254780.2321876872
+    },
+    "sequence_number": {
+      "mean": 15.295073091499729,
+      "stddev": 13.823471035525884
+    },
+    "payload.context_token_count": {
+      "mean": 368.5,
+      "stddev": 105.24003176412617
+    },
+    "payload.event_replay_from_position": {
+      "mean": 0.0,
+      "stddev": 0.0
+    },
+    "payload.validation_duration_ms": {
+      "mean": 1.3157894736842106,
+      "stddev": 0.464829519280413
+    },
+    "payload.duration_ms": {
+      "mean": 9.220081135902637,
+      "stddev": 29.526301445872367
+    },
+    "payload.llm_called": {
+      "mean": 0.056795131845841784,
+      "stddev": 0.23145073956342252
+    },
+    "payload.llm_cost_usd": {
+      "mean": 0.00033468559837728195,
+      "stddev": 0.0013938555952541843
+    },
+    "payload.llm_tokens_input": {
+      "mean": 12.109533468559837,
+      "stddev": 51.28582130494068
+    },
+    "payload.llm_tokens_output": {
+      "mean": 9.087221095334685,
+      "stddev": 38.62613355873931
+    },
+    "payload.node_sequence": {
+      "mean": 6808.063894523327,
+      "stddev": 4894.673638285729
+    },
+    "payload.tool_duration_ms": {
+      "mean": 16.102040816326532,
+      "stddev": 18.21329957886144
+    },
+    "payload.is_supported": {
+      "mean": 1.0,
+      "stddev": 0.0
+    },
+    "payload.extraction_context.pages": {
+      "mean": 1.0,
+      "stddev": 0.0
+    },
+    "payload.fact_provenance.ebitda.page": {
+      "mean": 1.0,
+      "stddev": 0.0
+    },
+    "payload.fact_provenance.net_income.page": {
+      "mean": 1.0,
+      "stddev": 0.0
+    },
+    "payload.fact_provenance.total_assets.page": {
+      "mean": 1.0,
+      "stddev": 0.0
+    },
+    "payload.fact_provenance.total_liabilities.page": {
+      "mean": 1.0,
+      "stddev": 0.0
+    },
+    "payload.fact_provenance.total_revenue.page": {
+      "mean": 1.0,
+      "stddev": 0.0
+    },
+    "payload.facts.ebitda": {
+      "mean": 2716108.2322857142,
+      "stddev": 1391408.2714399581
+    },
+    "payload.facts.net_income": {
+      "mean": 1907189.2083333333,
+      "stddev": 1124282.9172242146
+    },
+    "payload.facts.total_assets": {
+      "mean": 27608753.08888889,
+      "stddev": 10233135.425426958
+    },
+    "payload.facts.total_liabilities": {
+      "mean": 15927751.434999999,
+      "stddev": 6385868.754241516
+    },
+    "payload.facts.total_revenue": {
+      "mean": 15088760.527222224,
+      "stddev": 5000162.299327526
+    },
+    "payload.field_confidence.ebitda": {
+      "mean": 0.9722222222222222,
+      "stddev": 0.16433554953054488
+    },
+    "payload.field_confidence.net_income": {
+      "mean": 1.0,
+      "stddev": 0.0
+    },
+    "payload.field_confidence.total_assets": {
+      "mean": 1.0,
+      "stddev": 0.0
+    },
+    "payload.field_confidence.total_liabilities": {
+      "mean": 1.0,
+      "stddev": 0.0
+    },
+    "payload.field_confidence.total_revenue": {
+      "mean": 1.0,
+      "stddev": 0.0
+    },
+    "payload.is_coherent": {
+      "mean": 1.0,
+      "stddev": 0.0
+    },
+    "payload.overall_confidence": {
+      "mean": 0.9944444444444444,
+      "stddev": 0.03286710990610897
+    },
+    "payload.reextraction_recommended": {
+      "mean": 0.027777777777777776,
+      "stddev": 0.16433554953054488
+    },
+    "payload.total_cost_usd": {
+      "mean": 0.005892857142857143,
+      "stddev": 0.0012059165368621292
+    },
+    "payload.total_llm_calls": {
+      "mean": 1.0,
+      "stddev": 0.0
+    },
+    "payload.total_nodes_executed": {
+      "mean": 6.0,
+      "stddev": 0.0
+    },
+    "payload.total_tokens_used": {
+      "mean": 373.2142857142857,
+      "stddev": 59.7275702926314
+    },
+    "payload.analysis_duration_ms": {
+      "mean": 142.0,
+      "stddev": 0.0
+    },
+    "payload.confidence_score": {
+      "mean": 0.8081818181818182,
+      "stddev": 0.13479399648205148
+    },
+    "payload.recommended_limit_usd": {
+      "mean": 3103989.8764285715,
+      "stddev": 1419797.701459534
+    },
+    "payload.events_written.stream_position": {
+      "mean": 0.0,
+      "stddev": 0.0
+    },
+    "payload.fraud_score": {
+      "mean": 0.10555555555555556,
+      "stddev": 0.07228202652129152
+    },
+    "payload.completed_checks": {
+      "mean": 1.8571428571428572,
+      "stddev": 0.3499271061118826
+    },
+    "payload.total_checks": {
+      "mean": 1.8571428571428572,
+      "stddev": 0.3499271061118826
+    },
+    "payload.assessed_max_limit_usd": {
+      "mean": 1100000.0,
+      "stddev": 0.0
+    },
+    "payload.override": {
+      "mean": 0.0,
+      "stddev": 0.0
+    },
+    "payload.approved_amount_usd": {
+      "mean": 2316871.7325,
+      "stddev": 886493.6931709858
+    },
+    "payload.interest_rate": {
+      "mean": 7.4,
+      "stddev": 0.0
+    },
+    "payload.chain_valid": {
+      "mean": 1.0,
+      "stddev": 0.0
+    },
+    "payload.events_verified_count": {
+      "mean": 10.875,
+      "stddev": 1.4523687548277813
+    },
+    "payload.tamper_detected": {
+      "mean": 0.0,
+      "stddev": 0.0
+    },
+    "payload.adverse_action_notice_required": {
+      "mean": 1.0,
+      "stddev": 0.0
+    },
+    "payload.recoverable": {
+      "mean": 1.0,
+      "stddev": 0.0
+    },
+    "payload.remediation_required": {
+      "mean": 0.0,
+      "stddev": 0.0
+    }
+  }
+}

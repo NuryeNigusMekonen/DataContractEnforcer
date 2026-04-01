@@ -1,0 +1,9 @@
+{
+  "written_at": "2026-03-31T01:44:29Z",
+  "columns": {
+    "edges.confidence": {
+      "mean": 0.95,
+      "stddev": 0.0
+    }
+  }
+}

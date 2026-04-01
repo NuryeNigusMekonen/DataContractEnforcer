@@ -1,0 +1,280 @@
+contract_id: week5-event-records
+dataset: week5_events
+generated_at: '2026-03-31T00:48:22Z'
+source_path: outputs/week5/events.jsonl
+record_count: 7
+fields:
+  aggregate_id:
+    type: string
+    required: true
+    format: uuid
+    enum:
+    - 66666666-6666-4666-8666-666666666666
+    - 12121212-1212-4121-8121-121212121212
+    - 13131313-1313-4131-8131-131313131313
+    - 14141414-1414-4141-8141-141414141414
+    - 15151515-1515-4151-8151-151515151515
+  aggregate_type:
+    type: string
+    required: true
+    pattern: ^[A-Z][A-Za-z0-9]*$
+    enum:
+    - LoanApplication
+    - DocumentPackage
+    - CreditRecord
+    - FraudScreening
+    - ComplianceRecord
+  event_id:
+    type: string
+    required: true
+    format: uuid
+  event_type:
+    type: string
+    required: true
+    pattern: ^[A-Z][A-Za-z0-9]*$
+  metadata.causation_id:
+    type: string
+    required: false
+    format: uuid
+  metadata.correlation_id:
+    type: string
+    required: true
+    format: uuid
+    enum:
+    - 21212121-2121-4121-8121-212121212121
+  metadata.source_service:
+    type: string
+    required: true
+  metadata.user_id:
+    type: string
+    required: true
+    enum:
+    - system
+    - rm-jordan-lee
+  occurred_at:
+    type: string
+    required: true
+    format: date-time
+  payload.agent_id:
+    type: string
+    required: false
+    format: uuid
+    enum:
+    - credit-analysis-agent
+    - fraud-detection-agent
+  payload.analysis_duration_ms:
+    type: integer
+    required: false
+  payload.anomaly_flags:
+    type: string
+    required: false
+    enum:
+    - none_material
+  payload.applicant_id:
+    type: string
+    required: false
+    format: uuid
+    enum:
+    - COMP-031
+  payload.application_id:
+    type: string
+    required: true
+    format: uuid
+    enum:
+    - APEX-0012
+  payload.confidence_score:
+    type: number
+    required: false
+    minimum: 0.0
+    maximum: 1.0
+    description: Confidence must remain on a 0.0-1.0 scale.
+  payload.contributing_agent_sessions:
+    type: string
+    required: false
+    enum:
+    - sess-credit-001
+    - sess-fraud-001
+    - sess-compliance-001
+  payload.decision_basis_summary:
+    type: string
+    required: false
+    enum:
+    - Credit risk remained medium, fraud signals were low, and compliance cleared
+      the application.
+  payload.document_package_id:
+    type: string
+    required: false
+    format: uuid
+    enum:
+    - docpkg-APEX-0012
+  payload.document_paths:
+    type: string
+    required: false
+    enum:
+    - documents/COMP-031/income_statement_2024.pdf
+    - documents/COMP-031/balance_sheet_2024.pdf
+  payload.extraction_notes:
+    type: string
+    required: false
+  payload.facts.ebitda:
+    type: integer
+    required: false
+  payload.facts.net_income:
+    type: integer
+    required: false
+  payload.facts.total_revenue:
+    type: integer
+    required: false
+  payload.field_confidence.ebitda:
+    type: number
+    required: false
+    minimum: 0.0
+    maximum: 1.0
+    description: Confidence must remain on a 0.0-1.0 scale.
+  payload.field_confidence.net_income:
+    type: number
+    required: false
+    minimum: 0.0
+    maximum: 1.0
+    description: Confidence must remain on a 0.0-1.0 scale.
+  payload.field_confidence.total_revenue:
+    type: number
+    required: false
+    minimum: 0.0
+    maximum: 1.0
+    description: Confidence must remain on a 0.0-1.0 scale.
+  payload.fraud_score:
+    type: number
+    required: false
+  payload.hard_block:
+    type: boolean
+    required: false
+  payload.input_data_hash:
+    type: string
+    required: false
+    enum:
+    - sha256:credit-input-comp-031
+    - sha256:fraud-input-comp-031
+  payload.loan_purpose:
+    type: string
+    required: false
+    enum:
+    - Equipment expansion
+  payload.model_version:
+    type: string
+    required: false
+    enum:
+    - claude-3-5-sonnet-20241022
+  payload.model_versions.credit:
+    type: string
+    required: false
+    enum:
+    - claude-3-5-sonnet-20241022
+  payload.model_versions.fraud:
+    type: string
+    required: false
+    enum:
+    - fraud-v2.1
+  payload.model_versions.orchestrator:
+    type: string
+    required: false
+    enum:
+    - claude-3-5-sonnet-20241022
+  payload.orchestrator_agent_id:
+    type: string
+    required: false
+    format: uuid
+    enum:
+    - decision-orchestrator-agent
+  payload.overall_verdict:
+    type: string
+    required: false
+    enum:
+    - CLEAR
+  payload.recommendation:
+    type: string
+    required: false
+    enum:
+    - APPROVE
+  payload.recommended_limit_usd:
+    type: integer
+    required: false
+  payload.requested_amount_usd:
+    type: integer
+    required: false
+  payload.risk_tier:
+    type: string
+    required: false
+    enum:
+    - MEDIUM
+  payload.rules_evaluated:
+    type: string
+    required: false
+  payload.screening_model_version:
+    type: string
+    required: false
+    enum:
+    - fraud-v2.1
+  payload.session_id:
+    type: string
+    required: false
+    format: uuid
+    enum:
+    - sess-credit-001
+  payload.submission_channel:
+    type: string
+    required: false
+    enum:
+    - relationship_manager
+  payload.submitted_at:
+    type: string
+    required: false
+    format: date-time
+    enum:
+    - '2026-03-30T09:55:00Z'
+  payload.uploaded_at:
+    type: string
+    required: false
+    format: date-time
+    enum:
+    - '2026-03-30T09:58:00Z'
+  payload.uploaded_by:
+    type: string
+    required: false
+    enum:
+    - rm-jordan-lee
+  recorded_at:
+    type: string
+    required: true
+    format: date-time
+  schema_version:
+    type: string
+    required: true
+    pattern: ^\d+\.\d+$
+    enum:
+    - '1.0'
+  sequence_number:
+    type: integer
+    required: true
+    minimum: 1
+cross_checks:
+- id: week5.recorded_after_occurred
+  type: record_rule
+  field: recorded_at
+- id: week5.sequence_monotonic
+  type: dataset_rule
+  field: sequence_number
+- id: week5.payload_matches_schema
+  type: record_rule
+  field: payload
+lineage:
+  upstream: []
+  downstream:
+  - id: pipeline::week7-enforcer
+    relationship: CONSUMES
+    fields_consumed:
+    - aggregate_id
+    - aggregate_type
+    - event_id
+    - event_type
+    - metadata.causation_id
