@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "application_id": {
+      "type": "string",
+      "properties": {},
+      "required": [],
+      "additionalProperties": true
+    },
+    "created_at": {
+      "type": "string",
+      "properties": {},
+      "required": [],
+      "additionalProperties": true
+    },
+    "package_id": {
+      "type": "string",
+      "properties": {},
+      "required": [],
+      "additionalProperties": true
+    }
+  },
+  "required": [
+    "application_id",
+    "created_at",
+    "package_id"
+  ],
+  "additionalProperties": true
+}

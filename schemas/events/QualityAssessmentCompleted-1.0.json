@@ -1,0 +1,70 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "anomalies": {
+      "type": "array",
+      "properties": {},
+      "required": [],
+      "additionalProperties": true,
+      "items": {
+        "type": "string",
+        "properties": {},
+        "required": [],
+        "additionalProperties": true
+      }
+    },
+    "application_id": {
+      "type": "string",
+      "properties": {},
+      "required": [],
+      "additionalProperties": true
+    },
+    "auditor_notes": {
+      "type": "string",
+      "properties": {},
+      "required": [],
+      "additionalProperties": true
+    },
+    "critical_missing_fields": {
+      "type": "array",
+      "properties": {},
+      "required": [],
+      "additionalProperties": true,
+      "items": {
+        "type": "string",
+        "properties": {},
+        "required": [],
+        "additionalProperties": true
+      }
+    },
+    "is_coherent": {
+      "type": "boolean",
+      "properties": {},
+      "required": [],
+      "additionalProperties": true
+    },
+    "overall_confidence": {
+      "type": "number",
+      "properties": {},
+      "required": [],
+      "additionalProperties": true
+    },
+    "reextraction_recommended": {
+      "type": "boolean",
+      "properties": {},
+      "required": [],
+      "additionalProperties": true
+    }
+  },
+  "required": [
+    "anomalies",
+    "application_id",
+    "auditor_notes",
+    "critical_missing_fields",
+    "is_coherent",
+    "overall_confidence",
+    "reextraction_recommended"
+  ],
+  "additionalProperties": true
+}

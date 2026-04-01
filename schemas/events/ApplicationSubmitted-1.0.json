@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "applicant_id": {
+      "type": "string",
+      "properties": {},
+      "required": [],
+      "additionalProperties": true
+    },
+    "application_id": {
+      "type": "string",
+      "properties": {},
+      "required": [],
+      "additionalProperties": true
+    },
+    "loan_purpose": {
+      "type": "string",
+      "properties": {},
+      "required": [],
+      "additionalProperties": true
+    },
+    "requested_amount_usd": {
+      "type": "number",
+      "properties": {},
+      "required": [],
+      "additionalProperties": true
+    },
+    "submission_channel": {
+      "type": "string",
+      "properties": {},
+      "required": [],
+      "additionalProperties": true
+    },
+    "submitted_at": {
+      "type": "string",
+      "properties": {},
+      "required": [],
+      "additionalProperties": true
+    }
+  },
+  "required": [
+    "applicant_id",
+    "application_id",
+    "loan_purpose",
+    "requested_amount_usd",
+    "submission_channel",
+    "submitted_at"
+  ],
+  "additionalProperties": true
+}

@@ -1,0 +1,37 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "agent_id": {
+      "type": "string"
+    },
+    "error_message": {
+      "type": "string"
+    },
+    "error_type": {
+      "type": "string"
+    },
+    "failed_at": {
+      "type": "string"
+    },
+    "last_successful_node": {
+      "type": "string"
+    },
+    "recoverable": {
+      "type": "boolean"
+    },
+    "session_id": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "agent_id",
+    "error_message",
+    "error_type",
+    "failed_at",
+    "last_successful_node",
+    "recoverable",
+    "session_id"
+  ],
+  "additionalProperties": true
+}

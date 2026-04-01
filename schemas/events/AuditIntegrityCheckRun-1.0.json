@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "chain_valid": {
+      "type": "boolean",
+      "properties": {},
+      "required": [],
+      "additionalProperties": true
+    },
+    "check_timestamp": {
+      "type": "string",
+      "properties": {},
+      "required": [],
+      "additionalProperties": true
+    },
+    "entity_id": {
+      "type": "string",
+      "properties": {},
+      "required": [],
+      "additionalProperties": true
+    },
+    "events_verified_count": {
+      "type": "integer",
+      "properties": {},
+      "required": [],
+      "additionalProperties": true
+    },
+    "integrity_hash": {
+      "type": "string",
+      "properties": {},
+      "required": [],
+      "additionalProperties": true
+    },
+    "tamper_detected": {
+      "type": "boolean",
+      "properties": {},
+      "required": [],
+      "additionalProperties": true
+    }
+  },
+  "required": [
+    "chain_valid",
+    "check_timestamp",
+    "entity_id",
+    "events_verified_count",
+    "integrity_hash",
+    "tamper_detected"
+  ],
+  "additionalProperties": true
+}

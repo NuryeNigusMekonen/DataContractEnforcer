@@ -1,0 +1,288 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "application_id": {
+      "type": "string",
+      "properties": {},
+      "required": [],
+      "additionalProperties": true
+    },
+    "completed_at": {
+      "type": "string",
+      "properties": {},
+      "required": [],
+      "additionalProperties": true
+    },
+    "document_path": {
+      "type": "string",
+      "properties": {},
+      "required": [],
+      "additionalProperties": true
+    },
+    "extraction_context": {
+      "type": "object",
+      "properties": {
+        "origin": {
+          "type": "string",
+          "properties": {},
+          "required": [],
+          "additionalProperties": true
+        },
+        "pages": {
+          "type": "integer",
+          "properties": {},
+          "required": [],
+          "additionalProperties": true
+        },
+        "strategy_used": {
+          "type": "string",
+          "properties": {},
+          "required": [],
+          "additionalProperties": true
+        }
+      },
+      "required": [
+        "origin",
+        "pages",
+        "strategy_used"
+      ],
+      "additionalProperties": true
+    },
+    "extraction_notes": {
+      "type": "array",
+      "properties": {},
+      "required": [],
+      "additionalProperties": true,
+      "items": {
+        "type": "string",
+        "properties": {},
+        "required": [],
+        "additionalProperties": true
+      }
+    },
+    "fact_provenance": {
+      "type": "object",
+      "properties": {
+        "ebitda": {
+          "type": "object",
+          "properties": {
+            "page": {
+              "type": "integer",
+              "properties": {},
+              "required": [],
+              "additionalProperties": true
+            },
+            "source": {
+              "type": "string",
+              "properties": {},
+              "required": [],
+              "additionalProperties": true
+            }
+          },
+          "required": [
+            "page",
+            "source"
+          ],
+          "additionalProperties": true
+        },
+        "net_income": {
+          "type": "object",
+          "properties": {
+            "page": {
+              "type": "integer",
+              "properties": {},
+              "required": [],
+              "additionalProperties": true
+            },
+            "source": {
+              "type": "string",
+              "properties": {},
+              "required": [],
+              "additionalProperties": true
+            }
+          },
+          "required": [
+            "page",
+            "source"
+          ],
+          "additionalProperties": true
+        },
+        "total_assets": {
+          "type": "object",
+          "properties": {
+            "page": {
+              "type": "integer",
+              "properties": {},
+              "required": [],
+              "additionalProperties": true
+            },
+            "source": {
+              "type": "string",
+              "properties": {},
+              "required": [],
+              "additionalProperties": true
+            }
+          },
+          "required": [
+            "page",
+            "source"
+          ],
+          "additionalProperties": true
+        },
+        "total_liabilities": {
+          "type": "object",
+          "properties": {
+            "page": {
+              "type": "integer",
+              "properties": {},
+              "required": [],
+              "additionalProperties": true
+            },
+            "source": {
+              "type": "string",
+              "properties": {},
+              "required": [],
+              "additionalProperties": true
+            }
+          },
+          "required": [
+            "page",
+            "source"
+          ],
+          "additionalProperties": true
+        },
+        "total_revenue": {
+          "type": "object",
+          "properties": {
+            "page": {
+              "type": "integer",
+              "properties": {},
+              "required": [],
+              "additionalProperties": true
+            },
+            "source": {
+              "type": "string",
+              "properties": {},
+              "required": [],
+              "additionalProperties": true
+            }
+          },
+          "required": [
+            "page",
+            "source"
+          ],
+          "additionalProperties": true
+        }
+      },
+      "required": [
+        "ebitda",
+        "net_income",
+        "total_assets",
+        "total_liabilities",
+        "total_revenue"
+      ],
+      "additionalProperties": true
+    },
+    "facts": {
+      "type": "object",
+      "properties": {
+        "ebitda": {
+          "type": [
+            "null",
+            "number"
+          ],
+          "properties": {},
+          "required": [],
+          "additionalProperties": true
+        },
+        "net_income": {
+          "type": "number",
+          "properties": {},
+          "required": [],
+          "additionalProperties": true
+        },
+        "total_assets": {
+          "type": "number",
+          "properties": {},
+          "required": [],
+          "additionalProperties": true
+        },
+        "total_liabilities": {
+          "type": "number",
+          "properties": {},
+          "required": [],
+          "additionalProperties": true
+        },
+        "total_revenue": {
+          "type": "number",
+          "properties": {},
+          "required": [],
+          "additionalProperties": true
+        }
+      },
+      "required": [
+        "ebitda",
+        "net_income",
+        "total_assets",
+        "total_liabilities",
+        "total_revenue"
+      ],
+      "additionalProperties": true
+    },
+    "field_confidence": {
+      "type": "object",
+      "properties": {
+        "ebitda": {
+          "type": "number",
+          "properties": {},
+          "required": [],
+          "additionalProperties": true
+        },
+        "net_income": {
+          "type": "number",
+          "properties": {},
+          "required": [],
+          "additionalProperties": true
+        },
+        "total_assets": {
+          "type": "number",
+          "properties": {},
+          "required": [],
+          "additionalProperties": true
+        },
+        "total_liabilities": {
+          "type": "number",
+          "properties": {},
+          "required": [],
+          "additionalProperties": true
+        },
+        "total_revenue": {
+          "type": "number",
+          "properties": {},
+          "required": [],
+          "additionalProperties": true
+        }
+      },
+      "required": [
+        "ebitda",
+        "net_income",
+        "total_assets",
+        "total_liabilities",
+        "total_revenue"
+      ],
+      "additionalProperties": true
+    }
+  },
+  "required": [
+    "application_id",
+    "completed_at",
+    "document_path",
+    "extraction_context",
+    "extraction_notes",
+    "fact_provenance",
+    "facts",
+    "field_confidence"
+  ],
+  "additionalProperties": true
+}

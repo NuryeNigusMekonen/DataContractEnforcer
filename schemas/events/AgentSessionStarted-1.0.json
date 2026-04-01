@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "agent_id": {
+      "type": "string",
+      "properties": {},
+      "required": [],
+      "additionalProperties": true
+    },
+    "context_source": {
+      "type": "string",
+      "properties": {},
+      "required": [],
+      "additionalProperties": true
+    },
+    "context_token_count": {
+      "type": "integer",
+      "properties": {},
+      "required": [],
+      "additionalProperties": true
+    },
+    "model_version": {
+      "type": "string",
+      "properties": {},
+      "required": [],
+      "additionalProperties": true
+    },
+    "session_id": {
+      "type": "string",
+      "properties": {},
+      "required": [],
+      "additionalProperties": true
+    },
+    "started_at": {
+      "type": "string",
+      "properties": {},
+      "required": [],
+      "additionalProperties": true
+    }
+  },
+  "required": [
+    "agent_id",
+    "context_source",
+    "context_token_count",
+    "model_version",
+    "session_id",
+    "started_at"
+  ],
+  "additionalProperties": true
+}

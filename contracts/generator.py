@@ -17,6 +17,7 @@ from contracts.common import (
     build_field_clause,
     dataset_cross_checks,
     dataset_kind_from,
+    dataset_semantic_clauses,
     dbt_type_for,
     load_jsonl,
     normalize_contract_filename,
@@ -112,6 +113,7 @@ def build_contract(source: str, contract_id: str, lineage_path: str | None) -> d
     fields = {field_name: build_field_clause(field_name, profile) for field_name, profile in profiles.items()}
     apply_dataset_overrides(dataset, fields)
     title = contract_title(contract_id, dataset)
+    semantic_clauses = dataset_semantic_clauses(dataset)
     contract = {
         "kind": "DataContract",
         "apiVersion": "v3.0.0",
@@ -139,9 +141,11 @@ def build_contract(source: str, contract_id: str, lineage_path: str | None) -> d
         },
         "schema": fields,
         "fields": fields,
+        "clauses": semantic_clauses,
         "quality": {
             "type": "GeneratedChecks",
-            "minimum_clause_count": len(fields),
+            "minimum_clause_count": max(8, len(semantic_clauses)),
+            "semantic_clause_count": len(semantic_clauses),
         },
         "cross_checks": dataset_cross_checks(dataset),
     }

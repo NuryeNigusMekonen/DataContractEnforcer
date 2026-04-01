@@ -1,0 +1,64 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "agent_id": {
+      "type": "string",
+      "properties": {},
+      "required": [],
+      "additionalProperties": true
+    },
+    "anomaly_flags": {
+      "type": "array",
+      "properties": {},
+      "required": [],
+      "additionalProperties": true,
+      "items": {
+        "type": "string",
+        "properties": {},
+        "required": [],
+        "additionalProperties": true
+      }
+    },
+    "application_id": {
+      "type": "string",
+      "properties": {},
+      "required": [],
+      "additionalProperties": true
+    },
+    "fraud_score": {
+      "type": "number",
+      "properties": {},
+      "required": [],
+      "additionalProperties": true
+    },
+    "input_data_hash": {
+      "type": "string",
+      "properties": {},
+      "required": [],
+      "additionalProperties": true
+    },
+    "screening_model_version": {
+      "type": "string",
+      "properties": {},
+      "required": [],
+      "additionalProperties": true
+    },
+    "session_id": {
+      "type": "string",
+      "properties": {},
+      "required": [],
+      "additionalProperties": true
+    }
+  },
+  "required": [
+    "agent_id",
+    "anomaly_flags",
+    "application_id",
+    "fraud_score",
+    "input_data_hash",
+    "screening_model_version",
+    "session_id"
+  ],
+  "additionalProperties": true
+}

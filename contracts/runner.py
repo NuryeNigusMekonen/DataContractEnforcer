@@ -40,6 +40,7 @@ SEVERITY_BY_CHECK_TYPE = {
     "format": "HIGH",
     "pattern": "HIGH",
     "range": "CRITICAL",
+    "contract_clause": "HIGH",
     "cross_record": "CRITICAL",
     "cross_dataset": "HIGH",
     "drift": "MEDIUM",
@@ -65,13 +66,14 @@ def make_result(
     records_failing: int = 0,
     samples: list[str] | None = None,
     message: str = "",
+    severity: str | None = None,
 ) -> dict[str, Any]:
     return {
         "check_id": check_id,
         "check_type": check_type,
         "column_name": column_name,
         "status": status,
-        "severity": SEVERITY_BY_CHECK_TYPE.get(check_type, "LOW"),
+        "severity": severity or SEVERITY_BY_CHECK_TYPE.get(check_type, "LOW"),
         "expected": expected,
         "actual_value": actual_value,
         "records_failing": records_failing,
@@ -91,6 +93,376 @@ def matches_format(value: str, fmt: str) -> bool:
 
 def matches_pattern(value: str, pattern: str) -> bool:
     return bool(re.match(pattern, value))
+
+
+def normalize_clause_severity(severity: str | None) -> str:
+    mapping = {
+        "error": "CRITICAL",
+        "warn": "MEDIUM",
+        "warning": "MEDIUM",
+        "info": "LOW",
+    }
+    return mapping.get(str(severity or "").lower(), "HIGH")
+
+
+def raw_values_for_path(record: dict[str, Any], field_path: str) -> list[Any]:
+    parts = field_path.split(".")
+    current: list[Any] = [record]
+    for part in parts:
+        next_values: list[Any] = []
+        for value in current:
+            if isinstance(value, dict):
+                if part in value:
+                    next_values.append(value[part])
+            elif isinstance(value, list):
+                for item in value:
+                    if isinstance(item, dict) and part in item:
+                        next_values.append(item[part])
+        current = next_values
+    return current
+
+
+def scalar_values_for_path(record: dict[str, Any], field_path: str) -> list[Any]:
+    flattened: list[Any] = []
+
+    def visit(value: Any) -> None:
+        if isinstance(value, list):
+            for item in value:
+                visit(item)
+            return
+        flattened.append(value)
+
+    for value in raw_values_for_path(record, field_path):
+        visit(value)
+    return [value for value in flattened if value is not None]
+
+
+def first_scalar_for_path(record: dict[str, Any], field_path: str) -> Any:
+    values = scalar_values_for_path(record, field_path)
+    return values[0] if values else None
+
+
+def record_matches_condition(record: dict[str, Any], condition: dict[str, Any] | None) -> bool:
+    if not condition:
+        return True
+    observed = scalar_values_for_path(record, str(condition.get("field", "")))
+    if not observed:
+        return False
+    if "equals" in condition:
+        return any(value == condition["equals"] for value in observed)
+    if "in" in condition:
+        allowed = set(condition["in"])
+        return any(value in allowed for value in observed)
+    return False
+
+
+def clause_result(
+    clause: dict[str, Any],
+    *,
+    column_name: str,
+    status: str,
+    expected: Any,
+    actual_value: Any,
+    records_failing: int,
+    samples: list[str] | None,
+    message: str,
+) -> dict[str, Any]:
+    return make_result(
+        check_id=str(clause.get("id", "contract_clause")),
+        check_type="contract_clause",
+        column_name=column_name,
+        status=status,
+        expected=expected,
+        actual_value=actual_value,
+        records_failing=records_failing,
+        samples=samples,
+        message=message,
+        severity=normalize_clause_severity(str(clause.get("severity", ""))),
+    )
+
+
+def validate_contract_clauses(clauses: list[dict[str, Any]], records: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    results: list[dict[str, Any]] = []
+    for clause in clauses:
+        rule = clause.get("rule", {})
+        rule_type = rule.get("type")
+        if not rule_type:
+            continue
+        if rule_type == "field_format":
+            field = str(rule["field"])
+            invalid: list[str] = []
+            for record in records:
+                for value in scalar_values_for_path(record, field):
+                    if not isinstance(value, str) or not matches_format(value, str(rule["format"])):
+                        invalid.append(stringify(value))
+            results.append(
+                clause_result(
+                    clause,
+                    column_name=field,
+                    status="PASS" if not invalid else "FAIL",
+                    expected={"format": rule["format"]},
+                    actual_value="all conforming" if not invalid else invalid[0],
+                    records_failing=len(invalid),
+                    samples=invalid[:5],
+                    message=str(clause.get("description", "Field format clause.")),
+                )
+            )
+            continue
+        if rule_type == "field_pattern":
+            field = str(rule["field"])
+            invalid = []
+            for record in records:
+                for value in scalar_values_for_path(record, field):
+                    if not isinstance(value, str) or not matches_pattern(value, str(rule["pattern"])):
+                        invalid.append(stringify(value))
+            results.append(
+                clause_result(
+                    clause,
+                    column_name=field,
+                    status="PASS" if not invalid else "FAIL",
+                    expected={"pattern": rule["pattern"]},
+                    actual_value="all conforming" if not invalid else invalid[0],
+                    records_failing=len(invalid),
+                    samples=invalid[:5],
+                    message=str(clause.get("description", "Pattern clause.")),
+                )
+            )
+            continue
+        if rule_type == "field_enum":
+            field = str(rule["field"])
+            allowed = list(rule.get("allowed", []))
+            invalid = []
+            for record in records:
+                for value in scalar_values_for_path(record, field):
+                    if value not in allowed:
+                        invalid.append(stringify(value))
+            results.append(
+                clause_result(
+                    clause,
+                    column_name=field,
+                    status="PASS" if not invalid else "FAIL",
+                    expected={"allowed": allowed},
+                    actual_value="all conforming" if not invalid else invalid[0],
+                    records_failing=len(invalid),
+                    samples=invalid[:5],
+                    message=str(clause.get("description", "Enum clause.")),
+                )
+            )
+            continue
+        if rule_type == "numeric_range":
+            field = str(rule["field"])
+            minimum = rule.get("minimum")
+            maximum = rule.get("maximum")
+            invalid = []
+            numeric: list[float] = []
+            for record in records:
+                for value in scalar_values_for_path(record, field):
+                    if not isinstance(value, (int, float)):
+                        invalid.append(stringify(value))
+                        continue
+                    numeric.append(float(value))
+                    if minimum is not None and float(value) < float(minimum):
+                        invalid.append(stringify(value))
+                    if maximum is not None and float(value) > float(maximum):
+                        invalid.append(stringify(value))
+            results.append(
+                clause_result(
+                    clause,
+                    column_name=field,
+                    status="PASS" if not invalid else "FAIL",
+                    expected={"minimum": minimum, "maximum": maximum},
+                    actual_value={"min": min(numeric) if numeric else None, "max": max(numeric) if numeric else None},
+                    records_failing=len(invalid),
+                    samples=invalid[:5],
+                    message=str(clause.get("description", "Numeric range clause.")),
+                )
+            )
+            continue
+        if rule_type == "array_min_items":
+            field = str(rule["field"])
+            minimum = int(rule.get("minimum", 0))
+            failing: list[str] = []
+            for index, record in enumerate(records):
+                observed = raw_values_for_path(record, field)
+                array_value = observed[0] if observed else None
+                if not isinstance(array_value, list) or len(array_value) < minimum:
+                    failing.append(f"record[{index}]")
+            results.append(
+                clause_result(
+                    clause,
+                    column_name=field,
+                    status="PASS" if not failing else "FAIL",
+                    expected={"minimum_items": minimum},
+                    actual_value="all conforming" if not failing else f"{len(failing)} records below minimum",
+                    records_failing=len(failing),
+                    samples=failing[:5],
+                    message=str(clause.get("description", "Array cardinality clause.")),
+                )
+            )
+            continue
+        if rule_type == "string_length":
+            field = str(rule["field"])
+            minimum = int(rule.get("minimum", 0))
+            invalid = []
+            for record in records:
+                for value in scalar_values_for_path(record, field):
+                    if not isinstance(value, str) or len(value) < minimum:
+                        invalid.append(stringify(value))
+            results.append(
+                clause_result(
+                    clause,
+                    column_name=field,
+                    status="PASS" if not invalid else "FAIL",
+                    expected={"minimum_length": minimum},
+                    actual_value="all conforming" if not invalid else invalid[0],
+                    records_failing=len(invalid),
+                    samples=invalid[:5],
+                    message=str(clause.get("description", "String length clause.")),
+                )
+            )
+            continue
+        if rule_type == "multi_field_numeric_range":
+            fields = [str(field) for field in rule.get("fields", [])]
+            minimum = rule.get("minimum")
+            maximum = rule.get("maximum")
+            invalid = []
+            numeric: list[float] = []
+            for field in fields:
+                for record in records:
+                    for value in scalar_values_for_path(record, field):
+                        if not isinstance(value, (int, float)):
+                            invalid.append(f"{field}={stringify(value)}")
+                            continue
+                        numeric.append(float(value))
+                        if minimum is not None and float(value) < float(minimum):
+                            invalid.append(f"{field}={stringify(value)}")
+                        if maximum is not None and float(value) > float(maximum):
+                            invalid.append(f"{field}={stringify(value)}")
+            results.append(
+                clause_result(
+                    clause,
+                    column_name=",".join(fields),
+                    status="PASS" if not invalid else "FAIL",
+                    expected={"minimum": minimum, "maximum": maximum},
+                    actual_value={"checked_fields": fields, "count": len(numeric)},
+                    records_failing=len(invalid),
+                    samples=invalid[:5],
+                    message=str(clause.get("description", "Multi-field numeric range clause.")),
+                )
+            )
+            continue
+        if rule_type == "temporal_order":
+            left_field = str(rule["left_field"])
+            right_field = str(rule["right_field"])
+            failing = []
+            for index, record in enumerate(records):
+                left = parse_timestamp(first_scalar_for_path(record, left_field))
+                right = parse_timestamp(first_scalar_for_path(record, right_field))
+                if left is None or right is None or right < left:
+                    failing.append(f"record[{index}]")
+            results.append(
+                clause_result(
+                    clause,
+                    column_name=f"{left_field},{right_field}",
+                    status="PASS" if not failing else "FAIL",
+                    expected={rule.get("operator", "<="): [left_field, right_field]},
+                    actual_value="all conforming" if not failing else f"{len(failing)} records invalid",
+                    records_failing=len(failing),
+                    samples=failing[:5],
+                    message=str(clause.get("description", "Temporal ordering clause.")),
+                )
+            )
+            continue
+        if rule_type == "group_monotonic":
+            field = str(rule["field"])
+            group_by = [str(item) for item in rule.get("group_by", [])]
+            sequences: dict[tuple[Any, ...], list[int]] = defaultdict(list)
+            for record in records:
+                key = tuple(first_scalar_for_path(record, group_field) for group_field in group_by)
+                value = first_scalar_for_path(record, field)
+                if isinstance(value, int):
+                    sequences[key].append(value)
+                elif isinstance(value, float):
+                    sequences[key].append(int(value))
+            failing = []
+            for key, sequence in sequences.items():
+                expected = list(range(1, len(sequence) + 1))
+                if sorted(sequence) != expected:
+                    failing.append("|".join(str(item) for item in key))
+            results.append(
+                clause_result(
+                    clause,
+                    column_name=field,
+                    status="PASS" if not failing else "FAIL",
+                    expected={"group_by": group_by, "rule": "contiguous_from_1"},
+                    actual_value="all conforming" if not failing else f"{len(failing)} groups invalid",
+                    records_failing=len(failing),
+                    samples=failing[:5],
+                    message=str(clause.get("description", "Group monotonicity clause.")),
+                )
+            )
+            continue
+        if rule_type == "conditional_numeric_range":
+            field = str(rule["field"])
+            minimum = rule.get("minimum")
+            maximum = rule.get("maximum")
+            failing = []
+            for index, record in enumerate(records):
+                if not record_matches_condition(record, rule.get("when")):
+                    continue
+                observed = scalar_values_for_path(record, field)
+                if not observed:
+                    failing.append(f"record[{index}] missing {field}")
+                    continue
+                for value in observed:
+                    if not isinstance(value, (int, float)):
+                        failing.append(f"record[{index}]={stringify(value)}")
+                        continue
+                    if minimum is not None and float(value) < float(minimum):
+                        failing.append(f"record[{index}]={stringify(value)}")
+                    if maximum is not None and float(value) > float(maximum):
+                        failing.append(f"record[{index}]={stringify(value)}")
+            results.append(
+                clause_result(
+                    clause,
+                    column_name=field,
+                    status="PASS" if not failing else "FAIL",
+                    expected={"when": rule.get("when"), "minimum": minimum, "maximum": maximum},
+                    actual_value="all conforming" if not failing else failing[0],
+                    records_failing=len(failing),
+                    samples=failing[:5],
+                    message=str(clause.get("description", "Conditional numeric range clause.")),
+                )
+            )
+            continue
+        if rule_type == "conditional_pattern":
+            field = str(rule["field"])
+            pattern = str(rule["pattern"])
+            failing = []
+            for index, record in enumerate(records):
+                if not record_matches_condition(record, rule.get("when")):
+                    continue
+                observed = scalar_values_for_path(record, field)
+                if not observed:
+                    failing.append(f"record[{index}] missing {field}")
+                    continue
+                for value in observed:
+                    if not isinstance(value, str) or not matches_pattern(value, pattern):
+                        failing.append(f"record[{index}]={stringify(value)}")
+            results.append(
+                clause_result(
+                    clause,
+                    column_name=field,
+                    status="PASS" if not failing else "FAIL",
+                    expected={"when": rule.get("when"), "pattern": pattern},
+                    actual_value="all conforming" if not failing else failing[0],
+                    records_failing=len(failing),
+                    samples=failing[:5],
+                    message=str(clause.get("description", "Conditional pattern clause.")),
+                )
+            )
+            continue
+    return results
 
 
 def validate_field_rules(fields: dict[str, dict[str, Any]], records: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -534,6 +906,7 @@ def main() -> int:
         contract = yaml.safe_load(handle)
     records = load_jsonl(args.data)
     results = validate_field_rules(contract.get("fields", {}), records)
+    results.extend(validate_contract_clauses(contract.get("clauses", []), records))
     results.extend(dataset_specific_results(contract.get("dataset", "generic"), records))
     results.extend(drift_results(contract.get("contract_id", "contract"), records))
     summary = summarize(results)

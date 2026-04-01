@@ -1,0 +1,57 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "application_id": {
+      "type": "string",
+      "properties": {},
+      "required": [],
+      "additionalProperties": true
+    },
+    "completed_at": {
+      "type": "string",
+      "properties": {},
+      "required": [],
+      "additionalProperties": true
+    },
+    "completed_checks": {
+      "type": "integer",
+      "properties": {},
+      "required": [],
+      "additionalProperties": true
+    },
+    "failed_rule_ids": {
+      "type": "array",
+      "properties": {},
+      "required": [],
+      "additionalProperties": true,
+      "items": {
+        "type": "string",
+        "properties": {},
+        "required": [],
+        "additionalProperties": true
+      }
+    },
+    "overall_verdict": {
+      "type": "string",
+      "properties": {},
+      "required": [],
+      "additionalProperties": true
+    },
+    "total_checks": {
+      "type": "integer",
+      "properties": {},
+      "required": [],
+      "additionalProperties": true
+    }
+  },
+  "required": [
+    "application_id",
+    "completed_at",
+    "completed_checks",
+    "failed_rule_ids",
+    "overall_verdict",
+    "total_checks"
+  ],
+  "additionalProperties": true
+}

@@ -283,6 +283,227 @@ def apply_dataset_overrides(dataset_kind: str, fields: dict[str, dict[str, Any]]
         fields[field_name].update(clause)
 
 
+def dataset_semantic_clauses(dataset_kind: str) -> list[dict[str, Any]]:
+    clauses = {
+        "week3_extractions": [
+            {
+                "id": "week3.doc_id_uuid",
+                "category": "identifier",
+                "severity": "error",
+                "description": "Each extraction record must carry a stable UUID document identifier.",
+                "rule": {"type": "field_format", "field": "doc_id", "format": "uuid"},
+            },
+            {
+                "id": "week3.extracted_at_datetime",
+                "category": "temporal",
+                "severity": "error",
+                "description": "Extraction timestamps must be valid UTC date-times for traceability and replay.",
+                "rule": {"type": "field_format", "field": "extracted_at", "format": "date-time"},
+            },
+            {
+                "id": "week3.fact_id_uuid",
+                "category": "identifier",
+                "severity": "error",
+                "description": "Every extracted fact must expose a UUID fact identifier.",
+                "rule": {"type": "field_format", "field": "extracted_facts.fact_id", "format": "uuid"},
+            },
+            {
+                "id": "week3.confidence_unit_scale",
+                "category": "quality",
+                "severity": "error",
+                "description": "Confidence values must stay on the 0.0 to 1.0 unit interval and never drift to percentages.",
+                "rule": {
+                    "type": "numeric_range",
+                    "field": "extracted_facts.confidence",
+                    "minimum": 0.0,
+                    "maximum": 1.0,
+                },
+            },
+            {
+                "id": "week3.page_ref_positive",
+                "category": "provenance",
+                "severity": "error",
+                "description": "Each extracted fact must point to a positive page number in the source document.",
+                "rule": {"type": "numeric_range", "field": "extracted_facts.page_ref", "minimum": 1},
+            },
+            {
+                "id": "week3.source_excerpt_present",
+                "category": "provenance",
+                "severity": "error",
+                "description": "Facts must preserve a non-empty source excerpt to support audit review.",
+                "rule": {"type": "string_length", "field": "extracted_facts.source_excerpt", "minimum": 1},
+            },
+            {
+                "id": "week3.source_hash_sha256",
+                "category": "integrity",
+                "severity": "error",
+                "description": "Source hashes must be SHA-256 digests to support immutable provenance checks.",
+                "rule": {
+                    "type": "field_pattern",
+                    "field": "source_hash",
+                    "pattern": SHA256_PATTERN.pattern,
+                },
+            },
+            {
+                "id": "week3.processing_time_positive",
+                "category": "operational",
+                "severity": "error",
+                "description": "Processing duration must be recorded as a positive millisecond value.",
+                "rule": {"type": "numeric_range", "field": "processing_time_ms", "minimum": 1},
+            },
+            {
+                "id": "week3.source_path_lineage",
+                "category": "lineage",
+                "severity": "warn",
+                "description": "Source paths should resolve to refinery chunk or extraction artifacts rather than arbitrary files.",
+                "rule": {
+                    "type": "field_pattern",
+                    "field": "source_path",
+                    "pattern": r".*/(artifacts/)?week3/.refinery/(extracted|chunks)/.+",
+                },
+            },
+            {
+                "id": "week3.token_counts_non_negative",
+                "category": "operational",
+                "severity": "warn",
+                "description": "Recorded token counters must never be negative even for OCR-derived runs.",
+                "rule": {
+                    "type": "multi_field_numeric_range",
+                    "fields": ["token_count.input", "token_count.output"],
+                    "minimum": 0,
+                },
+            },
+        ],
+        "week5_events": [
+            {
+                "id": "week5.event_id_uuid",
+                "category": "identifier",
+                "severity": "error",
+                "description": "Each event must expose a stable UUID event identifier.",
+                "rule": {"type": "field_format", "field": "event_id", "format": "uuid"},
+            },
+            {
+                "id": "week5.aggregate_id_uuid",
+                "category": "identifier",
+                "severity": "error",
+                "description": "Each event must link back to a UUID aggregate identifier.",
+                "rule": {"type": "field_format", "field": "aggregate_id", "format": "uuid"},
+            },
+            {
+                "id": "week5.aggregate_type_enum",
+                "category": "domain",
+                "severity": "error",
+                "description": "Aggregate types must stay within the modeled bounded context set.",
+                "rule": {
+                    "type": "field_enum",
+                    "field": "aggregate_type",
+                    "allowed": [
+                        "LoanApplication",
+                        "AgentSession",
+                        "DocumentPackage",
+                        "ComplianceRecord",
+                        "AuditLedger",
+                    ],
+                },
+            },
+            {
+                "id": "week5.event_type_pascal_case",
+                "category": "domain",
+                "severity": "error",
+                "description": "Event names should remain PascalCase so downstream schema routing stays deterministic.",
+                "rule": {
+                    "type": "field_pattern",
+                    "field": "event_type",
+                    "pattern": PASCAL_CASE_PATTERN.pattern,
+                },
+            },
+            {
+                "id": "week5.occurred_at_datetime",
+                "category": "temporal",
+                "severity": "error",
+                "description": "Business occurrence timestamps must be valid date-times.",
+                "rule": {"type": "field_format", "field": "occurred_at", "format": "date-time"},
+            },
+            {
+                "id": "week5.recorded_at_not_before_occurred_at",
+                "category": "temporal",
+                "severity": "error",
+                "description": "Ledger write time must not precede the business event time.",
+                "rule": {
+                    "type": "temporal_order",
+                    "left_field": "occurred_at",
+                    "right_field": "recorded_at",
+                    "operator": "<=",
+                },
+            },
+            {
+                "id": "week5.sequence_number_positive",
+                "category": "ordering",
+                "severity": "error",
+                "description": "Sequence numbers must start at 1 and stay positive.",
+                "rule": {"type": "numeric_range", "field": "sequence_number", "minimum": 1},
+            },
+            {
+                "id": "week5.sequence_monotonic_per_aggregate",
+                "category": "ordering",
+                "severity": "error",
+                "description": "Sequence numbers must be monotonic within each aggregate stream.",
+                "rule": {
+                    "type": "group_monotonic",
+                    "group_by": ["aggregate_id"],
+                    "field": "sequence_number",
+                },
+            },
+            {
+                "id": "week5.schema_version_supported",
+                "category": "compatibility",
+                "severity": "error",
+                "description": "Schema versions must stay within supported major.minor contract versions.",
+                "rule": {
+                    "type": "field_enum",
+                    "field": "schema_version",
+                    "allowed": ["1.0", "2.0"],
+                },
+            },
+            {
+                "id": "week5.correlation_id_uuid",
+                "category": "traceability",
+                "severity": "error",
+                "description": "Each event must retain a correlation id for cross-service tracing.",
+                "rule": {"type": "field_format", "field": "metadata.correlation_id", "format": "uuid"},
+            },
+            {
+                "id": "week5.application_submission_amount_positive",
+                "category": "domain",
+                "severity": "error",
+                "description": "ApplicationSubmitted events must carry a positive requested amount.",
+                "rule": {
+                    "type": "conditional_numeric_range",
+                    "when": {"field": "event_type", "equals": "ApplicationSubmitted"},
+                    "field": "payload.requested_amount_usd",
+                    "minimum": 0.01,
+                },
+            },
+            {
+                "id": "week5.document_events_reference_pdf",
+                "category": "document",
+                "severity": "warn",
+                "description": "Document-related events should reference PDF assets so extraction lineage can be reproduced.",
+                "rule": {
+                    "type": "conditional_pattern",
+                    "when": {
+                        "field": "event_type",
+                        "in": ["DocumentUploadRequested", "DocumentUploaded", "DocumentAdded"],
+                    },
+                    "field": "payload.document_path",
+                    "pattern": r".+\.pdf$",
+                },
+            },
+        ],
+    }
+    return clauses.get(dataset_kind, [])
+
+
 def dataset_cross_checks(dataset_kind: str) -> list[dict[str, str]]:
     checks = {
         "week2_verdicts": [

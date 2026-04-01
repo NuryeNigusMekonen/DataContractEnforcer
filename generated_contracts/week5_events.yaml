@@ -3,7 +3,7 @@ apiVersion: v3.0.0
 id: week5-event-records
 contract_id: week5-event-records
 dataset: week5_events
-generated_at: '2026-04-01T10:26:49Z'
+generated_at: '2026-04-01T18:32:45Z'
 source_path: outputs/week5/events.jsonl
 record_count: 1847
 info:
@@ -695,9 +695,127 @@ schema: &id001
     required: true
     minimum: 1
 fields: *id001
+clauses:
+- id: week5.event_id_uuid
+  category: identifier
+  severity: error
+  description: Each event must expose a stable UUID event identifier.
+  rule:
+    type: field_format
+    field: event_id
+    format: uuid
+- id: week5.aggregate_id_uuid
+  category: identifier
+  severity: error
+  description: Each event must link back to a UUID aggregate identifier.
+  rule:
+    type: field_format
+    field: aggregate_id
+    format: uuid
+- id: week5.aggregate_type_enum
+  category: domain
+  severity: error
+  description: Aggregate types must stay within the modeled bounded context set.
+  rule:
+    type: field_enum
+    field: aggregate_type
+    allowed:
+    - LoanApplication
+    - AgentSession
+    - DocumentPackage
+    - ComplianceRecord
+    - AuditLedger
+- id: week5.event_type_pascal_case
+  category: domain
+  severity: error
+  description: Event names should remain PascalCase so downstream schema routing stays
+    deterministic.
+  rule:
+    type: field_pattern
+    field: event_type
+    pattern: ^[A-Z][A-Za-z0-9]*$
+- id: week5.occurred_at_datetime
+  category: temporal
+  severity: error
+  description: Business occurrence timestamps must be valid date-times.
+  rule:
+    type: field_format
+    field: occurred_at
+    format: date-time
+- id: week5.recorded_at_not_before_occurred_at
+  category: temporal
+  severity: error
+  description: Ledger write time must not precede the business event time.
+  rule:
+    type: temporal_order
+    left_field: occurred_at
+    right_field: recorded_at
+    operator: <=
+- id: week5.sequence_number_positive
+  category: ordering
+  severity: error
+  description: Sequence numbers must start at 1 and stay positive.
+  rule:
+    type: numeric_range
+    field: sequence_number
+    minimum: 1
+- id: week5.sequence_monotonic_per_aggregate
+  category: ordering
+  severity: error
+  description: Sequence numbers must be monotonic within each aggregate stream.
+  rule:
+    type: group_monotonic
+    group_by:
+    - aggregate_id
+    field: sequence_number
+- id: week5.schema_version_supported
+  category: compatibility
+  severity: error
+  description: Schema versions must stay within supported major.minor contract versions.
+  rule:
+    type: field_enum
+    field: schema_version
+    allowed:
+    - '1.0'
+    - '2.0'
+- id: week5.correlation_id_uuid
+  category: traceability
+  severity: error
+  description: Each event must retain a correlation id for cross-service tracing.
+  rule:
+    type: field_format
+    field: metadata.correlation_id
+    format: uuid
+- id: week5.application_submission_amount_positive
+  category: domain
+  severity: error
+  description: ApplicationSubmitted events must carry a positive requested amount.
+  rule:
+    type: conditional_numeric_range
+    when:
+      field: event_type
+      equals: ApplicationSubmitted
+    field: payload.requested_amount_usd
+    minimum: 0.01
+- id: week5.document_events_reference_pdf
+  category: document
+  severity: warn
+  description: Document-related events should reference PDF assets so extraction lineage
+    can be reproduced.
+  rule:
+    type: conditional_pattern
+    when:
+      field: event_type
+      in:
+      - DocumentUploadRequested
+      - DocumentUploaded
+      - DocumentAdded
+    field: payload.document_path
+    pattern: .+\.pdf$
 quality:
   type: GeneratedChecks
-  minimum_clause_count: 152
+  minimum_clause_count: 12
+  semantic_clause_count: 12
 cross_checks:
 - id: week5.recorded_after_occurred
   type: record_rule
