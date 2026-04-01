@@ -20,3 +20,4 @@ venv/
 # Local runtime helpers
 .codex
 outputs_tmp/
+artifacts/week3/.refinery/vector/
