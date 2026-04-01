@@ -19,5 +19,7 @@ venv/
 docs/
 # Local runtime helpers
 .codex
+artifacts/
 outputs_tmp/
+enforcer_report/
 artifacts/week3/.refinery/vector/
