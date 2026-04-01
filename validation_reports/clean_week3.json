@@ -1,0 +1,576 @@
+{
+  "report_id": "eff7a90c-f605-40e2-ba02-b97c1a3bf693",
+  "snapshot_id": "5a25f10bf6abe04ecce62238ba31ac0646d2ccbed2af35ebb4e4ab2b37091d66",
+  "run_timestamp": "2026-04-01T13:07:13Z",
+  "generated_at": "2026-04-01T13:07:13Z",
+  "contract_id": "week3-document-refinery-extractions",
+  "dataset": "week3_extractions",
+  "data_path": "outputs/week3/extractions.jsonl",
+  "record_count": 50,
+  "total_checks": 39,
+  "passed": 39,
+  "failed": 0,
+  "warned": 0,
+  "errored": 0,
+  "summary": {
+    "PASS": 39,
+    "WARN": 0,
+    "FAIL": 0,
+    "ERROR": 0
+  },
+  "results": [
+    {
+      "check_id": "doc_id.required",
+      "check_type": "required",
+      "column_name": "doc_id",
+      "status": "PASS",
+      "severity": "CRITICAL",
+      "expected": "field present on every record",
+      "actual_value": "0 missing",
+      "records_failing": 0,
+      "samples": [],
+      "sample_failing": [],
+      "message": "Required field presence check."
+    },
+    {
+      "check_id": "doc_id.type",
+      "check_type": "type",
+      "column_name": "doc_id",
+      "status": "PASS",
+      "severity": "CRITICAL",
+      "expected": "string",
+      "actual_value": "string",
+      "records_failing": 0,
+      "samples": [],
+      "sample_failing": [],
+      "message": "Observed type must match contract type."
+    },
+    {
+      "check_id": "doc_id.format",
+      "check_type": "format",
+      "column_name": "doc_id",
+      "status": "PASS",
+      "severity": "HIGH",
+      "expected": "uuid",
+      "actual_value": "all conforming",
+      "records_failing": 0,
+      "samples": [],
+      "sample_failing": [],
+      "message": "String format must parse correctly."
+    },
+    {
+      "check_id": "extracted_at.required",
+      "check_type": "required",
+      "column_name": "extracted_at",
+      "status": "PASS",
+      "severity": "CRITICAL",
+      "expected": "field present on every record",
+      "actual_value": "0 missing",
+      "records_failing": 0,
+      "samples": [],
+      "sample_failing": [],
+      "message": "Required field presence check."
+    },
+    {
+      "check_id": "extracted_at.type",
+      "check_type": "type",
+      "column_name": "extracted_at",
+      "status": "PASS",
+      "severity": "CRITICAL",
+      "expected": "string",
+      "actual_value": "string",
+      "records_failing": 0,
+      "samples": [],
+      "sample_failing": [],
+      "message": "Observed type must match contract type."
+    },
+    {
+      "check_id": "extracted_at.format",
+      "check_type": "format",
+      "column_name": "extracted_at",
+      "status": "PASS",
+      "severity": "HIGH",
+      "expected": "date-time",
+      "actual_value": "all conforming",
+      "records_failing": 0,
+      "samples": [],
+      "sample_failing": [],
+      "message": "String format must parse correctly."
+    },
+    {
+      "check_id": "extracted_facts.confidence.required",
+      "check_type": "required",
+      "column_name": "extracted_facts.confidence",
+      "status": "PASS",
+      "severity": "CRITICAL",
+      "expected": "field present on every record",
+      "actual_value": "0 missing",
+      "records_failing": 0,
+      "samples": [],
+      "sample_failing": [],
+      "message": "Required field presence check."
+    },
+    {
+      "check_id": "extracted_facts.confidence.type",
+      "check_type": "type",
+      "column_name": "extracted_facts.confidence",
+      "status": "PASS",
+      "severity": "CRITICAL",
+      "expected": "number",
+      "actual_value": "number",
+      "records_failing": 0,
+      "samples": [],
+      "sample_failing": [],
+      "message": "Observed type must match contract type."
+    },
+    {
+      "check_id": "extracted_facts.confidence.range",
+      "check_type": "range",
+      "column_name": "extracted_facts.confidence",
+      "status": "PASS",
+      "severity": "CRITICAL",
+      "expected": {
+        "minimum": 0.0,
+        "maximum": 1.0
+      },
+      "actual_value": {
+        "min": 0.84,
+        "max": 0.86
+      },
+      "records_failing": 0,
+      "samples": [],
+      "sample_failing": [],
+      "message": "Numeric range must remain within contract bounds."
+    },
+    {
+      "check_id": "extracted_facts.fact_id.required",
+      "check_type": "required",
+      "column_name": "extracted_facts.fact_id",
+      "status": "PASS",
+      "severity": "CRITICAL",
+      "expected": "field present on every record",
+      "actual_value": "0 missing",
+      "records_failing": 0,
+      "samples": [],
+      "sample_failing": [],
+      "message": "Required field presence check."
+    },
+    {
+      "check_id": "extracted_facts.fact_id.type",
+      "check_type": "type",
+      "column_name": "extracted_facts.fact_id",
+      "status": "PASS",
+      "severity": "CRITICAL",
+      "expected": "string",
+      "actual_value": "string",
+      "records_failing": 0,
+      "samples": [],
+      "sample_failing": [],
+      "message": "Observed type must match contract type."
+    },
+    {
+      "check_id": "extracted_facts.fact_id.format",
+      "check_type": "format",
+      "column_name": "extracted_facts.fact_id",
+      "status": "PASS",
+      "severity": "HIGH",
+      "expected": "uuid",
+      "actual_value": "all conforming",
+      "records_failing": 0,
+      "samples": [],
+      "sample_failing": [],
+      "message": "String format must parse correctly."
+    },
+    {
+      "check_id": "extracted_facts.page_ref.required",
+      "check_type": "required",
+      "column_name": "extracted_facts.page_ref",
+      "status": "PASS",
+      "severity": "CRITICAL",
+      "expected": "field present on every record",
+      "actual_value": "0 missing",
+      "records_failing": 0,
+      "samples": [],
+      "sample_failing": [],
+      "message": "Required field presence check."
+    },
+    {
+      "check_id": "extracted_facts.page_ref.type",
+      "check_type": "type",
+      "column_name": "extracted_facts.page_ref",
+      "status": "PASS",
+      "severity": "CRITICAL",
+      "expected": "integer",
+      "actual_value": "integer",
+      "records_failing": 0,
+      "samples": [],
+      "sample_failing": [],
+      "message": "Observed type must match contract type."
+    },
+    {
+      "check_id": "extracted_facts.source_excerpt.required",
+      "check_type": "required",
+      "column_name": "extracted_facts.source_excerpt",
+      "status": "PASS",
+      "severity": "CRITICAL",
+      "expected": "field present on every record",
+      "actual_value": "0 missing",
+      "records_failing": 0,
+      "samples": [],
+      "sample_failing": [],
+      "message": "Required field presence check."
+    },
+    {
+      "check_id": "extracted_facts.source_excerpt.type",
+      "check_type": "type",
+      "column_name": "extracted_facts.source_excerpt",
+      "status": "PASS",
+      "severity": "CRITICAL",
+      "expected": "string",
+      "actual_value": "string",
+      "records_failing": 0,
+      "samples": [],
+      "sample_failing": [],
+      "message": "Observed type must match contract type."
+    },
+    {
+      "check_id": "extracted_facts.text.required",
+      "check_type": "required",
+      "column_name": "extracted_facts.text",
+      "status": "PASS",
+      "severity": "CRITICAL",
+      "expected": "field present on every record",
+      "actual_value": "0 missing",
+      "records_failing": 0,
+      "samples": [],
+      "sample_failing": [],
+      "message": "Required field presence check."
+    },
+    {
+      "check_id": "extracted_facts.text.type",
+      "check_type": "type",
+      "column_name": "extracted_facts.text",
+      "status": "PASS",
+      "severity": "CRITICAL",
+      "expected": "string",
+      "actual_value": "string",
+      "records_failing": 0,
+      "samples": [],
+      "sample_failing": [],
+      "message": "Observed type must match contract type."
+    },
+    {
+      "check_id": "extraction_model.required",
+      "check_type": "required",
+      "column_name": "extraction_model",
+      "status": "PASS",
+      "severity": "CRITICAL",
+      "expected": "field present on every record",
+      "actual_value": "0 missing",
+      "records_failing": 0,
+      "samples": [],
+      "sample_failing": [],
+      "message": "Required field presence check."
+    },
+    {
+      "check_id": "extraction_model.type",
+      "check_type": "type",
+      "column_name": "extraction_model",
+      "status": "PASS",
+      "severity": "CRITICAL",
+      "expected": "string",
+      "actual_value": "string",
+      "records_failing": 0,
+      "samples": [],
+      "sample_failing": [],
+      "message": "Observed type must match contract type."
+    },
+    {
+      "check_id": "extraction_model.enum",
+      "check_type": "enum",
+      "column_name": "extraction_model",
+      "status": "PASS",
+      "severity": "HIGH",
+      "expected": [
+        "strategy_b_layout_docling",
+        "strategy_c_local_ocr",
+        "chunk-derived-chunk-view"
+      ],
+      "actual_value": "all conforming",
+      "records_failing": 0,
+      "samples": [],
+      "sample_failing": [],
+      "message": "Enum values must match the contract."
+    },
+    {
+      "check_id": "processing_time_ms.required",
+      "check_type": "required",
+      "column_name": "processing_time_ms",
+      "status": "PASS",
+      "severity": "CRITICAL",
+      "expected": "field present on every record",
+      "actual_value": "0 missing",
+      "records_failing": 0,
+      "samples": [],
+      "sample_failing": [],
+      "message": "Required field presence check."
+    },
+    {
+      "check_id": "processing_time_ms.type",
+      "check_type": "type",
+      "column_name": "processing_time_ms",
+      "status": "PASS",
+      "severity": "CRITICAL",
+      "expected": "integer",
+      "actual_value": "integer",
+      "records_failing": 0,
+      "samples": [],
+      "sample_failing": [],
+      "message": "Observed type must match contract type."
+    },
+    {
+      "check_id": "processing_time_ms.range",
+      "check_type": "range",
+      "column_name": "processing_time_ms",
+      "status": "PASS",
+      "severity": "CRITICAL",
+      "expected": {
+        "minimum": 1,
+        "maximum": null
+      },
+      "actual_value": {
+        "min": 200.0,
+        "max": 216013.0
+      },
+      "records_failing": 0,
+      "samples": [],
+      "sample_failing": [],
+      "message": "Numeric range must remain within contract bounds."
+    },
+    {
+      "check_id": "source_hash.required",
+      "check_type": "required",
+      "column_name": "source_hash",
+      "status": "PASS",
+      "severity": "CRITICAL",
+      "expected": "field present on every record",
+      "actual_value": "0 missing",
+      "records_failing": 0,
+      "samples": [],
+      "sample_failing": [],
+      "message": "Required field presence check."
+    },
+    {
+      "check_id": "source_hash.type",
+      "check_type": "type",
+      "column_name": "source_hash",
+      "status": "PASS",
+      "severity": "CRITICAL",
+      "expected": "string",
+      "actual_value": "string",
+      "records_failing": 0,
+      "samples": [],
+      "sample_failing": [],
+      "message": "Observed type must match contract type."
+    },
+    {
+      "check_id": "source_hash.pattern",
+      "check_type": "pattern",
+      "column_name": "source_hash",
+      "status": "PASS",
+      "severity": "HIGH",
+      "expected": "^[0-9a-f]{64}$",
+      "actual_value": "all conforming",
+      "records_failing": 0,
+      "samples": [],
+      "sample_failing": [],
+      "message": "Regex contract clause."
+    },
+    {
+      "check_id": "source_path.required",
+      "check_type": "required",
+      "column_name": "source_path",
+      "status": "PASS",
+      "severity": "CRITICAL",
+      "expected": "field present on every record",
+      "actual_value": "0 missing",
+      "records_failing": 0,
+      "samples": [],
+      "sample_failing": [],
+      "message": "Required field presence check."
+    },
+    {
+      "check_id": "source_path.type",
+      "check_type": "type",
+      "column_name": "source_path",
+      "status": "PASS",
+      "severity": "CRITICAL",
+      "expected": "string",
+      "actual_value": "string",
+      "records_failing": 0,
+      "samples": [],
+      "sample_failing": [],
+      "message": "Observed type must match contract type."
+    },
+    {
+      "check_id": "token_count.input.required",
+      "check_type": "required",
+      "column_name": "token_count.input",
+      "status": "PASS",
+      "severity": "CRITICAL",
+      "expected": "field present on every record",
+      "actual_value": "0 missing",
+      "records_failing": 0,
+      "samples": [],
+      "sample_failing": [],
+      "message": "Required field presence check."
+    },
+    {
+      "check_id": "token_count.input.type",
+      "check_type": "type",
+      "column_name": "token_count.input",
+      "status": "PASS",
+      "severity": "CRITICAL",
+      "expected": "integer",
+      "actual_value": "integer",
+      "records_failing": 0,
+      "samples": [],
+      "sample_failing": [],
+      "message": "Observed type must match contract type."
+    },
+    {
+      "check_id": "token_count.output.required",
+      "check_type": "required",
+      "column_name": "token_count.output",
+      "status": "PASS",
+      "severity": "CRITICAL",
+      "expected": "field present on every record",
+      "actual_value": "0 missing",
+      "records_failing": 0,
+      "samples": [],
+      "sample_failing": [],
+      "message": "Required field presence check."
+    },
+    {
+      "check_id": "token_count.output.type",
+      "check_type": "type",
+      "column_name": "token_count.output",
+      "status": "PASS",
+      "severity": "CRITICAL",
+      "expected": "integer",
+      "actual_value": "integer",
+      "records_failing": 0,
+      "samples": [],
+      "sample_failing": [],
+      "message": "Observed type must match contract type."
+    },
+    {
+      "check_id": "week3.entity_refs_exist",
+      "check_type": "cross_record",
+      "column_name": "extracted_facts.entity_refs",
+      "status": "PASS",
+      "severity": "CRITICAL",
+      "expected": "Every entity_ref exists in the sibling entities array",
+      "actual_value": "all refs resolved",
+      "records_failing": 0,
+      "samples": [],
+      "sample_failing": [],
+      "message": "Nested entity references must resolve within the same record."
+    },
+    {
+      "check_id": "extracted_facts.confidence.drift",
+      "check_type": "drift",
+      "column_name": "extracted_facts.confidence",
+      "status": "PASS",
+      "severity": "MEDIUM",
+      "expected": {
+        "mean": 0.8392,
+        "stddev": 0.09389623452057519
+      },
+      "actual_value": {
+        "mean": 0.8516959064327485,
+        "z_score": 0.133
+      },
+      "records_failing": 0,
+      "samples": [],
+      "sample_failing": [],
+      "message": "Numeric mean drifted against the stored baseline."
+    },
+    {
+      "check_id": "extracted_facts.page_ref.drift",
+      "check_type": "drift",
+      "column_name": "extracted_facts.page_ref",
+      "status": "PASS",
+      "severity": "MEDIUM",
+      "expected": {
+        "mean": 9.874285714285714,
+        "stddev": 9.69277618662897
+      },
+      "actual_value": {
+        "mean": 9.005847953216374,
+        "z_score": 0.09
+      },
+      "records_failing": 0,
+      "samples": [],
+      "sample_failing": [],
+      "message": "Numeric mean drifted against the stored baseline."
+    },
+    {
+      "check_id": "processing_time_ms.drift",
+      "check_type": "drift",
+      "column_name": "processing_time_ms",
+      "status": "PASS",
+      "severity": "MEDIUM",
+      "expected": {
+        "mean": 21678.64,
+        "stddev": 52041.55994040148
+      },
+      "actual_value": {
+        "mean": 21678.64,
+        "z_score": 0.0
+      },
+      "records_failing": 0,
+      "samples": [],
+      "sample_failing": [],
+      "message": "Numeric mean drifted against the stored baseline."
+    },
+    {
+      "check_id": "token_count.input.drift",
+      "check_type": "drift",
+      "column_name": "token_count.input",
+      "status": "PASS",
+      "severity": "MEDIUM",
+      "expected": {
+        "mean": 230.86,
+        "stddev": 270.664368545252
+      },
+      "actual_value": {
+        "mean": 230.86,
+        "z_score": 0.0
+      },
+      "records_failing": 0,
+      "samples": [],
+      "sample_failing": [],
+      "message": "Numeric mean drifted against the stored baseline."
+    },
+    {
+      "check_id": "token_count.output.drift",
+      "check_type": "drift",
+      "column_name": "token_count.output",
+      "status": "PASS",
+      "severity": "MEDIUM",
+      "expected": {
+        "mean": 44.14,
+        "stddev": 51.28079952574842
+      },
+      "actual_value": {
+        "mean": 44.14,
+        "z_score": 0.0
+      },
+      "records_failing": 0,
+      "samples": [],
+      "sample_failing": [],
+      "message": "Numeric mean drifted against the stored baseline."
+    }
+  ]
+}

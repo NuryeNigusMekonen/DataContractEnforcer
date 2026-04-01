@@ -1,0 +1,90 @@
+contract_id: week4-lineage-snapshots
+dataset: week4_lineage
+generated_at: '2026-03-31T01:45:13Z'
+source_path: outputs/week4/lineage_snapshots.jsonl
+record_count: 1
+fields:
+  captured_at:
+    type: string
+    required: true
+    format: date-time
+    enum:
+    - '2026-03-31T01:25:19Z'
+  codebase_root:
+    type: string
+    required: true
+    enum:
+    - /home/nurye/Desktop/TRP1/week7/DataContractEnforcer/artifacts/week4
+  edges.confidence:
+    type: number
+    required: true
+    minimum: 0.0
+    maximum: 1.0
+    description: Confidence must remain on a 0.0-1.0 scale.
+  edges.relationship:
+    type: string
+    required: true
+    enum:
+    - IMPORTS
+    - CALLS
+    - READS
+    - WRITES
+    - PRODUCES
+    - CONSUMES
+  edges.source:
+    type: string
+    required: true
+  edges.target:
+    type: string
+    required: true
+  git_commit:
+    type: string
+    required: true
+    pattern: ^[0-9a-f]{40}$
+    enum:
+    - 6389cb56790e116df6c88026eb227ffa043a4f42
+  nodes.label:
+    type: string
+    required: true
+  nodes.metadata.language:
+    type: string
+    required: true
+  nodes.metadata.last_modified:
+    type: string
+    required: true
+    enum:
+    - '2026-03-31T01:44:12Z'
+  nodes.metadata.path:
+    type: string
+    required: true
+  nodes.metadata.purpose:
+    type: string
+    required: true
+    enum:
+    - python_table_reader
+    - dataset
+    - python_file_reader
+    - python_file_writer
+  nodes.node_id:
+    type: string
+    required: true
+    format: null
+  nodes.type:
+    type: string
+    required: true
+    enum:
+    - PIPELINE
+    - TABLE
+  snapshot_id:
+    type: string
+    required: true
+    format: uuid
+    enum:
+    - 6d75c325-c364-5a5d-afe2-fa65b4d470ac
+cross_checks:
+- id: week4.edges_reference_nodes
+  type: record_rule
+  field: edges
+lineage:
+  upstream: []
+  downstream: []

@@ -1,0 +1,116 @@
+contract_id: week2-verdict-records
+dataset: week2_verdicts
+generated_at: '2026-03-31T00:35:51Z'
+source_path: outputs/week2/verdicts.jsonl
+record_count: 2
+fields:
+  confidence:
+    type: number
+    required: true
+    minimum: 0.0
+    maximum: 1.0
+    description: Confidence must remain on a 0.0-1.0 scale.
+  evaluated_at:
+    type: string
+    required: true
+    format: date-time
+    enum:
+    - '2026-03-30T09:00:00Z'
+    - '2026-03-30T09:10:00Z'
+  overall_score:
+    type: number
+    required: true
+    minimum: 1.0
+    maximum: 5.0
+  overall_verdict:
+    type: string
+    required: true
+    enum:
+    - PASS
+    - FAIL
+    - WARN
+  rubric_id:
+    type: string
+    required: true
+    pattern: ^[0-9a-f]{64}$
+    enum:
+    - 07b2d15abdee1485f6b8abe94078e52f0f0a96a9dc34e8306ee631aa4ad0fd7a
+  rubric_version:
+    type: string
+    required: true
+    pattern: ^\d+\.\d+\.\d+$
+    enum:
+    - 1.2.0
+  scores.accuracy.evidence:
+    type: string
+    required: true
+    enum:
+    - Generator writes YAML and dbt outputs.
+    - Structural and statistical checks are both present.
+  scores.accuracy.notes:
+    type: string
+    required: true
+    enum:
+    - Core flow works.
+    - The script validates required, enum, and range rules.
+  scores.accuracy.score:
+    type: integer
+    required: true
+  scores.actionability.evidence:
+    type: string
+    required: true
+    enum:
+    - Contract can be run from the CLI.
+    - Report JSON is structured for downstream tools.
+  scores.actionability.notes:
+    type: string
+    required: true
+    enum:
+    - Clear next steps for users.
+    - Failures are easy to triage.
+  scores.actionability.score:
+    type: integer
+    required: true
+  scores.traceability.evidence:
+    type: string
+    required: true
+    enum:
+    - Lineage is embedded into the contract.
+    - Findings include check IDs and failing columns.
+  scores.traceability.notes:
+    type: string
+    required: true
+    enum:
+    - Downstream links are recorded.
+    - Output is traceable back to fields.
+  scores.traceability.score:
+    type: integer
+    required: true
+  target_ref:
+    type: string
+    required: true
+    enum:
+    - contracts/generator.py
+    - contracts/runner.py
+  verdict_id:
+    type: string
+    required: true
+    format: uuid
+    enum:
+    - 44444444-4444-4444-8444-444444444444
+    - 55555555-5555-4555-8555-555555555555
+  scores.score:
+    type: integer
+    required: false
+    minimum: 1
+    maximum: 5
+cross_checks:
+- id: week2.overall_score_weighted_mean
+  type: record_rule
+  field: overall_score
+- id: week2.rubric_hash_exists
+  type: record_rule
+  field: rubric_id
+lineage:
+  upstream: []
+  downstream: []

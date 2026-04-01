@@ -1,0 +1,187 @@
+kind: DataContract
+apiVersion: v3.0.0
+id: langsmith-trace-records
+contract_id: langsmith-trace-records
+dataset: traces
+generated_at: '2026-04-01T10:25:03Z'
+source_path: outputs/traces/runs.jsonl
+record_count: 12
+info:
+  title: LangSmith Trace Records
+  version: 1.0.0
+  owner: trp1-week7
+  description: Auto-generated contract for langsmith trace records sourced from outputs/traces/runs.jsonl.
+servers:
+  local:
+    type: local
+    path: outputs/traces/runs.jsonl
+    format: jsonl
+terms:
+  usage: Internal inter-system data contract. Do not publish externally.
+schema: &id001
+  completion_tokens:
+    type: integer
+    required: true
+  end_time:
+    type: string
+    required: true
+    format: date-time
+  error:
+    type: string
+    required: false
+  id:
+    type: string
+    required: true
+    format: uuid
+  inputs.contract:
+    type: string
+    required: false
+    enum:
+    - week3-document-refinery-extractions
+  inputs.contract_id:
+    type: string
+    required: false
+    format: uuid
+    enum:
+    - week3-document-refinery-extractions
+  inputs.dataset:
+    type: string
+    required: false
+    enum:
+    - outputs/week3/extractions.jsonl
+  inputs.doc_batch:
+    type: string
+    required: false
+    enum:
+    - policy-pdfs-2026-03-30
+    - invoice-pdfs-2026-03-30
+  inputs.doc_id:
+    type: string
+    required: false
+    format: uuid
+    enum:
+    - 66666666-6666-4666-8666-666666666666
+    - 12121212-1212-4121-8121-121212121212
+  inputs.fact_count:
+    type: integer
+    required: false
+  inputs.facts:
+    type: integer
+    required: false
+  inputs.report:
+    type: string
+    required: false
+    enum:
+    - validation_reports/violated_week3.json
+  inputs.reports_dir:
+    type: string
+    required: false
+    enum:
+    - validation_reports
+  inputs.strategy:
+    type: string
+    required: false
+    enum:
+    - docling-first
+    - marker-fallback
+  inputs.violations:
+    type: string
+    required: false
+    enum:
+    - violation_log/violations.jsonl
+  name:
+    type: string
+    required: true
+  outputs.candidates:
+    type: integer
+    required: false
+  outputs.changes:
+    type: integer
+    required: false
+  outputs.checks:
+    type: integer
+    required: false
+  outputs.chunks:
+    type: integer
+    required: false
+  outputs.citations:
+    type: integer
+    required: false
+  outputs.documents:
+    type: integer
+    required: false
+  outputs.facts:
+    type: integer
+    required: false
+  outputs.missing_refs:
+    type: integer
+    required: false
+  outputs.report:
+    type: string
+    required: false
+    enum:
+    - enforcer_report/report_data.json
+  outputs.status:
+    type: string
+    required: false
+    enum:
+    - completed
+    - PASS
+    - BREAKING
+  outputs.vectors:
+    type: integer
+    required: false
+  parent_run_id:
+    type: string
+    required: false
+    format: uuid
+    enum:
+    - 3d87d7e9-4170-4d9e-8a9b-2f918ef0a101
+    - 27272727-2727-4272-8272-272727272727
+    - 88a4db57-2cfe-4f6e-8701-8d1ef5cb7105
+    - 29292929-2929-4292-8292-292929292929
+  prompt_tokens:
+    type: integer
+    required: true
+  run_type:
+    type: string
+    required: true
+    enum:
+    - llm
+    - chain
+    - tool
+    - retriever
+    - embedding
+  session_id:
+    type: string
+    required: true
+    format: uuid
+  start_time:
+    type: string
+    required: true
+    format: date-time
+  tags:
+    type: string
+    required: true
+  total_cost:
+    type: number
+    required: true
+    minimum: 0.0
+  total_tokens:
+    type: integer
+    required: true
+    minimum: 0
+fields: *id001
+quality:
+  type: GeneratedChecks
+  minimum_clause_count: 35
+cross_checks:
+- id: traces.end_after_start
+  type: record_rule
+  field: end_time
+- id: traces.total_tokens_add_up
+  type: record_rule
+  field: total_tokens
+lineage:
+  upstream: []
+  downstream: []

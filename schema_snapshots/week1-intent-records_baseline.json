@@ -1,0 +1,17 @@
+{
+  "written_at": "2026-04-01T00:00:00Z",
+  "columns": {
+    "code_refs.confidence": {
+      "mean": 0.9500000000000001,
+      "stddev": 0.019999999999999962
+    },
+    "code_refs.line_end": {
+      "mean": 72.75,
+      "stddev": 28.640370691269577
+    },
+    "code_refs.line_start": {
+      "mean": 22.333333333333332,
+      "stddev": 26.61401051242664
+    }
+  }
+}

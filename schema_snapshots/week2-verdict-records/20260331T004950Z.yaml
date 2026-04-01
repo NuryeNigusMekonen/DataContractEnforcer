@@ -1,0 +1,119 @@
+contract_id: week2-verdict-records
+dataset: week2_verdicts
+generated_at: '2026-03-31T00:49:50Z'
+source_path: outputs/week2/verdicts.jsonl
+record_count: 2
+fields:
+  confidence:
+    type: number
+    required: true
+    minimum: 0.0
+    maximum: 1.0
+    description: Confidence must remain on a 0.0-1.0 scale.
+  evaluated_at:
+    type: string
+    required: true
+    format: date-time
+    enum:
+    - '2026-03-30T09:00:00Z'
+    - '2026-03-30T09:10:00Z'
+  overall_score:
+    type: number
+    required: true
+    minimum: 1.0
+    maximum: 5.0
+  overall_verdict:
+    type: string
+    required: true
+    enum:
+    - PASS
+    - FAIL
+    - WARN
+  rubric_id:
+    type: string
+    required: true
+    pattern: ^[0-9a-f]{64}$
+    enum:
+    - 5c21d51dd764720ef2b1894110e493f64f9825e03ee1d13b9893984dc266e2b8
+  rubric_version:
+    type: string
+    required: true
+    pattern: ^\d+\.\d+\.\d+$
+    enum:
+    - 1.2.0
+  scores.forensic_accuracy.evidence:
+    type: string
+    required: true
+    enum:
+    - Failures cite the exact field, check id, actual value, and failing record count.
+    - The report pulls live counts from validation reports and the violation log.
+  scores.forensic_accuracy.notes:
+    type: string
+    required: true
+    enum:
+    - Evidence remains grounded in machine-readable artifacts.
+    - Numbers are generated, not hand-written.
+  scores.forensic_accuracy.score:
+    type: integer
+    required: true
+  scores.judicial_nuance.evidence:
+    type: string
+    required: true
+    enum:
+    - The report output preserves separate findings and severities rather than collapsing
+      to a single sentence.
+    - The final report preserves disagreement-worthy findings and recommendations
+      rather than averaging them away.
+  scores.judicial_nuance.notes:
+    type: string
+    required: true
+    enum:
+    - This mirrors criterion-by-criterion judgment.
+    - Useful for a Chief Justice style synthesis.
+  scores.judicial_nuance.score:
+    type: integer
+    required: true
+  scores.langgraph_architecture.evidence:
+    type: string
+    required: true
+    enum:
+    - Validation flow separates structural checks, dataset rules, and drift checks.
+    - The current repo implements the courtroom outputs, but not the full week 2 parallel
+      judge swarm.
+  scores.langgraph_architecture.notes:
+    type: string
+    required: true
+    enum:
+    - Not a LangGraph swarm, but the architecture is modular and typed.
+    - Structure is solid but simplified.
+  scores.langgraph_architecture.score:
+    type: integer
+    required: true
+  target_ref:
+    type: string
+    required: true
+    enum:
+    - contracts/runner.py
+    - enforcer_report/report_data.json
+  verdict_id:
+    type: string
+    required: true
+    format: uuid
+    enum:
+    - 44444444-4444-4444-8444-444444444444
+    - 55555555-5555-4555-8555-555555555555
+  scores.score:
+    type: integer
+    required: false
+    minimum: 1
+    maximum: 5
+cross_checks:
+- id: week2.overall_score_weighted_mean
+  type: record_rule
+  field: overall_score
+- id: week2.rubric_hash_exists
+  type: record_rule
+  field: rubric_id
+lineage:
+  upstream: []
+  downstream: []

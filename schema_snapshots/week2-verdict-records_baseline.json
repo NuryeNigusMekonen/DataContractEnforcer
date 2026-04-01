@@ -1,0 +1,61 @@
+{
+  "written_at": "2026-03-31T01:44:29Z",
+  "columns": {
+    "confidence": {
+      "mean": 0.9199999999999999,
+      "stddev": 0.032659863237109024
+    },
+    "overall_score": {
+      "mean": 3.033333333333333,
+      "stddev": 0.9392668535736916
+    },
+    "scores.chief_justice_synthesis.score": {
+      "mean": 3.3333333333333335,
+      "stddev": 1.247219128924647
+    },
+    "scores.git_forensic_analysis.score": {
+      "mean": 3.0,
+      "stddev": 1.632993161855452
+    },
+    "scores.graph_orchestration.score": {
+      "mean": 2.6666666666666665,
+      "stddev": 1.699673171197595
+    },
+    "scores.judicial_nuance.score": {
+      "mean": 3.6666666666666665,
+      "stddev": 0.9428090415820634
+    },
+    "scores.report_accuracy.score": {
+      "mean": 2.0,
+      "stddev": 0.0
+    },
+    "scores.safe_tool_engineering.score": {
+      "mean": 3.6666666666666665,
+      "stddev": 1.8856180831641267
+    },
+    "scores.state_management_rigor.score": {
+      "mean": 2.6666666666666665,
+      "stddev": 1.699673171197595
+    },
+    "scores.structured_output_enforcement.score": {
+      "mean": 2.6666666666666665,
+      "stddev": 1.699673171197595
+    },
+    "scores.swarm_visual.score": {
+      "mean": 3.3333333333333335,
+      "stddev": 0.9428090415820634
+    },
+    "scores.theoretical_depth.score": {
+      "mean": 3.0,
+      "stddev": 0.0
+    },
+    "scores.Cross-Reference.score": {
+      "mean": 3.0,
+      "stddev": 0.0
+    },
+    "scores.Documentation.score": {
+      "mean": 3.0,
+      "stddev": 0.0
+    }
+  }
+}
