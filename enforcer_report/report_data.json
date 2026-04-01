@@ -1,20 +1,20 @@
 {
-  "generated_at": "2026-04-01T10:28:09Z",
+  "generated_at": "2026-04-01T21:00:28Z",
   "period": "2026-03-25 to 2026-04-01",
   "data_health_score": 60,
   "health_narrative": "Health score dropped to 60/100 due to actionable contract failures.",
   "top_violations": [
     "System issue in extracted_facts.confidence.range: the extracted_facts.confidence field failed validation with status FAIL. No downstream nodes were identified. Affected records: 350.",
     "System issue in traces.total_tokens_add_up: the total_tokens field failed validation with status FAIL. No downstream nodes were identified. Affected records: 4.",
-    "System issue in ai.prompt_input_validation: the content_preview field failed validation with status WARN. Downstream impact reaches week3-document-refinery, week7-ai-contract-extension. Affected records: 8."
+    "System issue in ai.prompt_input_validation: the content_preview field failed validation with status WARN. Downstream impact reaches week3-document-refinery, week7-ai-contract-extension. Affected records: 9."
   ],
   "total_violations_by_severity": {
     "CRITICAL": 2,
     "HIGH": 0,
-    "MEDIUM": 2,
+    "MEDIUM": 3,
     "LOW": 0
   },
-  "violation_count": 4,
+  "violation_count": 5,
   "schema_changes_detected": [
     "doc_id: COMPATIBLE - doc_id: no material change",
     "entities: COMPATIBLE - entities: no material change",
