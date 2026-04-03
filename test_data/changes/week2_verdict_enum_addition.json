@@ -1,0 +1,24 @@
+{
+  "contract_id": "week2-verdict-records",
+  "change_type": "enum_change",
+  "field": "overall_verdict",
+  "from": [
+    "PASS",
+    "FAIL",
+    "WARN"
+  ],
+  "to": [
+    "PASS",
+    "FAIL",
+    "WARN",
+    "UNKNOWN"
+  ],
+  "added_values": [
+    "UNKNOWN"
+  ],
+  "target_version": "1.1.0",
+  "apply_to_records": false,
+  "notes": [
+    "Schema-only additive enum simulation. Existing payloads remain unchanged."
+  ]
+}

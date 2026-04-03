@@ -1,0 +1,23 @@
+{
+  "contract_id": "week5-event-records",
+  "change_type": "add_field",
+  "field": "payload.regulatory_basis",
+  "from": null,
+  "to": "string required",
+  "required": true,
+  "field_schema": {
+    "type": "string",
+    "required": true,
+    "enum": [
+      "AUTO_INFERRED",
+      "REG-003",
+      "MANUAL_OVERRIDE"
+    ]
+  },
+  "default_value": "AUTO_INFERRED",
+  "apply_to_records": false,
+  "target_version": "2.0.0",
+  "notes": [
+    "Adds a required event payload field that would need explicit migration approval before the contract is updated."
+  ]
+}

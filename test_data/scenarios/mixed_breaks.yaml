@@ -1,0 +1,35 @@
+name: mixed_breaks
+seed: 99
+healthy: false
+enabled_simulators:
+  - week1
+  - week2
+  - week3
+  - week4
+  - week5
+  - traces
+counts:
+  week1: 24
+  week2: 24
+  week3: 24
+  week4: 5
+  week5: 60
+  traces: 36
+violations:
+  - system: week1
+    type: empty_code_refs
+    field: code_refs
+    mode: first_record
+  - system: week3
+    type: invalid_entity_refs
+    field: extracted_facts.entity_refs
+    mode: first_record
+  - system: week5
+    type: payload_schema_mismatch
+    field: payload
+    mode: first_record
+  - system: traces
+    type: total_tokens_mismatch
+    field: total_tokens
+    mode: all_records
+

@@ -1,0 +1,13 @@
+{
+  "contract_id": "week3-document-refinery-extractions",
+  "change_type": "numeric_scale_change",
+  "field": "extracted_facts.confidence",
+  "from": "float 0.0-1.0",
+  "to": "int 0-100",
+  "factor": 100,
+  "sample_transform": "x -> x * 100",
+  "target_version": "2.0.0",
+  "notes": [
+    "Simulates a producer changing confidence from unit interval values to integer percentages."
+  ]
+}

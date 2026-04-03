@@ -1,0 +1,24 @@
+adapters:
+  week3-document-refinery-extractions:
+    "2.0.0->1.0.0":
+      - source_version: 2.0.0
+        target_version: 1.0.0
+        type: numeric_scaling
+        field: extracted_facts.confidence
+        factor: 0.01
+        description: Convert percentage confidence back to a 0.0-1.0 scale.
+
+  week5-event-records:
+    "0.9.0->1.0.0":
+      - source_version: 0.9.0
+        target_version: 1.0.0
+        type: field_rename
+        from: event_name
+        to: event_type
+        description: Map legacy event_name to event_type.
+      - source_version: 0.9.0
+        target_version: 1.0.0
+        type: default_value
+        field: schema_version
+        value: "1.0"
+        description: Inject the default event schema version for legacy events.

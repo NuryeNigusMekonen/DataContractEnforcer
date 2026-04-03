@@ -1,0 +1,20 @@
+name: healthy
+seed: 42
+healthy: true
+clear_existing: false
+enabled_simulators:
+  - week1
+  - week2
+  - week3
+  - week4
+  - week5
+  - traces
+counts:
+  week1: 24
+  week2: 24
+  week3: 24
+  week4: 5
+  week5: 60
+  traces: 36
+violations: []
+

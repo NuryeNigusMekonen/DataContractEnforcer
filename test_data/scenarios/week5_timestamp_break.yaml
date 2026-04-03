@@ -1,0 +1,23 @@
+name: week5_timestamp_break
+seed: 42
+healthy: false
+enabled_simulators:
+  - week1
+  - week2
+  - week3
+  - week4
+  - week5
+  - traces
+counts:
+  week1: 24
+  week2: 24
+  week3: 24
+  week4: 5
+  week5: 60
+  traces: 36
+violations:
+  - system: week5
+    type: timestamp_break
+    field: recorded_at
+    mode: first_record
+

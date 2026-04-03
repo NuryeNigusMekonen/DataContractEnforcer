@@ -5,8 +5,19 @@ description = "TRP1 week 7 Data Contract Enforcer"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
+  "flask>=3.0",
+  "flask-cors>=5.0",
+  "anthropic",
+  "gitpython",
   "jsonschema>=4.0",
+  "langsmith",
+  "numpy",
+  "openai",
+  "pandas",
   "pyyaml>=6.0",
+  "scikit-learn",
+  "soda-core",
+  "ydata-profiling",
 ]
 
 [build-system]
