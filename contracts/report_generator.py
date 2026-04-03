@@ -1,10 +1,15 @@
 from __future__ import annotations
 
+import argparse
 import glob
 import json
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
+import textwrap
+
+
+SEVERITY_RANK = {"CRITICAL": 3, "HIGH": 2, "MEDIUM": 1, "LOW": 0}
 
 def compute_health_score(validation_reports: list[dict[str, Any]]) -> int:
     total_checks = sum(int(report.get("total_checks", 0) or len(report.get("results", []))) for report in validation_reports)
@@ -23,18 +28,65 @@ def compute_health_score(validation_reports: list[dict[str, Any]]) -> int:
 
 def plain_language_violation(result: dict[str, Any]) -> str:
     field_name = result.get("field_name") or result.get("column_name") or "unknown field"
+    failing_system = result.get("contract_id") or result.get("system") or result.get("check_id", "unknown system")
     impact_nodes = result.get("blast_radius", {}).get("affected_nodes", [])
     impact = "No downstream nodes were identified."
     if impact_nodes:
         impact = f"Downstream impact reaches {', '.join(str(node) for node in impact_nodes[:3])}."
     return (
-        f"System issue in {result.get('check_id', 'unknown check')}: the {field_name} field "
+        f"System issue in {failing_system} via {result.get('check_id', 'unknown check')}: the {field_name} field "
         f"failed validation with status {result.get('status')}. {impact} "
         f"Affected records: {result.get('records_failing', 'unknown')}."
     )
 
 
-def load_reports(reports_dir: str = "validation_reports") -> list[dict[str, Any]]:
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Generate Data Contract Enforcer report artifacts.")
+    parser.add_argument(
+        "--mode",
+        default="weekly",
+        choices=["weekly", "baseline"],
+        help="weekly uses all reports + violation log; baseline uses clean validation reports only.",
+    )
+    parser.add_argument("--reports-dir", default="validation_reports")
+    parser.add_argument("--violations", default="violation_log/violations.jsonl")
+    parser.add_argument("--output", default="", help="Optional explicit report_data.json output path.")
+    return parser.parse_args()
+
+
+def dedupe_violations(violations: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    deduped: dict[tuple[str, str, str], dict[str, Any]] = {}
+    for violation in violations:
+        check_id = str(violation.get("check_id", ""))
+        field_name = str(violation.get("field_name", violation.get("column_name", "")))
+        status = str(violation.get("status", ""))
+        key = (check_id, field_name, status)
+        current = deduped.get(key)
+        if current is None:
+            deduped[key] = violation
+            continue
+        current_rank = SEVERITY_RANK.get(str(current.get("severity", "LOW")), 0)
+        candidate_rank = SEVERITY_RANK.get(str(violation.get("severity", "LOW")), 0)
+        if candidate_rank > current_rank:
+            deduped[key] = violation
+            continue
+        if candidate_rank == current_rank and int(violation.get("records_failing", 0) or 0) > int(current.get("records_failing", 0) or 0):
+            deduped[key] = violation
+    return list(deduped.values())
+
+
+def load_reports(reports_dir: str = "validation_reports", mode: str = "weekly") -> list[dict[str, Any]]:
+    if mode == "baseline":
+        preferred = [
+            Path(reports_dir) / "clean.json",
+            Path(reports_dir) / "wednesday_baseline.json",
+            Path(reports_dir) / "clean_run.json",
+        ]
+        chosen: list[Path] = [path for path in preferred if path.exists()]
+        if not chosen:
+            chosen = sorted(Path(reports_dir).glob("clean*.json"))
+        reports = [json.loads(path.read_text(encoding="utf-8")) for path in chosen]
+        return [report for report in reports if "results" in report]
     reports = [json.loads(Path(path).read_text(encoding="utf-8")) for path in sorted(glob.glob(f"{reports_dir}/*.json"))]
     return [report for report in reports if "results" in report]
 
@@ -52,11 +104,11 @@ def load_violations(violations_path: str = "violation_log/violations.jsonl") -> 
     return records
 
 
-def load_ai_report(path: str = "validation_reports/ai_extensions.json") -> dict[str, Any]:
-    report_path = Path(path)
-    if not report_path.exists():
+def load_ai_report(reports_dir: str = "validation_reports") -> dict[str, Any]:
+    path = Path(reports_dir) / "ai_extensions.json"
+    if not path.exists():
         return {}
-    return json.loads(report_path.read_text(encoding="utf-8"))
+    return json.loads(path.read_text(encoding="utf-8"))
 
 
 def load_schema_reports(reports_dir: str = "validation_reports") -> list[dict[str, Any]]:
@@ -66,13 +118,35 @@ def load_schema_reports(reports_dir: str = "validation_reports") -> list[dict[st
     return payloads
 
 
+def load_what_if_reports(reports_dir: str = "validation_reports") -> list[dict[str, Any]]:
+    payloads: list[dict[str, Any]] = []
+    for path in sorted(glob.glob(f"{reports_dir}/what_if_*.json")):
+        payload = json.loads(Path(path).read_text(encoding="utf-8"))
+        if "compatibility_verdict" in payload:
+            payloads.append(payload)
+    return payloads
+
+
 def schema_change_summary(schema_reports: list[dict[str, Any]]) -> list[str]:
     summaries: list[str] = []
     for report in schema_reports:
         for change in report.get("changes", []):
+            classification = change.get("compatibility_class", change.get("classification", "unknown"))
             summaries.append(
-                f"{change.get('field_name')}: {change.get('classification')} - {change.get('rationale')}"
+                f"{change.get('field_name')}: {classification} - {change.get('rationale')}"
             )
+    return summaries[:10]
+
+
+def what_if_summary(what_if_reports: list[dict[str, Any]]) -> list[str]:
+    summaries: list[str] = []
+    for report in what_if_reports:
+        proposed = report.get("proposed_change", {})
+        summaries.append(
+            f"{report.get('contract_id')}: {proposed.get('change_type')} on {proposed.get('field')} -> "
+            f"{report.get('compatibility_verdict')} "
+            f"(raw {report.get('raw_changed_status')}, adapter {report.get('adapter_status') or 'N/A'})"
+        )
     return summaries[:10]
 
 
@@ -84,21 +158,40 @@ def recommended_actions(violations: list[dict[str, Any]]) -> list[str]:
             "Review quarantined AI inputs weekly and fix upstream text extraction gaps before they accumulate.",
         ]
     actions: list[str] = []
-    for violation in violations[:3]:
+    seen_actions: set[str] = set()
+    for violation in violations:
         field_name = violation.get("field_name", "unknown field")
+        clause = violation.get("check_id", "unknown clause")
         candidates = violation.get("blame_chain", [])
         if candidates:
             top = candidates[0]
-            actions.append(
-                f"Update {top.get('file_path')} to restore contract compliance for {field_name} and rerun validation."
+            action = (
+                f"Update {top.get('file_path')} to satisfy contract clause {clause} for field {field_name}, then rerun validation."
             )
         else:
-            actions.append(
-                f"Investigate the upstream producer for {field_name} and restore the expected contract shape before downstream use."
+            contract_path = violation.get("contract_path") or "generated contract"
+            action = (
+                f"Inspect {contract_path} and restore contract clause {clause} for field {field_name} before downstream use."
             )
+        if action not in seen_actions:
+            seen_actions.add(action)
+            actions.append(action)
+        if len(actions) >= 3:
+            break
     while len(actions) < 3:
         actions.append("Re-run contract generation and validation after each upstream schema or prompt pipeline change.")
     return actions[:3]
+
+
+def wrap_lines(lines: list[str], width: int = 100) -> list[str]:
+    wrapped: list[str] = []
+    for line in lines:
+        if not line:
+            wrapped.append("")
+            continue
+        chunks = textwrap.wrap(line, width=width, break_long_words=False, break_on_hyphens=False)
+        wrapped.extend(chunks or [""])
+    return wrapped
 
 
 def escape_pdf_text(text: str) -> str:
@@ -162,20 +255,27 @@ def build_pdf_bytes(lines: list[str]) -> bytes:
     return bytes(pdf)
 
 
-def generate_report(reports_dir: str = "validation_reports", violations_path: str = "violation_log/violations.jsonl") -> dict[str, Any]:
-    reports = load_reports(reports_dir)
-    violations = load_violations(violations_path)
-    ai_report = load_ai_report()
-    schema_reports = load_schema_reports(reports_dir)
+def generate_report(
+    reports_dir: str = "validation_reports",
+    violations_path: str = "violation_log/violations.jsonl",
+    mode: str = "weekly",
+) -> dict[str, Any]:
+    reports = load_reports(reports_dir, mode=mode)
+    violations = [] if mode == "baseline" else load_violations(violations_path)
+    ai_report = load_ai_report(reports_dir)
+    schema_reports = [] if mode == "baseline" else load_schema_reports(reports_dir)
+    what_if_reports = [] if mode == "baseline" else load_what_if_reports(reports_dir)
     all_failures = [result for result in violations if result.get("status") in {"FAIL", "ERROR", "WARN"}]
+    unique_failures = dedupe_violations(all_failures)
     top_failures = sorted(
-        all_failures,
-        key=lambda item: ({"CRITICAL": 3, "HIGH": 2, "MEDIUM": 1, "LOW": 0}.get(str(item.get("severity")), 0), item.get("records_failing", 0)),
+        unique_failures,
+        key=lambda item: (SEVERITY_RANK.get(str(item.get("severity")), 0), item.get("records_failing", 0)),
         reverse=True,
     )[:3]
     now = datetime.now(timezone.utc)
     health_score = compute_health_score(reports)
     return {
+        "mode": mode,
         "generated_at": now.replace(microsecond=0).isoformat().replace("+00:00", "Z"),
         "period": f"{(now - timedelta(days=7)).date()} to {now.date()}",
         "data_health_score": health_score,
@@ -191,36 +291,55 @@ def generate_report(reports_dir: str = "validation_reports", violations_path: st
         },
         "violation_count": len(violations),
         "schema_changes_detected": schema_change_summary(schema_reports),
+        "what_if_simulations": what_if_summary(what_if_reports),
         "ai_system_risk_assessment": ai_report,
         "recommendations": recommended_actions(top_failures),
     }
 
 
 def main() -> int:
-    report = generate_report()
-    output_path = Path("enforcer_report/report_data.json")
+    args = parse_args()
+    report = generate_report(reports_dir=args.reports_dir, violations_path=args.violations, mode=args.mode)
+    default_name = "report_data_baseline.json" if args.mode == "baseline" else "report_data.json"
+    output_path = Path(args.output) if args.output else Path("enforcer_report") / default_name
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(json.dumps(report, indent=2), encoding="utf-8")
     report_date = datetime.now(timezone.utc).strftime("%Y%m%d")
-    pdf_path = output_path.parent / f"report_{report_date}.pdf"
+    suffix = "_baseline" if args.mode == "baseline" else ""
+    pdf_path = output_path.parent / f"report_{report_date}{suffix}.pdf"
+    top_violations = report.get("top_violations", [])
+    schema_changes = report.get("schema_changes_detected", [])
+    what_if_changes = report.get("what_if_simulations", [])
+    recommendations = report.get("recommendations", [])
+    ai_payload = report.get("ai_system_risk_assessment", {})
+
+    violation_lines = [f"- {item}" for item in top_violations] if top_violations else ["- None"]
+    schema_lines = [f"- {item}" for item in schema_changes[:5]] if schema_changes else ["- None"]
+    what_if_lines = [f"- {item}" for item in what_if_changes[:5]] if what_if_changes else ["- None"]
+    recommendation_lines = [f"- {item}" for item in recommendations] if recommendations else ["- None"]
+    ai_lines = [json.dumps(ai_payload, sort_keys=True)] if ai_payload else ["None"]
+
     pdf_lines = [
         "Data Contract Enforcer Report",
         f"Generated at: {report['generated_at']}",
         f"Data Health Score: {report['data_health_score']} - {report['health_narrative']}",
         "",
         "Violations This Week:",
-        *[f"- {item}" for item in report.get("top_violations", [])],
+        *violation_lines,
         "",
         "Schema Changes Detected:",
-        *[f"- {item}" for item in report.get("schema_changes_detected", [])[:5]],
+        *schema_lines,
+        "",
+        "What-If Simulations:",
+        *what_if_lines,
         "",
         "AI System Risk Assessment:",
-        json.dumps(report.get("ai_system_risk_assessment", {}), sort_keys=True),
+        *ai_lines,
         "",
         "Recommended Actions:",
-        *[f"- {item}" for item in report.get("recommendations", [])],
+        *recommendation_lines,
     ]
-    pdf_path.write_bytes(build_pdf_bytes(pdf_lines))
+    pdf_path.write_bytes(build_pdf_bytes(wrap_lines(pdf_lines)))
     print(json.dumps({"report": str(output_path), "pdf": str(pdf_path), "health_score": report["data_health_score"]}, indent=2))
     return 0
 
