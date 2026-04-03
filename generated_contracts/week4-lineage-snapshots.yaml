@@ -3,7 +3,7 @@ apiVersion: v3.0.0
 id: week4-lineage-snapshots
 contract_id: week4-lineage-snapshots
 dataset: week4_lineage
-generated_at: '2026-04-01T22:11:46Z'
+generated_at: '2026-04-03T14:39:58Z'
 source_path: outputs/week4/lineage_snapshots.jsonl
 record_count: 1
 info:
@@ -108,4 +108,36 @@ cross_checks:
   field: edges
 lineage:
   upstream: []
-  downstream: []
+  downstream:
+  - id: week7-violation-attributor
+    kind: SUBSCRIBER
+    relationship: CONSUMED_BY
+    hops: 1
+    source: contract_graph
+    via: []
+    relationship_path:
+    - CONSUMED_BY
+    fields_consumed:
+    - nodes.node_id
+    - nodes.metadata.path
+    - edges.source
+    - edges.target
+    - edges.relationship
+    - git_commit
+    breaking_fields:
+    - field: nodes.node_id
+      reason: attribution candidate lookup and graph-node matching depend on node
+        IDs.
+    - field: edges.source
+      reason: blast radius traversal fails if edge source references are removed or
+        renamed.
+    - field: edges.target
+      reason: downstream impact mapping fails if edge target references are invalid.
+    contact: week7-team@local
+    validation_mode: AUDIT
+  graph_seeds: []
+registry:
+  path: contract_registry/subscriptions.yaml
+  subscriber_count: 1
+  subscriber_ids:
+  - week7-violation-attributor

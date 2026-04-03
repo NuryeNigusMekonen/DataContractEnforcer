@@ -1,8 +1,11 @@
 {
-  "report_id": "854689e6-6832-4a7b-8fdb-560d1434143c",
+  "report_id": "d5805e49-cc66-4fe6-a938-7b59b3934203",
   "snapshot_id": "5a25f10bf6abe04ecce62238ba31ac0646d2ccbed2af35ebb4e4ab2b37091d66",
-  "run_timestamp": "2026-04-01T22:11:47Z",
-  "generated_at": "2026-04-01T22:11:47Z",
+  "run_timestamp": "2026-04-03T14:39:59Z",
+  "generated_at": "2026-04-03T14:39:59Z",
+  "mode": "AUDIT",
+  "blocking": false,
+  "overall_status": "PASS",
   "contract_id": "week3-document-refinery-extractions",
   "dataset": "week3_extractions",
   "data_path": "outputs/week3/extractions.jsonl",
@@ -653,12 +656,12 @@
       "status": "PASS",
       "severity": "MEDIUM",
       "expected": {
-        "mean": 0.8392,
-        "stddev": 0.09389623452057519
+        "mean": 0.8516959064327485,
+        "stddev": 0.00985514593353961
       },
       "actual_value": {
         "mean": 0.8516959064327485,
-        "z_score": 0.133
+        "z_score": 0.0
       },
       "records_failing": 0,
       "samples": [],
@@ -672,12 +675,12 @@
       "status": "PASS",
       "severity": "MEDIUM",
       "expected": {
-        "mean": 9.874285714285714,
-        "stddev": 9.69277618662897
+        "mean": 9.005847953216374,
+        "stddev": 6.812868006926727
       },
       "actual_value": {
         "mean": 9.005847953216374,
-        "z_score": 0.09
+        "z_score": 0.0
       },
       "records_failing": 0,
       "samples": [],

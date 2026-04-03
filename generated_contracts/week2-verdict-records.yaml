@@ -3,9 +3,9 @@ apiVersion: v3.0.0
 id: week2-verdict-records
 contract_id: week2-verdict-records
 dataset: week2_verdicts
-generated_at: '2026-04-01T22:11:46Z'
+generated_at: '2026-04-03T14:39:58Z'
 source_path: outputs/week2/verdicts.jsonl
-record_count: 3
+record_count: 10
 info:
   title: Week 2 Verdict Records
   version: 1.0.0
@@ -30,7 +30,11 @@ schema: &id001
     required: true
     format: date-time
     enum:
-    - '2026-03-31T01:13:36Z'
+    - '2026-04-01T21:25:28Z'
+    - '2026-02-27T00:45:46Z'
+    - '2026-02-27T00:48:39Z'
+    - '2026-02-27T00:44:49Z'
+    - '2026-02-27T00:47:19Z'
   overall_score:
     type: number
     required: true
@@ -97,6 +101,7 @@ schema: &id001
     enum:
     - src/nodes/justice.py
     - Chief Justice Synthesis Engine
+    - src/tools
   scores.chief_justice_synthesis.notes:
     type: string
     required: true
@@ -137,6 +142,7 @@ schema: &id001
     enum:
     - src/graph.py
     - Graph Orchestration Architecture
+    - repo_index
   scores.graph_orchestration.notes:
     type: string
     required: true
@@ -251,58 +257,12 @@ schema: &id001
   scores.swarm_visual.notes:
     type: string
     required: true
-    enum:
-    - "Generic box-and-arrow diagram with no indication of parallelism. Or no diagram\
-      \ present at all. Diagram shows linear flow that contradicts the parallel architecture\
-      \ claimed in the report.\n\n## Remediation Plan\nFix lowest scores first.\n\
-      - Report Accuracy (Cross-Reference) score=2\n  Action: Report references files\
-      \ that do not exist. Claims parallel execution but code shows linear flow. Multiple\
-      \ hallucinated paths detected.\n- Judicial Nuance and Dialectics score=3\n \
-      \ Action: Single agent acts as 'The Grader' with no persona separation. Or three\
-      \ judges exist but share 90% of prompt text, producing near-identical outputs.\
-      \ Scores are random or purely praise/criticism without nuance.\n- Theoretical\
-      \ Depth (Documentation) score=3\n  Action: Terms appear only in the executive\
-      \ summary or introduction. No connection to actual implementation. 'We used\
-      \ Dialectical Synthesis' with no explanation of how.\n- Architectural Diagram\
-      \ Analysis score=4\n  Action: Generic box-and-arrow diagram with no indication\
-      \ of parallelism. Or no diagram present at all. Diagram shows linear flow that\
-      \ contradicts the parallel architecture claimed in the report.\n- Git Forensic\
-      \ Analysis score=5\n  Action: Single 'init' commit or bulk upload of all code\
-      \ at once. No iterative development visible. Timestamps clustered within minutes."
-    - "Generic box-and-arrow diagram with no indication of parallelism. Or no diagram\
-      \ present at all. Diagram shows linear flow that contradicts the parallel architecture\
-      \ claimed in the report.\n\n## Remediation Plan\nFix lowest scores first.\n\
-      - State Management Rigor score=2\n  Action: Plain Python dicts used for state.\
-      \ No Pydantic models. No reducers, meaning parallel agents will overwrite each\
-      \ other's data.\n- Graph Orchestration Architecture score=2\n  Action: Purely\
-      \ linear flow (RepoInvestigator -> DocAnalyst -> Judge -> End). No parallel\
-      \ branches. No synchronization node. No conditional edges for error handling.\n\
-      - Structured Output Enforcement score=2\n  Action: Judge nodes call LLMs with\
-      \ plain prompts and parse freeform text responses. No Pydantic validation on\
-      \ output. No retry on parse failure.\n- Chief Justice Synthesis Engine score=2\n\
-      \  Action: ChiefJustice is just another LLM prompt that averages the three judge\
-      \ scores. No hardcoded rules. No dissent summary. Output is console text or\
-      \ unstructured.\n- Report Accuracy (Cross-Reference) score=2\n  Action: Report\
-      \ references files that do not exist. Claims parallel execution but code shows\
-      \ linear flow. Multiple hallucinated paths detected."
-    - 'Rate limit exceeded after 3 retries: Error code: 429 - {''error'': {''message'':
-      ''Rate limit reached for model `llama-3.3-70b-versatile` in organization `org_01kjjp9r1rfmpbcz0a3s4wm48k`
-      service tier `on_demand` on tokens per day (TPD): Limit 100000, Used 99944,
-      Requested 850. Please try again in 11m26.016s. Need more tokens? Upgrade to
-      Dev Tier today at https://console.groq.com/settings/billing'', ''type'': ''tokens'',
-      ''code'': ''rate_limit_exceeded''}}'
   scores.swarm_visual.score:
     type: integer
     required: true
   scores.theoretical_depth.evidence:
     type: string
     required: false
-    enum:
-    - pdf:page=2
-    - pdf:page=3
-    - pdf:page=4
-    - pdf:page=5
-    - pdf:page=8
   scores.theoretical_depth.notes:
     type: string
     required: false
@@ -324,10 +284,6 @@ schema: &id001
     type: string
     required: true
     format: uuid
-    enum:
-    - 157394fc-49ed-5a3f-8e4d-060033416e9c
-    - b0d38319-c2db-5f23-b301-fffe98eaca9e
-    - 846b14d6-d19e-5f0d-a1ee-19d67c78bd48
 fields: *id001
 clauses: []
 quality:
@@ -343,4 +299,33 @@ cross_checks:
   field: rubric_id
 lineage:
   upstream: []
-  downstream: []
+  downstream:
+  - id: week7-ai-contract-extension
+    kind: SUBSCRIBER
+    relationship: CONSUMED_BY
+    hops: 1
+    source: contract_graph
+    via: []
+    relationship_path:
+    - CONSUMED_BY
+    fields_consumed:
+    - verdict_id
+    - scores
+    - overall_verdict
+    - overall_score
+    - confidence
+    - evaluated_at
+    breaking_fields:
+    - field: overall_verdict
+      reason: output schema violation-rate metric depends on stable PASS|FAIL|WARN
+        enum.
+    - field: scores
+      reason: rubric-level score validation fails if nested score structure changes.
+    contact: week7-ai@local
+    validation_mode: AUDIT
+  graph_seeds: []
+registry:
+  path: contract_registry/subscriptions.yaml
+  subscriber_count: 1
+  subscriber_ids:
+  - week7-ai-contract-extension

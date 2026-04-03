@@ -3,9 +3,9 @@ apiVersion: v3.0.0
 id: week1-intent-records
 contract_id: week1-intent-records
 dataset: week1_intents
-generated_at: '2026-04-01T22:11:46Z'
+generated_at: '2026-04-03T14:39:57Z'
 source_path: outputs/week1/intent_records.jsonl
-record_count: 4
+record_count: 20
 info:
   title: Week 1 Intent Records
   version: 1.0.0
@@ -37,47 +37,20 @@ schema: &id001
   code_refs.symbol:
     type: string
     required: true
-    enum:
-    - Build Weather API
-    - Refactor Trace Writer
-    - Agent Trace ledger Phase 3
-    - Parallel Orchestration and Optimistic Locking
   created_at:
     type: string
     required: true
     format: date-time
-    enum:
-    - '2026-02-18T09:00:00Z'
-    - '2026-02-18T09:05:00Z'
-    - '2026-02-18T11:00:00Z'
-    - '2026-02-19T18:30:00Z'
   description:
     type: string
     required: true
-    enum:
-    - Add a /forecast endpoint and unit tests.
-    - Improve trace writer performance without schema change.
-    - Append deterministic mutation ledger records for successful write-like tool
-      calls.
-    - Prevent stale writes and append lessons on verification failures.
   governance_tags:
     type: string
     required: true
-    enum:
-    - week1
-    - intent-traceability
-    - completed
-    - trace-backed
-    - in_progress
   intent_id:
     type: string
     required: true
     format: uuid
-    enum:
-    - 5e99b93d-7c6c-4c1d-9b47-e08c890afcf3
-    - 66febdab-f37d-4d3f-9d88-f0199bff33dc
-    - 67ac29ec-106e-493c-b5ea-922796206bed
-    - d5aa5b70-5559-486d-861c-6bebbed7b1a9
 fields: *id001
 clauses: []
 quality:
@@ -87,4 +60,68 @@ quality:
 cross_checks: []
 lineage:
   upstream: []
-  downstream: []
+  downstream:
+  - id: week2-digital-courtroom
+    kind: SUBSCRIBER
+    relationship: CONSUMED_BY
+    hops: 1
+    source: contract_graph
+    via: []
+    relationship_path:
+    - CONSUMED_BY
+    fields_consumed:
+    - code_refs.file
+    - code_refs.line_start
+    - code_refs.line_end
+    - code_refs.symbol
+    - intent_id
+    breaking_fields:
+    - field: code_refs.file
+      reason: verdict target mapping fails when source file paths are missing or renamed.
+    - field: intent_id
+      reason: intent-level traceability joins fail without stable identifiers.
+    contact: week2-team@local
+    validation_mode: AUDIT
+  - id: week2-verdict-records
+    kind: CONTRACT
+    relationship: PUBLISHES
+    hops: 2
+    source: contract_graph
+    via:
+    - week2-digital-courtroom
+    relationship_path:
+    - CONSUMED_BY
+    - PUBLISHES
+  - id: week7-ai-contract-extension
+    kind: SUBSCRIBER
+    relationship: CONSUMED_BY
+    hops: 3
+    source: contract_graph
+    via:
+    - week2-digital-courtroom
+    - week2-verdict-records
+    relationship_path:
+    - CONSUMED_BY
+    - PUBLISHES
+    - CONSUMED_BY
+    fields_consumed:
+    - verdict_id
+    - scores
+    - overall_verdict
+    - overall_score
+    - confidence
+    - evaluated_at
+    breaking_fields:
+    - field: overall_verdict
+      reason: output schema violation-rate metric depends on stable PASS|FAIL|WARN
+        enum.
+    - field: scores
+      reason: rubric-level score validation fails if nested score structure changes.
+    contact: week7-ai@local
+    validation_mode: AUDIT
+  graph_seeds: []
+registry:
+  path: contract_registry/subscriptions.yaml
+  subscriber_count: 1
+  subscriber_ids:
+  - week2-digital-courtroom

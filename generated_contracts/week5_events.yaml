@@ -3,7 +3,7 @@ apiVersion: v3.0.0
 id: week5-event-records
 contract_id: week5-event-records
 dataset: week5_events
-generated_at: '2026-04-01T22:11:46Z'
+generated_at: '2026-04-03T14:39:58Z'
 source_path: outputs/week5/events.jsonl
 record_count: 1847
 info:
@@ -828,4 +828,36 @@ cross_checks:
   field: payload
 lineage:
   upstream: []
-  downstream: []
+  downstream:
+  - id: week7-validation-runner
+    kind: SUBSCRIBER
+    relationship: CONSUMED_BY
+    hops: 1
+    source: contract_graph
+    via: []
+    relationship_path:
+    - CONSUMED_BY
+    fields_consumed:
+    - event_id
+    - event_type
+    - aggregate_id
+    - sequence_number
+    - payload
+    - occurred_at
+    - recorded_at
+    breaking_fields:
+    - field: event_type
+      reason: event schema routing and registry lookups break if event type format
+        changes.
+    - field: sequence_number
+      reason: monotonic consistency checks fail on duplicates or gaps.
+    - field: recorded_at
+      reason: temporal integrity checks fail when recorded_at is missing or malformed.
+    contact: week7-team@local
+    validation_mode: AUDIT
+  graph_seeds: []
+registry:
+  path: contract_registry/subscriptions.yaml
+  subscriber_count: 1
+  subscriber_ids:
+  - week7-validation-runner

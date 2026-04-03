@@ -1,19 +1,22 @@
 {
-  "report_id": "b0ede607-dd13-48a4-939b-9f88c028ddf3",
-  "snapshot_id": "85c4f924641f06705da13d068c8ab9034fb67819f41f9d920624f8558d1b29c2",
-  "run_timestamp": "2026-04-01T22:11:47Z",
-  "generated_at": "2026-04-01T22:11:47Z",
+  "report_id": "dd3f786b-4704-4ebe-a9a1-0bdc9891925d",
+  "snapshot_id": "dc8c44b0037f7c474f8b883e246572dd12251de88b4a193e6179866a8a8222bb",
+  "run_timestamp": "2026-04-03T14:39:59Z",
+  "generated_at": "2026-04-03T14:39:59Z",
+  "mode": "AUDIT",
+  "blocking": false,
+  "overall_status": "PASS",
   "contract_id": "week2-verdict-records",
   "dataset": "week2_verdicts",
   "data_path": "outputs/week2/verdicts.jsonl",
-  "record_count": 3,
-  "total_checks": 126,
-  "passed": 126,
+  "record_count": 10,
+  "total_checks": 123,
+  "passed": 123,
   "failed": 0,
   "warned": 0,
   "errored": 0,
   "summary": {
-    "PASS": 126,
+    "PASS": 123,
     "WARN": 0,
     "FAIL": 0,
     "ERROR": 0
@@ -97,7 +100,11 @@
       "status": "PASS",
       "severity": "HIGH",
       "expected": [
-        "2026-03-31T01:13:36Z"
+        "2026-04-01T21:25:28Z",
+        "2026-02-27T00:45:46Z",
+        "2026-02-27T00:48:39Z",
+        "2026-02-27T00:44:49Z",
+        "2026-02-27T00:47:19Z"
       ],
       "actual_value": "all conforming",
       "records_failing": 0,
@@ -486,7 +493,8 @@
       "severity": "HIGH",
       "expected": [
         "src/nodes/justice.py",
-        "Chief Justice Synthesis Engine"
+        "Chief Justice Synthesis Engine",
+        "src/tools"
       ],
       "actual_value": "all conforming",
       "records_failing": 0,
@@ -707,7 +715,8 @@
       "severity": "HIGH",
       "expected": [
         "src/graph.py",
-        "Graph Orchestration Architecture"
+        "Graph Orchestration Architecture",
+        "repo_index"
       ],
       "actual_value": "all conforming",
       "records_failing": 0,
@@ -1330,23 +1339,6 @@
       "message": "Observed type must match contract type."
     },
     {
-      "check_id": "scores.swarm_visual.notes.enum",
-      "check_type": "enum",
-      "column_name": "scores.swarm_visual.notes",
-      "status": "PASS",
-      "severity": "HIGH",
-      "expected": [
-        "Generic box-and-arrow diagram with no indication of parallelism. Or no diagram present at all. Diagram shows linear flow that contradicts the parallel architecture claimed in the report.\n\n## Remediation Plan\nFix lowest scores first.\n- Report Accuracy (Cross-Reference) score=2\n  Action: Report references files that do not exist. Claims parallel execution but code shows linear flow. Multiple hallucinated paths detected.\n- Judicial Nuance and Dialectics score=3\n  Action: Single agent acts as 'The Grader' with no persona separation. Or three judges exist but share 90% of prompt text, producing near-identical outputs. Scores are random or purely praise/criticism without nuance.\n- Theoretical Depth (Documentation) score=3\n  Action: Terms appear only in the executive summary or introduction. No connection to actual implementation. 'We used Dialectical Synthesis' with no explanation of how.\n- Architectural Diagram Analysis score=4\n  Action: Generic box-and-arrow diagram with no indication of parallelism. Or no diagram present at all. Diagram shows linear flow that contradicts the parallel architecture claimed in the report.\n- Git Forensic Analysis score=5\n  Action: Single 'init' commit or bulk upload of all code at once. No iterative development visible. Timestamps clustered within minutes.",
-        "Generic box-and-arrow diagram with no indication of parallelism. Or no diagram present at all. Diagram shows linear flow that contradicts the parallel architecture claimed in the report.\n\n## Remediation Plan\nFix lowest scores first.\n- State Management Rigor score=2\n  Action: Plain Python dicts used for state. No Pydantic models. No reducers, meaning parallel agents will overwrite each other's data.\n- Graph Orchestration Architecture score=2\n  Action: Purely linear flow (RepoInvestigator -> DocAnalyst -> Judge -> End). No parallel branches. No synchronization node. No conditional edges for error handling.\n- Structured Output Enforcement score=2\n  Action: Judge nodes call LLMs with plain prompts and parse freeform text responses. No Pydantic validation on output. No retry on parse failure.\n- Chief Justice Synthesis Engine score=2\n  Action: ChiefJustice is just another LLM prompt that averages the three judge scores. No hardcoded rules. No dissent summary. Output is console text or unstructured.\n- Report Accuracy (Cross-Reference) score=2\n  Action: Report references files that do not exist. Claims parallel execution but code shows linear flow. Multiple hallucinated paths detected.",
-        "Rate limit exceeded after 3 retries: Error code: 429 - {'error': {'message': 'Rate limit reached for model `llama-3.3-70b-versatile` in organization `org_01kjjp9r1rfmpbcz0a3s4wm48k` service tier `on_demand` on tokens per day (TPD): Limit 100000, Used 99944, Requested 850. Please try again in 11m26.016s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}"
-      ],
-      "actual_value": "all conforming",
-      "records_failing": 0,
-      "samples": [],
-      "sample_failing": [],
-      "message": "Enum values must match the contract."
-    },
-    {
       "check_id": "scores.swarm_visual.score.required",
       "check_type": "required",
       "column_name": "scores.swarm_visual.score",
@@ -1384,25 +1376,6 @@
       "samples": [],
       "sample_failing": [],
       "message": "Observed type must match contract type."
-    },
-    {
-      "check_id": "scores.theoretical_depth.evidence.enum",
-      "check_type": "enum",
-      "column_name": "scores.theoretical_depth.evidence",
-      "status": "PASS",
-      "severity": "HIGH",
-      "expected": [
-        "pdf:page=2",
-        "pdf:page=3",
-        "pdf:page=4",
-        "pdf:page=5",
-        "pdf:page=8"
-      ],
-      "actual_value": "all conforming",
-      "records_failing": 0,
-      "samples": [],
-      "sample_failing": [],
-      "message": "Enum values must match the contract."
     },
     {
       "check_id": "scores.theoretical_depth.notes.type",
@@ -1515,23 +1488,6 @@
       "message": "Observed type must match contract type."
     },
     {
-      "check_id": "verdict_id.enum",
-      "check_type": "enum",
-      "column_name": "verdict_id",
-      "status": "PASS",
-      "severity": "HIGH",
-      "expected": [
-        "157394fc-49ed-5a3f-8e4d-060033416e9c",
-        "b0d38319-c2db-5f23-b301-fffe98eaca9e",
-        "846b14d6-d19e-5f0d-a1ee-19d67c78bd48"
-      ],
-      "actual_value": "all conforming",
-      "records_failing": 0,
-      "samples": [],
-      "sample_failing": [],
-      "message": "Enum values must match the contract."
-    },
-    {
       "check_id": "verdict_id.format",
       "check_type": "format",
       "column_name": "verdict_id",
@@ -1577,11 +1533,11 @@
       "status": "PASS",
       "severity": "MEDIUM",
       "expected": {
-        "mean": 0.9199999999999999,
-        "stddev": 0.032659863237109024
+        "mean": 0.93,
+        "stddev": 0.032557641192199394
       },
       "actual_value": {
-        "mean": 0.9199999999999999,
+        "mean": 0.93,
         "z_score": 0.0
       },
       "records_failing": 0,
@@ -1596,11 +1552,11 @@
       "status": "PASS",
       "severity": "MEDIUM",
       "expected": {
-        "mean": 3.033333333333333,
-        "stddev": 0.9392668535736916
+        "mean": 3.19,
+        "stddev": 0.67446274915669
       },
       "actual_value": {
-        "mean": 3.033333333333333,
+        "mean": 3.19,
         "z_score": 0.0
       },
       "records_failing": 0,
@@ -1653,11 +1609,11 @@
       "status": "PASS",
       "severity": "MEDIUM",
       "expected": {
-        "mean": 3.3333333333333335,
-        "stddev": 1.247219128924647
+        "mean": 2.7,
+        "stddev": 1.1874342087037917
       },
       "actual_value": {
-        "mean": 3.3333333333333335,
+        "mean": 2.7,
         "z_score": 0.0
       },
       "records_failing": 0,
@@ -1672,11 +1628,11 @@
       "status": "PASS",
       "severity": "MEDIUM",
       "expected": {
-        "mean": 3.0,
-        "stddev": 1.632993161855452
+        "mean": 4.1,
+        "stddev": 1.3
       },
       "actual_value": {
-        "mean": 3.0,
+        "mean": 4.1,
         "z_score": 0.0
       },
       "records_failing": 0,
@@ -1691,11 +1647,11 @@
       "status": "PASS",
       "severity": "MEDIUM",
       "expected": {
-        "mean": 2.6666666666666665,
-        "stddev": 1.699673171197595
+        "mean": 3.4,
+        "stddev": 1.624807680927192
       },
       "actual_value": {
-        "mean": 2.6666666666666665,
+        "mean": 3.4,
         "z_score": 0.0
       },
       "records_failing": 0,
@@ -1710,11 +1666,11 @@
       "status": "PASS",
       "severity": "MEDIUM",
       "expected": {
-        "mean": 3.6666666666666665,
-        "stddev": 0.9428090415820634
+        "mean": 3.8,
+        "stddev": 1.2489995996796797
       },
       "actual_value": {
-        "mean": 3.6666666666666665,
+        "mean": 3.8,
         "z_score": 0.0
       },
       "records_failing": 0,
@@ -1748,11 +1704,11 @@
       "status": "PASS",
       "severity": "MEDIUM",
       "expected": {
-        "mean": 3.6666666666666665,
-        "stddev": 1.8856180831641267
+        "mean": 3.8,
+        "stddev": 1.5362291495737217
       },
       "actual_value": {
-        "mean": 3.6666666666666665,
+        "mean": 3.8,
         "z_score": 0.0
       },
       "records_failing": 0,
@@ -1767,11 +1723,11 @@
       "status": "PASS",
       "severity": "MEDIUM",
       "expected": {
-        "mean": 2.6666666666666665,
-        "stddev": 1.699673171197595
+        "mean": 2.9,
+        "stddev": 1.7578395831246945
       },
       "actual_value": {
-        "mean": 2.6666666666666665,
+        "mean": 2.9,
         "z_score": 0.0
       },
       "records_failing": 0,
@@ -1786,11 +1742,11 @@
       "status": "PASS",
       "severity": "MEDIUM",
       "expected": {
-        "mean": 2.6666666666666665,
-        "stddev": 1.699673171197595
+        "mean": 3.5,
+        "stddev": 1.284523257866513
       },
       "actual_value": {
-        "mean": 2.6666666666666665,
+        "mean": 3.5,
         "z_score": 0.0
       },
       "records_failing": 0,
@@ -1805,11 +1761,11 @@
       "status": "PASS",
       "severity": "MEDIUM",
       "expected": {
-        "mean": 3.3333333333333335,
-        "stddev": 0.9428090415820634
+        "mean": 3.0,
+        "stddev": 1.0
       },
       "actual_value": {
-        "mean": 3.3333333333333335,
+        "mean": 3.0,
         "z_score": 0.0
       },
       "records_failing": 0,
@@ -1824,11 +1780,11 @@
       "status": "PASS",
       "severity": "MEDIUM",
       "expected": {
-        "mean": 3.0,
-        "stddev": 0.0
+        "mean": 2.5555555555555554,
+        "stddev": 0.4969039949999533
       },
       "actual_value": {
-        "mean": 3.0,
+        "mean": 2.5555555555555554,
         "z_score": 0.0
       },
       "records_failing": 0,

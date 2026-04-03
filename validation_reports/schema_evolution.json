@@ -1,9 +1,9 @@
 {
-  "generated_at": "2026-04-01T22:11:50Z",
+  "generated_at": "2026-04-03T14:40:02Z",
   "contract_id": "week3-document-refinery-extractions",
   "status": "OK",
-  "old_snapshot": "schema_snapshots/week3-document-refinery-extractions/20260401T221146Z.yaml",
-  "new_snapshot": "schema_snapshots/week3-document-refinery-extractions/20260401T221150Z.yaml",
+  "old_snapshot": "schema_snapshots/week3-document-refinery-extractions/20260403T143958Z.yaml",
+  "new_snapshot": "schema_snapshots/week3-document-refinery-extractions/20260403T144002Z.yaml",
   "compatibility_verdict": "BREAKING",
   "migration_checklist": [
     "Notify downstream owners named in the lineage downstream section before release.",
@@ -15,7 +15,7 @@
     "Replay validation on the last known-good dataset snapshot.",
     "Pause downstream consumption until the restored contract passes clean validation."
   ],
-  "migration_impact_report": "validation_reports/migration_impact_week3-document-refinery-extractions_20260401T221150Z.json",
+  "migration_impact_report": "validation_reports/migration_impact_week3-document-refinery-extractions_20260403T144002Z.json",
   "changes": [
     {
       "field_name": "doc_id",

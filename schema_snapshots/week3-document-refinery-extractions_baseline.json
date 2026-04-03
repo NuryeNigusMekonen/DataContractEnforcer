@@ -1,13 +1,13 @@
 {
-  "written_at": "2026-04-01T00:00:00Z",
+  "written_at": "2026-04-02T12:09:31Z",
   "columns": {
     "extracted_facts.confidence": {
-      "mean": 0.8392,
-      "stddev": 0.09389623452057519
+      "mean": 0.8516959064327485,
+      "stddev": 0.00985514593353961
     },
     "extracted_facts.page_ref": {
-      "mean": 9.874285714285714,
-      "stddev": 9.69277618662897
+      "mean": 9.005847953216374,
+      "stddev": 6.812868006926727
     },
     "processing_time_ms": {
       "mean": 21678.64,

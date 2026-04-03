@@ -1,20 +1,21 @@
 {
-  "generated_at": "2026-04-01T22:11:50Z",
-  "period": "2026-03-25 to 2026-04-01",
-  "data_health_score": 39,
-  "health_narrative": "Health score dropped to 39/100 due to actionable contract failures.",
+  "mode": "weekly",
+  "generated_at": "2026-04-03T14:40:03Z",
+  "period": "2026-03-27 to 2026-04-03",
+  "data_health_score": 60,
+  "health_narrative": "Health score dropped to 60/100 due to actionable contract failures.",
   "top_violations": [
-    "System issue in extracted_facts.confidence.range: the extracted_facts.confidence field failed validation with status FAIL. No downstream nodes were identified. Affected records: 350.",
-    "System issue in extracted_facts.confidence.range: the extracted_facts.confidence field failed validation with status FAIL. No downstream nodes were identified. Affected records: 342.",
-    "System issue in week3.confidence_unit_scale: the extracted_facts.confidence field failed validation with status FAIL. No downstream nodes were identified. Affected records: 342."
+    "System issue in week3.confidence_unit_scale: the extracted_facts.confidence field failed validation with status FAIL. Downstream impact reaches week4-brownfield-cartographer, week4-lineage-snapshots, week7-violation-attributor. Affected records: 342.",
+    "System issue in ai.prompt_input_validation: the content_preview field failed validation with status WARN. Downstream impact reaches week3-document-refinery, week7-ai-contract-extension. Affected records: 9.",
+    "System issue in extracted_facts.confidence.drift: the extracted_facts.confidence field failed validation with status FAIL. Downstream impact reaches week4-brownfield-cartographer, week4-lineage-snapshots, week7-violation-attributor. Affected records: 1."
   ],
   "total_violations_by_severity": {
-    "CRITICAL": 5,
+    "CRITICAL": 1,
     "HIGH": 0,
-    "MEDIUM": 5,
+    "MEDIUM": 2,
     "LOW": 0
   },
-  "violation_count": 10,
+  "violation_count": 3,
   "schema_changes_detected": [
     "doc_id: COMPATIBLE - doc_id: no material change",
     "entities: COMPATIBLE - entities: no material change",
@@ -28,13 +29,12 @@
     "extracted_facts.text: COMPATIBLE - extracted_facts.text: no material change"
   ],
   "ai_system_risk_assessment": {
-    "generated_at": "2026-04-01T22:11:50Z",
+    "generated_at": "2026-04-03T14:40:03Z",
     "mode": "all",
     "embedding_drift": {
-      "status": "PASS",
-      "drift_score": 0.0051,
-      "threshold": 0.15,
-      "interpretation": "semantic content stable"
+      "status": "BASELINE_SET",
+      "drift_score": 0.0,
+      "threshold": 0.15
     },
     "prompt_input_validation": {
       "status": "WARN",
@@ -43,7 +43,7 @@
     },
     "llm_output_schema_rate": {
       "status": "PASS",
-      "total_outputs": 3,
+      "total_outputs": 10,
       "schema_violations": 0,
       "violation_rate": 0.0,
       "trend": "stable",
@@ -52,7 +52,7 @@
   },
   "recommendations": [
     "Update create_violation.py to restore contract compliance for extracted_facts.confidence and rerun validation.",
-    "Update create_violation.py to restore contract compliance for extracted_facts.confidence and rerun validation.",
-    "Update create_violation.py to restore contract compliance for extracted_facts.confidence and rerun validation."
+    "Update artifacts/week3/outputs/extractions.jsonl to restore contract compliance for content_preview and rerun validation.",
+    "Re-run contract generation and validation after each upstream schema or prompt pipeline change."
   ]
 }

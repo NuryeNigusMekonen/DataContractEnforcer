@@ -1,11 +1,10 @@
 {
-  "generated_at": "2026-04-01T22:11:50Z",
+  "generated_at": "2026-04-03T14:40:03Z",
   "mode": "all",
   "embedding_drift": {
-    "status": "PASS",
-    "drift_score": 0.0051,
-    "threshold": 0.15,
-    "interpretation": "semantic content stable"
+    "status": "BASELINE_SET",
+    "drift_score": 0.0,
+    "threshold": 0.15
   },
   "prompt_input_validation": {
     "status": "WARN",
@@ -14,7 +13,7 @@
   },
   "llm_output_schema_rate": {
     "status": "PASS",
-    "total_outputs": 3,
+    "total_outputs": 10,
     "schema_violations": 0,
     "violation_rate": 0.0,
     "trend": "stable",

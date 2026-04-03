@@ -11,52 +11,674 @@ models:
     data_type: string
   - name: id
     data_type: string
-  - name: inputs.contract
+  - name: inputs.append_result.events.event_id
     data_type: string
-  - name: inputs.contract_id
+  - name: inputs.append_result.events.event_type
     data_type: string
-  - name: inputs.dataset
+  - name: inputs.append_result.events.event_version
+    data_type: int
+  - name: inputs.append_result.events.global_position
+    data_type: int
+  - name: inputs.append_result.events.metadata.actor_id
     data_type: string
-  - name: inputs.doc_batch
+  - name: inputs.append_result.events.metadata.causation_id
+    data_type: string
+  - name: inputs.append_result.events.metadata.correlation_id
+    data_type: string
+  - name: inputs.append_result.events.payload.agent_id
+    data_type: string
+  - name: inputs.append_result.events.payload.analysis_duration_ms
+    data_type: int
+  - name: inputs.append_result.events.payload.application_id
+    data_type: string
+  - name: inputs.append_result.events.payload.assigned_agent_id
+    data_type: string
+  - name: inputs.append_result.events.payload.confidence_score
+    data_type: float
+  - name: inputs.append_result.events.payload.docpkg_stream_id
+    data_type: string
+  - name: inputs.append_result.events.payload.input_data_hash
+    data_type: string
+  - name: inputs.append_result.events.payload.model_version
+    data_type: string
+  - name: inputs.append_result.events.payload.priority
+    data_type: string
+  - name: inputs.append_result.events.payload.recommended_limit_usd
+    data_type: float
+  - name: inputs.append_result.events.payload.regulatory_basis
+    data_type: string
+  - name: inputs.append_result.events.payload.requested_at
+    data_type: string
+  - name: inputs.append_result.events.payload.risk_tier
+    data_type: string
+  - name: inputs.append_result.events.payload.session_id
+    data_type: string
+  - name: inputs.append_result.events.payload.source
+    data_type: string
+  - name: inputs.append_result.events.recorded_at
+    data_type: string
+  - name: inputs.append_result.events.stream_id
+    data_type: string
+  - name: inputs.append_result.events.stream_position
+    data_type: int
+  - name: inputs.append_result.new_stream_version
+    data_type: int
+  - name: inputs.append_result.stream_id
+    data_type: string
+  - name: inputs.arg
+    data_type: string
+  - name: inputs.command.agent_id
+    data_type: string
+  - name: inputs.command.analysis_duration_ms
+    data_type: int
+  - name: inputs.command.anomaly_flags
+    data_type: string
+  - name: inputs.command.applicant_id
+    data_type: string
+  - name: inputs.command.application_id
+    data_type: string
+  - name: inputs.command.auto_orchestrate_lifecycle
+    data_type: boolean
+  - name: inputs.command.causation_id
+    data_type: string
+  - name: inputs.command.confidence_score
+    data_type: float
+  - name: inputs.command.correlation_id
+    data_type: string
+  - name: inputs.command.document_path
+    data_type: string
+  - name: inputs.command.document_paths
+    data_type: string
+  - name: inputs.command.fraud_score
+    data_type: float
+  - name: inputs.command.input_data_hash
+    data_type: string
+  - name: inputs.command.loan_purpose
+    data_type: string
+  - name: inputs.command.model_version
+    data_type: string
+  - name: inputs.command.process_documents_after_submit
+    data_type: boolean
+  - name: inputs.command.recommended_limit_usd
+    data_type: float
+  - name: inputs.command.requested_amount_usd
+    data_type: float
+  - name: inputs.command.risk_tier
+    data_type: string
+  - name: inputs.command.screening_model_version
+    data_type: string
+  - name: inputs.command.session_id
+    data_type: string
+  - name: inputs.command.submission_channel
+    data_type: string
+  - name: inputs.command.submitted_at
+    data_type: string
+  - name: inputs.context_snapshot.credit_analysis.confidence_score
+    data_type: float
+  - name: inputs.context_snapshot.credit_analysis.rationale
+    data_type: string
+  - name: inputs.context_snapshot.credit_analysis.recommended_limit_usd
+    data_type: float
+  - name: inputs.context_snapshot.credit_analysis.risk_tier
+    data_type: string
+  - name: inputs.context_snapshot.credit_plan.model_version
+    data_type: string
+  - name: inputs.context_snapshot.credit_plan.target_output
+    data_type: string
+  - name: inputs.context_snapshot.docpkg_event_count
+    data_type: int
+  - name: inputs.context_snapshot.document_count
+    data_type: int
+  - name: inputs.context_snapshot.existing_loan_events
+    data_type: int
+  - name: inputs.context_snapshot.loan_event_count
+    data_type: int
+  - name: inputs.context_snapshot.prepared_output.agent_id
+    data_type: string
+  - name: inputs.context_snapshot.prepared_output.event_type
+    data_type: string
+  - name: inputs.context_snapshot.prepared_output.has_pre_extracted_evidence
+    data_type: boolean
+  - name: inputs.context_snapshot.prepared_output.session_id
+    data_type: string
+  - name: inputs.context_snapshot.refinery_document_count
+    data_type: int
+  - name: inputs.context_snapshot.refinery_plan.document_count
+    data_type: int
+  - name: inputs.context_snapshot.refinery_plan.enabled
+    data_type: boolean
+  - name: inputs.context_snapshot.refinery_quality_assessment
+    data_type: string
+  - name: inputs.context_snapshot.refinery_strategies
+    data_type: string
+  - name: inputs.correlation_id
+    data_type: string
+  - name: inputs.direction
     data_type: string
   - name: inputs.doc_id
     data_type: string
-  - name: inputs.fact_count
+  - name: inputs.document_paths
+    data_type: string
+  - name: inputs.error
+    data_type: string
+  - name: inputs.evidence
+    data_type: string
+  - name: inputs.hits.bounding_box
+    data_type: float
+  - name: inputs.hits.chunk_type
+    data_type: string
+  - name: inputs.hits.content
+    data_type: string
+  - name: inputs.hits.content_hash
+    data_type: string
+  - name: inputs.hits.ldu_id
+    data_type: string
+  - name: inputs.hits.page_refs.bbox
+    data_type: float
+  - name: inputs.hits.page_refs.content_hash
+    data_type: string
+  - name: inputs.hits.page_refs.doc_name
+    data_type: string
+  - name: inputs.hits.page_refs.page_number
     data_type: int
-  - name: inputs.facts
+  - name: inputs.hits.page_refs.ref_type
+    data_type: string
+  - name: inputs.hits.page_refs.section_path
+    data_type: string
+  - name: inputs.hits.parent_section
+    data_type: string
+  - name: inputs.hits.parent_section_path
+    data_type: string
+  - name: inputs.hits.provenance_chain.chain_type
+    data_type: string
+  - name: inputs.hits.provenance_chain.steps.bbox
+    data_type: float
+  - name: inputs.hits.provenance_chain.steps.content_hash
+    data_type: string
+  - name: inputs.hits.provenance_chain.steps.doc_name
+    data_type: string
+  - name: inputs.hits.provenance_chain.steps.page_number
     data_type: int
-  - name: inputs.report
+  - name: inputs.hits.provenance_chain.steps.ref_type
     data_type: string
-  - name: inputs.reports_dir
+  - name: inputs.hits.provenance_chain.steps.section_path
     data_type: string
-  - name: inputs.strategy
+  - name: inputs.hits.relationships
     data_type: string
-  - name: inputs.violations
+  - name: inputs.hits.structured_payload.headers
+    data_type: string
+  - name: inputs.hits.structured_payload.rows
+    data_type: string
+  - name: inputs.hits.token_count
+    data_type: int
+  - name: inputs.judicial_verdict
+    data_type: string
+  - name: inputs.metrics.total_cost_usd
+    data_type: float
+  - name: inputs.metrics.total_llm_calls
+    data_type: int
+  - name: inputs.metrics.total_nodes_executed
+    data_type: int
+  - name: inputs.metrics.total_tokens_used
+    data_type: int
+  - name: inputs.navigation_sections
+    data_type: string
+  - name: inputs.pre_extracted_evidence./tmp/pytest-of-nurye/pytest-0/test_submit_workflow_uses_refi0/company-a.txt.extraction_context.strategy_used
+    data_type: string
+  - name: inputs.pre_extracted_evidence./tmp/pytest-of-nurye/pytest-0/test_submit_workflow_uses_refi0/company-a.txt.facts.ebitda
+    data_type: string
+  - name: inputs.pre_extracted_evidence./tmp/pytest-of-nurye/pytest-0/test_submit_workflow_uses_refi0/company-a.txt.facts.net_income
+    data_type: float
+  - name: inputs.pre_extracted_evidence./tmp/pytest-of-nurye/pytest-0/test_submit_workflow_uses_refi0/company-a.txt.facts.total_assets
+    data_type: float
+  - name: inputs.pre_extracted_evidence./tmp/pytest-of-nurye/pytest-0/test_submit_workflow_uses_refi0/company-a.txt.facts.total_liabilities
+    data_type: string
+  - name: inputs.pre_extracted_evidence./tmp/pytest-of-nurye/pytest-0/test_submit_workflow_uses_refi0/company-a.txt.facts.total_revenue
+    data_type: float
+  - name: inputs.question
+    data_type: string
+  - name: inputs.result
+    data_type: string
+  - name: inputs.route
+    data_type: string
+  - name: inputs.semantic_query
+    data_type: string
+  - name: inputs.tool
+    data_type: string
+  - name: inputs.tool_trace
+    data_type: string
+  - name: inputs.used_section_scope
+    data_type: boolean
+  - name: inputs.writer
     data_type: string
   - name: name
     data_type: string
-  - name: outputs.candidates
-    data_type: int
-  - name: outputs.changes
-    data_type: int
-  - name: outputs.checks
-    data_type: int
-  - name: outputs.chunks
-    data_type: int
-  - name: outputs.citations
-    data_type: int
-  - name: outputs.documents
-    data_type: int
-  - name: outputs.facts
-    data_type: int
-  - name: outputs.missing_refs
-    data_type: int
-  - name: outputs.report
+  - name: outputs.answer
     data_type: string
-  - name: outputs.status
+  - name: outputs.append_result.events.event_id
     data_type: string
-  - name: outputs.vectors
+  - name: outputs.append_result.events.event_type
+    data_type: string
+  - name: outputs.append_result.events.event_version
     data_type: int
+  - name: outputs.append_result.events.global_position
+    data_type: int
+  - name: outputs.append_result.events.metadata.actor_id
+    data_type: string
+  - name: outputs.append_result.events.metadata.causation_id
+    data_type: string
+  - name: outputs.append_result.events.metadata.correlation_id
+    data_type: string
+  - name: outputs.append_result.events.payload.agent_id
+    data_type: string
+  - name: outputs.append_result.events.payload.analysis_duration_ms
+    data_type: int
+  - name: outputs.append_result.events.payload.application_id
+    data_type: string
+  - name: outputs.append_result.events.payload.assigned_agent_id
+    data_type: string
+  - name: outputs.append_result.events.payload.confidence_score
+    data_type: float
+  - name: outputs.append_result.events.payload.docpkg_stream_id
+    data_type: string
+  - name: outputs.append_result.events.payload.input_data_hash
+    data_type: string
+  - name: outputs.append_result.events.payload.model_version
+    data_type: string
+  - name: outputs.append_result.events.payload.priority
+    data_type: string
+  - name: outputs.append_result.events.payload.recommended_limit_usd
+    data_type: float
+  - name: outputs.append_result.events.payload.regulatory_basis
+    data_type: string
+  - name: outputs.append_result.events.payload.requested_at
+    data_type: string
+  - name: outputs.append_result.events.payload.risk_tier
+    data_type: string
+  - name: outputs.append_result.events.payload.session_id
+    data_type: string
+  - name: outputs.append_result.events.payload.source
+    data_type: string
+  - name: outputs.append_result.events.recorded_at
+    data_type: string
+  - name: outputs.append_result.events.stream_id
+    data_type: string
+  - name: outputs.append_result.events.stream_position
+    data_type: int
+  - name: outputs.append_result.new_stream_version
+    data_type: int
+  - name: outputs.append_result.stream_id
+    data_type: string
+  - name: outputs.arg
+    data_type: string
+  - name: outputs.command.agent_id
+    data_type: string
+  - name: outputs.command.analysis_duration_ms
+    data_type: int
+  - name: outputs.command.anomaly_flags
+    data_type: string
+  - name: outputs.command.applicant_id
+    data_type: string
+  - name: outputs.command.application_id
+    data_type: string
+  - name: outputs.command.auto_orchestrate_lifecycle
+    data_type: boolean
+  - name: outputs.command.causation_id
+    data_type: string
+  - name: outputs.command.confidence_score
+    data_type: float
+  - name: outputs.command.correlation_id
+    data_type: string
+  - name: outputs.command.document_path
+    data_type: string
+  - name: outputs.command.document_paths
+    data_type: string
+  - name: outputs.command.fraud_score
+    data_type: float
+  - name: outputs.command.input_data_hash
+    data_type: string
+  - name: outputs.command.loan_purpose
+    data_type: string
+  - name: outputs.command.model_version
+    data_type: string
+  - name: outputs.command.process_documents_after_submit
+    data_type: boolean
+  - name: outputs.command.recommended_limit_usd
+    data_type: float
+  - name: outputs.command.requested_amount_usd
+    data_type: float
+  - name: outputs.command.risk_tier
+    data_type: string
+  - name: outputs.command.screening_model_version
+    data_type: string
+  - name: outputs.command.session_id
+    data_type: string
+  - name: outputs.command.submission_channel
+    data_type: string
+  - name: outputs.command.submitted_at
+    data_type: string
+  - name: outputs.confidence
+    data_type: float
+  - name: outputs.context_snapshot.credit_analysis.confidence_score
+    data_type: float
+  - name: outputs.context_snapshot.credit_analysis.rationale
+    data_type: string
+  - name: outputs.context_snapshot.credit_analysis.recommended_limit_usd
+    data_type: float
+  - name: outputs.context_snapshot.credit_analysis.risk_tier
+    data_type: string
+  - name: outputs.context_snapshot.credit_plan.model_version
+    data_type: string
+  - name: outputs.context_snapshot.credit_plan.target_output
+    data_type: string
+  - name: outputs.context_snapshot.docpkg_event_count
+    data_type: int
+  - name: outputs.context_snapshot.document_count
+    data_type: int
+  - name: outputs.context_snapshot.existing_loan_events
+    data_type: int
+  - name: outputs.context_snapshot.loan_event_count
+    data_type: int
+  - name: outputs.context_snapshot.prepared_output.agent_id
+    data_type: string
+  - name: outputs.context_snapshot.prepared_output.event_type
+    data_type: string
+  - name: outputs.context_snapshot.prepared_output.has_pre_extracted_evidence
+    data_type: boolean
+  - name: outputs.context_snapshot.prepared_output.session_id
+    data_type: string
+  - name: outputs.context_snapshot.refinery_document_count
+    data_type: int
+  - name: outputs.context_snapshot.refinery_plan.document_count
+    data_type: int
+  - name: outputs.context_snapshot.refinery_plan.enabled
+    data_type: boolean
+  - name: outputs.context_snapshot.refinery_quality_assessment
+    data_type: string
+  - name: outputs.context_snapshot.refinery_strategies
+    data_type: string
+  - name: outputs.correlation_id
+    data_type: string
+  - name: outputs.direction
+    data_type: string
+  - name: outputs.doc_id
+    data_type: string
+  - name: outputs.document_paths
+    data_type: string
+  - name: outputs.error
+    data_type: string
+  - name: outputs.evidence
+    data_type: string
+  - name: outputs.evidence.analysis_method
+    data_type: string
+  - name: outputs.evidence.line_range
+    data_type: int
+  - name: outputs.evidence.module
+    data_type: string
+  - name: outputs.evidence.node
+    data_type: string
+  - name: outputs.evidence.source_file
+    data_type: string
+  - name: outputs.hits.bounding_box
+    data_type: float
+  - name: outputs.hits.chunk_type
+    data_type: string
+  - name: outputs.hits.content
+    data_type: string
+  - name: outputs.hits.content_hash
+    data_type: string
+  - name: outputs.hits.ldu_id
+    data_type: string
+  - name: outputs.hits.page_refs.bbox
+    data_type: float
+  - name: outputs.hits.page_refs.content_hash
+    data_type: string
+  - name: outputs.hits.page_refs.doc_name
+    data_type: string
+  - name: outputs.hits.page_refs.page_number
+    data_type: int
+  - name: outputs.hits.page_refs.ref_type
+    data_type: string
+  - name: outputs.hits.page_refs.section_path
+    data_type: string
+  - name: outputs.hits.parent_section
+    data_type: string
+  - name: outputs.hits.parent_section_path
+    data_type: string
+  - name: outputs.hits.provenance_chain.chain_type
+    data_type: string
+  - name: outputs.hits.provenance_chain.steps.bbox
+    data_type: float
+  - name: outputs.hits.provenance_chain.steps.content_hash
+    data_type: string
+  - name: outputs.hits.provenance_chain.steps.doc_name
+    data_type: string
+  - name: outputs.hits.provenance_chain.steps.page_number
+    data_type: int
+  - name: outputs.hits.provenance_chain.steps.ref_type
+    data_type: string
+  - name: outputs.hits.provenance_chain.steps.section_path
+    data_type: string
+  - name: outputs.hits.relationships
+    data_type: string
+  - name: outputs.hits.structured_payload.headers
+    data_type: string
+  - name: outputs.hits.structured_payload.rows
+    data_type: string
+  - name: outputs.hits.token_count
+    data_type: int
+  - name: outputs.judicial_verdict
+    data_type: string
+  - name: outputs.judicial_verdict.applied_rules
+    data_type: string
+  - name: outputs.judicial_verdict.dimension_id
+    data_type: string
+  - name: outputs.judicial_verdict.dimension_name
+    data_type: string
+  - name: outputs.judicial_verdict.dissent
+    data_type: string
+  - name: outputs.judicial_verdict.final_score
+    data_type: int
+  - name: outputs.judicial_verdict.judge_opinions.argument
+    data_type: string
+  - name: outputs.judicial_verdict.judge_opinions.cited_evidence
+    data_type: string
+  - name: outputs.judicial_verdict.judge_opinions.criterion_id
+    data_type: string
+  - name: outputs.judicial_verdict.judge_opinions.judge
+    data_type: string
+  - name: outputs.judicial_verdict.judge_opinions.score
+    data_type: int
+  - name: outputs.judicial_verdict.remediation_plan
+    data_type: string
+  - name: outputs.metrics.total_cost_usd
+    data_type: float
+  - name: outputs.metrics.total_llm_calls
+    data_type: int
+  - name: outputs.metrics.total_nodes_executed
+    data_type: int
+  - name: outputs.metrics.total_tokens_used
+    data_type: int
+  - name: outputs.navigation_sections
+    data_type: string
+  - name: outputs.output
+    data_type: string
+  - name: outputs.pre_extracted_evidence./tmp/pytest-of-nurye/pytest-0/test_submit_workflow_uses_refi0/company-a.txt.extraction_context.strategy_used
+    data_type: string
+  - name: outputs.pre_extracted_evidence./tmp/pytest-of-nurye/pytest-0/test_submit_workflow_uses_refi0/company-a.txt.facts.ebitda
+    data_type: string
+  - name: outputs.pre_extracted_evidence./tmp/pytest-of-nurye/pytest-0/test_submit_workflow_uses_refi0/company-a.txt.facts.net_income
+    data_type: float
+  - name: outputs.pre_extracted_evidence./tmp/pytest-of-nurye/pytest-0/test_submit_workflow_uses_refi0/company-a.txt.facts.total_assets
+    data_type: float
+  - name: outputs.pre_extracted_evidence./tmp/pytest-of-nurye/pytest-0/test_submit_workflow_uses_refi0/company-a.txt.facts.total_liabilities
+    data_type: string
+  - name: outputs.pre_extracted_evidence./tmp/pytest-of-nurye/pytest-0/test_submit_workflow_uses_refi0/company-a.txt.facts.total_revenue
+    data_type: float
+  - name: outputs.provenance_chain.bbox
+    data_type: float
+  - name: outputs.provenance_chain.cell_range
+    data_type: string
+  - name: outputs.provenance_chain.content_hash
+    data_type: string
+  - name: outputs.provenance_chain.doc_name
+    data_type: string
+  - name: outputs.provenance_chain.line_range
+    data_type: string
+  - name: outputs.provenance_chain.page_number
+    data_type: int
+  - name: outputs.provenance_chain.ref_type
+    data_type: string
+  - name: outputs.provenance_chain.section_path
+    data_type: string
+  - name: outputs.provenance_chain.sheet_name
+    data_type: string
+  - name: outputs.question
+    data_type: string
+  - name: outputs.result
+    data_type: string
+  - name: outputs.result.complexity
+    data_type: float
+  - name: outputs.result.direct_nodes
+    data_type: string
+  - name: outputs.result.direction
+    data_type: string
+  - name: outputs.result.evidence.analysis_method
+    data_type: string
+  - name: outputs.result.evidence.line_range
+    data_type: int
+  - name: outputs.result.evidence.module
+    data_type: string
+  - name: outputs.result.evidence.node
+    data_type: string
+  - name: outputs.result.evidence.source_file
+    data_type: string
+  - name: outputs.result.evidence_contract.analysis_method
+    data_type: string
+  - name: outputs.result.evidence_contract.confidence
+    data_type: float
+  - name: outputs.result.evidence_contract.content
+    data_type: string
+  - name: outputs.result.evidence_contract.found
+    data_type: boolean
+  - name: outputs.result.evidence_contract.goal
+    data_type: string
+  - name: outputs.result.evidence_contract.line_range
+    data_type: int
+  - name: outputs.result.evidence_contract.location
+    data_type: string
+  - name: outputs.result.evidence_contract.module
+    data_type: string
+  - name: outputs.result.evidence_contract.node
+    data_type: string
+  - name: outputs.result.evidence_contract.rationale
+    data_type: string
+  - name: outputs.result.evidence_contract.source_file
+    data_type: string
+  - name: outputs.result.evidence_contract.transformation_type
+    data_type: string
+  - name: outputs.result.impact_count
+    data_type: int
+  - name: outputs.result.impacted_nodes.depth
+    data_type: int
+  - name: outputs.result.impacted_nodes.evidence.analysis_method
+    data_type: string
+  - name: outputs.result.impacted_nodes.evidence.line_range
+    data_type: int
+  - name: outputs.result.impacted_nodes.evidence.module
+    data_type: string
+  - name: outputs.result.impacted_nodes.evidence.source_file
+    data_type: string
+  - name: outputs.result.impacted_nodes.node
+    data_type: string
+  - name: outputs.result.impacted_nodes.node_type
+    data_type: string
+  - name: outputs.result.judicial_verdict.applied_rules
+    data_type: string
+  - name: outputs.result.judicial_verdict.dimension_id
+    data_type: string
+  - name: outputs.result.judicial_verdict.dimension_name
+    data_type: string
+  - name: outputs.result.judicial_verdict.dissent
+    data_type: string
+  - name: outputs.result.judicial_verdict.final_score
+    data_type: int
+  - name: outputs.result.judicial_verdict.judge_opinions.argument
+    data_type: string
+  - name: outputs.result.judicial_verdict.judge_opinions.cited_evidence
+    data_type: string
+  - name: outputs.result.judicial_verdict.judge_opinions.criterion_id
+    data_type: string
+  - name: outputs.result.judicial_verdict.judge_opinions.judge
+    data_type: string
+  - name: outputs.result.judicial_verdict.judge_opinions.score
+    data_type: int
+  - name: outputs.result.judicial_verdict.remediation_plan
+    data_type: string
+  - name: outputs.result.language
+    data_type: string
+  - name: outputs.result.match_count
+    data_type: int
+  - name: outputs.result.matches.display_name
+    data_type: string
+  - name: outputs.result.matches.domain_cluster
+    data_type: string
+  - name: outputs.result.matches.entity_id
+    data_type: string
+  - name: outputs.result.matches.entity_kind
+    data_type: string
+  - name: outputs.result.matches.evidence.analysis_method
+    data_type: string
+  - name: outputs.result.matches.evidence.line_range
+    data_type: int
+  - name: outputs.result.matches.evidence.module
+    data_type: string
+  - name: outputs.result.matches.evidence.source_file
+    data_type: string
+  - name: outputs.result.matches.language
+    data_type: string
+  - name: outputs.result.matches.module
+    data_type: string
+  - name: outputs.result.matches.path
+    data_type: string
+  - name: outputs.result.matches.public_api
+    data_type: string
+  - name: outputs.result.matches.purpose
+    data_type: string
+  - name: outputs.result.matches.signature
+    data_type: string
+  - name: outputs.result.matches.similarity_score
+    data_type: float
+  - name: outputs.result.message
+    data_type: string
+  - name: outputs.result.module
+    data_type: string
+  - name: outputs.result.node_count
+    data_type: int
+  - name: outputs.result.nodes
+    data_type: string
+  - name: outputs.result.public_api
+    data_type: string
+  - name: outputs.result.purpose
+    data_type: string
+  - name: outputs.result.query
+    data_type: string
+  - name: outputs.result.target
+    data_type: string
+  - name: outputs.result.target_type
+    data_type: string
+  - name: outputs.route
+    data_type: string
+  - name: outputs.semantic_query
+    data_type: string
+  - name: outputs.tool
+    data_type: string
+  - name: outputs.tool_trace
+    data_type: string
+  - name: outputs.used_section_scope
+    data_type: boolean
+  - name: outputs.writer
+    data_type: string
   - name: parent_run_id
     data_type: string
   - name: prompt_tokens
