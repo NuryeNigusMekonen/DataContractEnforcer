@@ -216,10 +216,7 @@ def build_field_clause(field_name: str, profile: dict[str, Any]) -> dict[str, An
     if "confidence" in field_name and clause["type"] in {"integer", "number"}:
         clause["type"] = "number"
         clause["minimum"] = 0.0
-        observed_max = 1.0
-        if stats:
-            observed_max = float(stats["max"])
-        clause["maximum"] = 1.0 if observed_max <= 1.0 else round(observed_max, 3)
+        clause["maximum"] = 1.0
         clause["description"] = "Confidence must remain on a 0.0-1.0 scale."
     if stats and field_name in {"processing_time_ms", "total_cost"}:
         clause["minimum"] = 0.0
@@ -233,6 +230,11 @@ def build_field_clause(field_name: str, profile: dict[str, Any]) -> dict[str, An
 
 def apply_dataset_overrides(dataset_kind: str, fields: dict[str, dict[str, Any]]) -> None:
     overrides: dict[str, dict[str, Any]] = {
+        "week1_intents": {
+            "intent_id": {"format": "uuid"},
+            "created_at": {"format": "date-time"},
+            "code_refs.confidence": {"type": "number", "minimum": 0.0, "maximum": 1.0},
+        },
         "week2_verdicts": {
             "overall_verdict": {"enum": ["PASS", "FAIL", "WARN"]},
             "overall_score": {"type": "number", "minimum": 1.0, "maximum": 5.0},
@@ -285,6 +287,36 @@ def apply_dataset_overrides(dataset_kind: str, fields: dict[str, dict[str, Any]]
 
 def dataset_semantic_clauses(dataset_kind: str) -> list[dict[str, Any]]:
     clauses = {
+        "week1_intents": [
+            {
+                "id": "week1.intent_id_uuid",
+                "category": "identifier",
+                "severity": "error",
+                "description": "Each intent record must expose a stable UUID identifier.",
+                "rule": {"type": "field_format", "field": "intent_id", "format": "uuid"},
+            },
+            {
+                "id": "week1.created_at_datetime",
+                "category": "temporal",
+                "severity": "error",
+                "description": "Intent timestamps must be valid UTC date-times.",
+                "rule": {"type": "field_format", "field": "created_at", "format": "date-time"},
+            },
+            {
+                "id": "week1.code_refs_non_empty",
+                "category": "traceability",
+                "severity": "error",
+                "description": "Each intent record should reference at least one code location.",
+                "rule": {"type": "array_min_items", "field": "code_refs", "minimum": 1},
+            },
+            {
+                "id": "week1.code_ref_confidence_unit_scale",
+                "category": "quality",
+                "severity": "error",
+                "description": "Code reference confidence values must remain on the 0.0-1.0 scale.",
+                "rule": {"type": "numeric_range", "field": "code_refs.confidence", "minimum": 0.0, "maximum": 1.0},
+            },
+        ],
         "week3_extractions": [
             {
                 "id": "week3.doc_id_uuid",
