@@ -22,15 +22,20 @@ from contracts.common import (
     SEMVER_PATTERN,
     SCHEMA_VERSION_PATTERN,
     UUID_PATTERN,
+    apply_dataset_overrides,
+    build_field_clause,
     extract_field_observations,
     infer_scalar_type,
     load_jsonl,
+    profile_records,
     parse_timestamp,
     sha256_file,
     stringify,
     utc_now,
     normalize_contract_filename,
 )
+from contracts.adapter import SchemaAdapter
+from contracts.evolution import build_compatibility_report, contract_version
 
 
 SEVERITY_BY_CHECK_TYPE = {
@@ -51,6 +56,12 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Validate JSONL data against a generated contract.")
     parser.add_argument("--contract", required=True, help="Path to a YAML contract.")
     parser.add_argument("--data", required=True, help="Path to a JSONL data file.")
+    parser.add_argument(
+        "--mode",
+        default="AUDIT",
+        choices=["AUDIT", "WARN", "ENFORCE", "audit", "warn", "enforce"],
+        help="Validation mode: AUDIT logs only, WARN blocks on CRITICAL failures, ENFORCE blocks on CRITICAL/HIGH failures.",
+    )
     parser.add_argument("--output", required=False, help="Path for the validation report.")
     return parser.parse_args()
 
@@ -98,8 +109,8 @@ def matches_pattern(value: str, pattern: str) -> bool:
 def normalize_clause_severity(severity: str | None) -> str:
     mapping = {
         "error": "CRITICAL",
-        "warn": "MEDIUM",
-        "warning": "MEDIUM",
+        "warn": "WARNING",
+        "warning": "WARNING",
         "info": "LOW",
     }
     return mapping.get(str(severity or "").lower(), "HIGH")
@@ -612,12 +623,22 @@ def validate_week2(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
     hash_failures = 0
     hash_samples: list[str] = []
     score_failures = 0
+    score_range_failures = 0
+    score_range_samples: list[str] = []
     for record in records:
         rubric_id = record.get("rubric_id", "")
         if not rubric_id or find_rubric_path(rubric_id) is None:
             hash_failures += 1
             hash_samples.append(rubric_id)
-        score_values = [item.get("score") for item in record.get("scores", {}).values() if isinstance(item, dict)]
+        score_values = []
+        for criterion, item in record.get("scores", {}).items():
+            if not isinstance(item, dict):
+                continue
+            score = item.get("score")
+            score_values.append(score)
+            if not isinstance(score, int) or not 1 <= score <= 5:
+                score_range_failures += 1
+                score_range_samples.append(f"{criterion}={stringify(score)}")
         expected = round(sum(score_values) / len(score_values), 3) if score_values else None
         actual = round(float(record.get("overall_score", 0)), 3)
         if expected is None or expected != actual:
@@ -637,6 +658,19 @@ def validate_week2(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
     )
     results.append(
         make_result(
+            check_id="week2.score_range_valid",
+            check_type="cross_record",
+            column_name="scores.*.score",
+            status="PASS" if score_range_failures == 0 else "FAIL",
+            expected="every nested score is an integer between 1 and 5",
+            actual_value="all matched" if score_range_failures == 0 else f"{score_range_failures} out-of-range scores",
+            records_failing=score_range_failures,
+            samples=score_range_samples[:5],
+            message="Nested criterion scores must remain on the rubric's 1-5 scale.",
+        )
+    )
+    results.append(
+        make_result(
             check_id="week2.overall_score_weighted_mean",
             check_type="cross_record",
             column_name="overall_score",
@@ -648,6 +682,65 @@ def validate_week2(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
         )
     )
     return results
+
+
+def validate_week1(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    empty_code_ref_failures = 0
+    missing_file_failures = 0
+    confidence_failures = 0
+    samples_empty: list[str] = []
+    samples_missing: list[str] = []
+    samples_confidence: list[str] = []
+    for index, record in enumerate(records):
+        code_refs = record.get("code_refs")
+        if not isinstance(code_refs, list) or not code_refs:
+            empty_code_ref_failures += 1
+            samples_empty.append(f"record[{index}]")
+            continue
+        for code_ref in code_refs:
+            file_path = code_ref.get("file") if isinstance(code_ref, dict) else None
+            if not isinstance(file_path, str) or not file_path.strip():
+                missing_file_failures += 1
+                samples_missing.append(f"record[{index}]")
+            confidence = code_ref.get("confidence") if isinstance(code_ref, dict) else None
+            if not isinstance(confidence, (int, float)) or float(confidence) < 0.0 or float(confidence) > 1.0:
+                confidence_failures += 1
+                samples_confidence.append(f"record[{index}]={stringify(confidence)}")
+    return [
+        make_result(
+            check_id="week1.code_refs_non_empty",
+            check_type="cross_record",
+            column_name="code_refs",
+            status="PASS" if empty_code_ref_failures == 0 else "FAIL",
+            expected="Every intent record contains at least one code_ref",
+            actual_value="all matched" if empty_code_ref_failures == 0 else f"{empty_code_ref_failures} empty code_refs arrays",
+            records_failing=empty_code_ref_failures,
+            samples=samples_empty[:5],
+            message="Intent records must retain code references for downstream traceability.",
+        ),
+        make_result(
+            check_id="week1.code_ref_file_present",
+            check_type="cross_record",
+            column_name="code_refs.file",
+            status="PASS" if missing_file_failures == 0 else "FAIL",
+            expected="Every code_ref contains a non-empty file path",
+            actual_value="all matched" if missing_file_failures == 0 else f"{missing_file_failures} missing file paths",
+            records_failing=missing_file_failures,
+            samples=samples_missing[:5],
+            message="Each referenced code location must keep its file path.",
+        ),
+        make_result(
+            check_id="week1.code_ref_confidence_scale",
+            check_type="cross_record",
+            column_name="code_refs.confidence",
+            status="PASS" if confidence_failures == 0 else "FAIL",
+            expected="All confidence values are numeric and between 0.0 and 1.0",
+            actual_value="all matched" if confidence_failures == 0 else f"{confidence_failures} invalid confidence values",
+            records_failing=confidence_failures,
+            samples=samples_confidence[:5],
+            message="Code reference confidence values must stay on the unit interval.",
+        ),
+    ]
 
 
 def validate_week3(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -805,7 +898,7 @@ def validate_traces(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
 
 
 def numeric_baseline_path(contract_id: str) -> Path:
-    return Path("schema_snapshots") / f"{contract_id}_baseline.json"
+    return Path("schema_snapshots") / f"{normalize_contract_filename(contract_id)}_baseline.json"
 
 
 def aggregated_baseline_path() -> Path:
@@ -824,10 +917,42 @@ def compute_numeric_stats(records: list[dict[str, Any]]) -> dict[str, dict[str, 
     return stats
 
 
-def drift_results(contract_id: str, records: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    current = compute_numeric_stats(records)
+def load_numeric_baseline(contract_id: str) -> tuple[dict[str, Any], str | None]:
+    aggregate_path = aggregated_baseline_path()
+    if aggregate_path.exists():
+        aggregate = json.loads(aggregate_path.read_text(encoding="utf-8"))
+        normalized_contract_id = normalize_contract_filename(contract_id)
+        for candidate in (contract_id, normalized_contract_id):
+            baseline = aggregate.get(candidate)
+            if isinstance(baseline, dict):
+                columns = baseline.get("columns", {})
+                if isinstance(columns, dict):
+                    return columns, str(aggregate_path)
     baseline_path = numeric_baseline_path(contract_id)
-    if not baseline_path.exists():
+    if baseline_path.exists():
+        columns = json.loads(baseline_path.read_text(encoding="utf-8")).get("columns", {})
+        if isinstance(columns, dict):
+            return columns, str(baseline_path)
+    return {}, None
+
+
+def drift_results(contract_id: str, records: list[dict[str, Any]], *, persist_baselines: bool = True) -> list[dict[str, Any]]:
+    current = compute_numeric_stats(records)
+    baseline, baseline_source = load_numeric_baseline(contract_id)
+    if not baseline:
+        if not persist_baselines:
+            return [
+                make_result(
+                    check_id="baseline.unavailable",
+                    check_type="drift",
+                    column_name="*",
+                    status="PASS",
+                    expected="existing baseline file",
+                    actual_value="baseline missing; what-if run did not persist one",
+                    message="No drift baseline was available, and this validation run was read-only.",
+                )
+            ]
+        baseline_path = numeric_baseline_path(contract_id)
         baseline_path.write_text(json.dumps({"written_at": utc_now(), "columns": current}, indent=2), encoding="utf-8")
         aggregate_path = aggregated_baseline_path()
         aggregate = {}
@@ -846,7 +971,6 @@ def drift_results(contract_id: str, records: list[dict[str, Any]]) -> list[dict[
                 message="No prior baseline existed, so this run established it.",
             )
         ]
-    baseline = json.loads(baseline_path.read_text(encoding="utf-8")).get("columns", {})
     results: list[dict[str, Any]] = []
     for field_name, current_stats in sorted(current.items()):
         stored = baseline.get(field_name)
@@ -867,15 +991,22 @@ def drift_results(contract_id: str, records: list[dict[str, Any]]) -> list[dict[
                 column_name=field_name,
                 status=status,
                 expected={"mean": stored["mean"], "stddev": stored["stddev"]},
-                actual_value={"mean": current_stats["mean"], "z_score": round(z_score, 3)},
+                actual_value={
+                    "mean": current_stats["mean"],
+                    "z_score": round(z_score, 3),
+                    "baseline_source": baseline_source,
+                },
                 records_failing=0 if status == "PASS" else 1,
                 message="Numeric mean drifted against the stored baseline.",
+                severity="WARNING" if status == "WARN" else None,
             )
         )
     return results
 
 
 def dataset_specific_results(dataset: str, records: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    if dataset == "week1_intents":
+        return validate_week1(records)
     if dataset == "week2_verdicts":
         return validate_week2(records)
     if dataset == "week3_extractions":
@@ -896,42 +1027,260 @@ def summarize(results: list[dict[str, Any]]) -> dict[str, int]:
     return summary
 
 
+def overall_status(summary: dict[str, int]) -> str:
+    if summary.get("ERROR", 0) > 0 or summary.get("FAIL", 0) > 0:
+        return "FAIL"
+    if summary.get("WARN", 0) > 0:
+        return "WARN"
+    return "PASS"
+
+
+def should_block(mode: str, results: list[dict[str, Any]]) -> bool:
+    normalized_mode = mode.upper()
+    if normalized_mode == "AUDIT":
+        return False
+    failures = [result for result in results if result.get("status") in {"FAIL", "ERROR"}]
+    if normalized_mode == "WARN":
+        return any(str(result.get("severity", "LOW")).upper() == "CRITICAL" for result in failures)
+    if normalized_mode == "ENFORCE":
+        return any(str(result.get("severity", "HIGH")).upper() in {"CRITICAL", "HIGH"} for result in failures)
+    return False
+
+
+def build_validation_report(contract: dict[str, Any], evaluation: dict[str, Any], *, data_path: str, snapshot_id: str) -> dict[str, Any]:
+    return {
+        "report_id": str(uuid.uuid4()),
+        "contract_id": contract.get("contract_id"),
+        "snapshot_id": snapshot_id,
+        "run_timestamp": utc_now(),
+        "generated_at": utc_now(),
+        "mode": evaluation["mode"],
+        "blocking": evaluation["blocking"],
+        "overall_status": evaluation["overall_status"],
+        "dataset": contract.get("dataset"),
+        "expected_contract_version": evaluation["expected_contract_version"],
+        "data_path": data_path,
+        "record_count": evaluation["record_count"],
+        "raw_record_count": evaluation["raw_record_count"],
+        "total_checks": evaluation["total_checks"],
+        "passed": evaluation["passed"],
+        "failed": evaluation["failed"],
+        "warned": evaluation["warned"],
+        "errored": evaluation["errored"],
+        "summary": evaluation["summary"],
+        "schema_evolution": evaluation["schema_evolution"],
+        "adapter": evaluation["adapter"],
+        "results": evaluation["results"],
+    }
+
+
 def default_output_path(contract_id: str) -> Path:
     return Path("validation_reports") / f"{normalize_contract_filename(contract_id)}_{utc_now().replace(':', '').replace('-', '')}.json"
 
 
-def main() -> int:
-    args = parse_args()
-    with Path(args.contract).open("r", encoding="utf-8") as handle:
-        contract = yaml.safe_load(handle)
-    records = load_jsonl(args.data)
-    results = validate_field_rules(contract.get("fields", {}), records)
-    results.extend(validate_contract_clauses(contract.get("clauses", []), records))
-    results.extend(dataset_specific_results(contract.get("dataset", "generic"), records))
-    results.extend(drift_results(contract.get("contract_id", "contract"), records))
-    summary = summarize(results)
-    report = {
-        "report_id": str(uuid.uuid4()),
-        "snapshot_id": sha256_file(args.data),
-        "run_timestamp": utc_now(),
-        "generated_at": utc_now(),
+def registry_path() -> str | None:
+    candidate = Path("contract_registry/subscriptions.yaml")
+    return str(candidate) if candidate.exists() else None
+
+
+def observed_contract(contract: dict[str, Any], records: list[dict[str, Any]], schema_version: str) -> dict[str, Any]:
+    dataset = str(contract.get("dataset", "generic"))
+    target_fields = contract.get("fields", {}) if isinstance(contract.get("fields"), dict) else {}
+    profiles = profile_records(records)
+    fields = {field_name: build_field_clause(field_name, profile) for field_name, profile in profiles.items()}
+    apply_dataset_overrides(dataset, fields)
+    for field_name, clause in fields.items():
+        target_clause = target_fields.get(field_name, {})
+        if "enum" not in target_clause:
+            clause.pop("enum", None)
+    return {
+        "id": contract.get("id"),
         "contract_id": contract.get("contract_id"),
-        "dataset": contract.get("dataset"),
-        "data_path": args.data,
-        "record_count": len(records),
+        "dataset": dataset,
+        "schema_version": schema_version,
+        "info": {
+            "version": schema_version,
+            "title": contract.get("info", {}).get("title", contract.get("contract_id", "contract")),
+        },
+        "fields": fields,
+        "profiling": {
+            "statistics": {
+                field_name: profile.get("stats", {})
+                for field_name, profile in profiles.items()
+                if profile.get("stats")
+            }
+        },
+    }
+
+
+def adapter_result(payload: dict[str, Any]) -> dict[str, Any]:
+    if payload.get("attempted") and not payload.get("succeeded"):
+        return make_result(
+            check_id="schema.adapter",
+            check_type="contract_clause",
+            column_name="*",
+            status="FAIL",
+            expected=f"adapter available for {payload.get('source_version')} -> {payload.get('target_version')}",
+            actual_value=payload.get("failure_reason", "adapter failed"),
+            records_failing=1,
+            message="Schema adaptation failed before validation could continue.",
+            severity="HIGH",
+        )
+    if payload.get("attempted") and not payload.get("applied"):
+        return make_result(
+            check_id="schema.adapter",
+            check_type="contract_clause",
+            column_name="*",
+            status="FAIL",
+            expected=f"{payload.get('source_version')} -> {payload.get('target_version')}",
+            actual_value="no records were transformed",
+            records_failing=1,
+            message="Schema adaptation was attempted, but no transformable records matched the configured rules.",
+            severity="HIGH",
+        )
+    if payload.get("applied"):
+        return make_result(
+            check_id="schema.adapter",
+            check_type="contract_clause",
+            column_name="*",
+            status="PASS",
+            expected=f"{payload.get('source_version')} -> {payload.get('target_version')}",
+            actual_value="adapter rules applied",
+            records_failing=0,
+            message="Schema adapter transformed incoming records into the expected contract shape.",
+            severity="LOW",
+        )
+    return make_result(
+        check_id="schema.adapter",
+        check_type="contract_clause",
+        column_name="*",
+        status="PASS",
+        expected="no adaptation required",
+        actual_value="adapter not applied",
+        records_failing=0,
+        message="Incoming records already matched the expected contract version.",
+        severity="LOW",
+    )
+
+
+def compatibility_context(contract: dict[str, Any], records: list[dict[str, Any]]) -> tuple[dict[str, Any], dict[str, Any], SchemaAdapter]:
+    expected_version = contract_version(contract)
+    adapter = SchemaAdapter(str(contract.get("contract_id", "")))
+    detection = adapter.detect_source_version(records, expected_version)
+    observed = observed_contract(contract, records, detection["detected_schema_version"])
+    compatibility = build_compatibility_report(observed, contract, registry_path())
+    return detection, compatibility, adapter
+
+
+def evaluate_contract_records(
+    contract: dict[str, Any],
+    records: list[dict[str, Any]],
+    *,
+    mode: str = "AUDIT",
+    data_path: str = "",
+    attempt_adapter: bool = True,
+    persist_baselines: bool = True,
+) -> dict[str, Any]:
+    normalized_mode = str(mode).upper()
+    detection, compatibility, adapter = compatibility_context(contract, records)
+    expected_version = contract_version(contract)
+
+    if attempt_adapter:
+        adapter_payload = adapter.transform_records(records, detection["detected_schema_version"], expected_version)
+    else:
+        adapter_payload = {
+            "attempted": False,
+            "applied": False,
+            "succeeded": True,
+            "fallback_succeeded": compatibility["compatibility_verdict"] != "breaking_change",
+            "source_version": detection["detected_schema_version"],
+            "target_version": expected_version,
+            "failure_reason": "",
+            "rule_logs": [],
+            "original_samples": [],
+            "transformed_samples": [],
+            "records": records,
+        }
+
+    validation_records = adapter_payload["records"] if adapter_payload.get("succeeded") else records
+    post_transform_compatibility = None
+    if attempt_adapter and adapter_payload.get("applied"):
+        post_observed = observed_contract(contract, validation_records, expected_version)
+        post_transform_compatibility = build_compatibility_report(post_observed, contract, registry_path())
+        adapter_payload["fallback_succeeded"] = post_transform_compatibility["compatibility_verdict"] != "breaking_change"
+    elif not attempt_adapter:
+        adapter_payload["fallback_succeeded"] = False
+
+    results = [adapter_result(adapter_payload)]
+    results.extend(validate_field_rules(contract.get("fields", {}), validation_records))
+    results.extend(validate_contract_clauses(contract.get("clauses", []), validation_records))
+    results.extend(dataset_specific_results(contract.get("dataset", "generic"), validation_records))
+    results.extend(drift_results(contract.get("contract_id", "contract"), validation_records, persist_baselines=persist_baselines))
+    summary = summarize(results)
+    blocking = should_block(normalized_mode, results)
+    return {
+        "mode": normalized_mode,
+        "blocking": blocking,
+        "overall_status": overall_status(summary),
+        "expected_contract_version": expected_version,
+        "record_count": len(validation_records),
+        "raw_record_count": len(records),
         "total_checks": len(results),
         "passed": summary.get("PASS", 0),
         "failed": summary.get("FAIL", 0),
         "warned": summary.get("WARN", 0),
         "errored": summary.get("ERROR", 0),
         "summary": summary,
+        "schema_evolution": {
+            "original_schema_version": detection["original_schema_version"],
+            "detected_schema_version": detection["detected_schema_version"],
+            "compatibility_classification": compatibility["compatibility_verdict"],
+            "change_counts": compatibility["change_counts"],
+            "changes": compatibility["changes"],
+            "renames": compatibility["renames"],
+            "primary_breaking_change": compatibility["primary_breaking_change"],
+            "notification": compatibility["notification"],
+            "post_transform_compatibility": None
+            if post_transform_compatibility is None
+            else post_transform_compatibility["compatibility_verdict"],
+        },
+        "adapter": {
+            "attempted": adapter_payload["attempted"],
+            "applied": adapter_payload["applied"],
+            "succeeded": adapter_payload["succeeded"],
+            "fallback_succeeded": adapter_payload["fallback_succeeded"],
+            "source_version": adapter_payload["source_version"],
+            "target_version": adapter_payload["target_version"],
+            "failure_reason": adapter_payload["failure_reason"],
+            "rules_applied": adapter.summarize_rule_logs(adapter_payload),
+            "original_samples": adapter_payload["original_samples"][:3],
+            "transformed_samples": adapter_payload["transformed_samples"][:3],
+        },
         "results": results,
+        "data_path": data_path,
     }
+
+
+def main() -> int:
+    args = parse_args()
+    mode = str(args.mode).upper()
+    with Path(args.contract).open("r", encoding="utf-8") as handle:
+        contract = yaml.safe_load(handle)
+    raw_records = load_jsonl(args.data)
+    evaluation = evaluate_contract_records(
+        contract,
+        raw_records,
+        mode=mode,
+        data_path=args.data,
+        attempt_adapter=True,
+        persist_baselines=True,
+    )
+    report = build_validation_report(contract, evaluation, data_path=args.data, snapshot_id=sha256_file(args.data))
     output_path = Path(args.output) if args.output else default_output_path(str(contract.get("contract_id", "contract")))
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(json.dumps(report, indent=2), encoding="utf-8")
-    print(json.dumps(report["summary"], indent=2))
-    return 0
+    print(json.dumps({"mode": evaluation["mode"], "blocking": evaluation["blocking"], "summary": report["summary"]}, indent=2))
+    return 2 if evaluation["blocking"] else 0
 
 
 if __name__ == "__main__":
