@@ -88,11 +88,12 @@ def extraction_prompt_records(records: list[dict[str, Any]]) -> list[dict[str, s
         facts = record.get("extracted_facts", [])
         if facts:
             preview = str(facts[0].get("source_excerpt", ""))
+        metadata = record.get("document_metadata", {}) if isinstance(record.get("document_metadata"), dict) else {}
         prompt_records.append(
             {
-                "doc_id": str(record.get("doc_id", "")),
-                "source_path": str(record.get("source_path", "")),
-                "content_preview": preview[:8000],
+                "doc_id": str(metadata.get("doc_id", record.get("doc_id", ""))),
+                "source_path": str(metadata.get("source_path", record.get("source_path", ""))),
+                "content_preview": str(metadata.get("content_preview", preview[:8000])),
             }
         )
     return prompt_records
@@ -101,6 +102,7 @@ def extraction_prompt_records(records: list[dict[str, Any]]) -> list[dict[str, s
 def validate_prompt_inputs(records: list[dict[str, Any]]) -> dict[str, Any]:
     valid = 0
     quarantined: list[dict[str, str]] = []
+    quarantine_path = Path("outputs/quarantine/quarantine.jsonl")
     for record in extraction_prompt_records(records):
         try:
             validate(instance=record, schema=PROMPT_INPUT_SCHEMA)
@@ -108,12 +110,12 @@ def validate_prompt_inputs(records: list[dict[str, Any]]) -> dict[str, Any]:
         except ValidationError as exc:
             quarantined.append({"record": json.dumps(record, sort_keys=True), "error": exc.message})
     if quarantined:
-        path = Path("outputs/quarantine/quarantine.jsonl")
-        write_jsonl(path, quarantined)
+        write_jsonl(quarantine_path, quarantined)
     return {
         "status": "PASS" if not quarantined else "WARN",
         "valid_records": valid,
         "quarantined_records": len(quarantined),
+        "quarantine_path": str(quarantine_path),
     }
 
 
@@ -144,6 +146,7 @@ def check_output_schema_violation_rate(
         "violation_rate": round(rate, 4),
         "trend": trend,
         "baseline_violation_rate": round(baseline_rate, 4),
+        "warn_threshold": round(warn_threshold, 4),
     }
 
 
@@ -161,12 +164,12 @@ def ai_violation_records(report: dict[str, Any]) -> list[dict[str, Any]]:
                 "field_name": "content_preview",
                 "message": "Some extraction records do not produce a valid prompt input preview and were quarantined.",
                 "records_failing": int(prompt.get("quarantined_records", 0)),
-                "candidate_files": ["artifacts/week3/outputs/extractions.jsonl"],
+                "candidate_files": ["outputs/week3/extractions.jsonl"],
                 "blame_chain": [
                     {
                         "rank": 1,
-                        "file_path": "artifacts/week3/outputs/extractions.jsonl",
-                        "commit_hash": hashlib.sha1(b"artifacts/week3/outputs/extractions.jsonl").hexdigest(),
+                        "file_path": "outputs/week3/extractions.jsonl",
+                        "commit_hash": hashlib.sha1(b"outputs/week3/extractions.jsonl").hexdigest(),
                         "author": "workspace@local",
                         "commit_timestamp": utc_now(),
                         "commit_message": "Real data produced quarantined prompt previews.",
@@ -182,7 +185,7 @@ def ai_violation_records(report: dict[str, Any]) -> list[dict[str, Any]]:
             }
         )
     output_rate = report.get("llm_output_schema_rate", {})
-    if output_rate.get("trend") == "rising":
+    if output_rate.get("status") == "WARN":
         records.append(
             {
                 "violation_id": str(uuid.uuid4()),
@@ -191,9 +194,13 @@ def ai_violation_records(report: dict[str, Any]) -> list[dict[str, Any]]:
                 "severity": "LOW",
                 "check_id": "ai.llm_output_schema_rate",
                 "field_name": "overall_verdict",
-                "message": "LLM output schema violation rate is rising against the stored baseline.",
+                "message": (
+                    "LLM output schema violation rate exceeded the configured threshold."
+                    if float(output_rate.get("violation_rate", 0.0)) > float(output_rate.get("warn_threshold", 0.0))
+                    else "LLM output schema violation rate is rising against the stored baseline."
+                ),
                 "records_failing": int(output_rate.get("schema_violations", 0)),
-                "candidate_files": ["artifacts/week2/outputs/verdicts.jsonl"],
+                "candidate_files": ["outputs/week2/verdicts.jsonl"],
                 "blame_chain": [],
                 "blast_radius": {
                     "affected_nodes": ["week2-digital-courtroom"],
@@ -215,7 +222,7 @@ def ai_violation_records(report: dict[str, Any]) -> list[dict[str, Any]]:
                 "field_name": "extracted_facts.text",
                 "message": "Embedding drift exceeded the configured threshold.",
                 "records_failing": 1,
-                "candidate_files": ["artifacts/week3/outputs/extractions.jsonl"],
+                "candidate_files": ["outputs/week3/extractions.jsonl"],
                 "blame_chain": [],
                 "blast_radius": {
                     "affected_nodes": ["week3-document-refinery", "week7-ai-contract-extension"],
