@@ -1,0 +1,114 @@
+subscriptions:
+  - contract_id: week1-intent-records
+    subscriber_id: week2-digital-courtroom
+    fields_consumed:
+      - code_refs.file
+      - code_refs.line_start
+      - code_refs.line_end
+      - code_refs.symbol
+      - intent_id
+    breaking_fields:
+      - field: code_refs.file
+        reason: verdict target mapping fails when source file paths are missing or renamed.
+      - field: intent_id
+        reason: intent-level traceability joins fail without stable identifiers.
+    validation_mode: AUDIT
+    registered_at: "2026-04-02T15:10:00Z"
+    contact: week2-team@local
+
+  - contract_id: week3-document-refinery-extractions
+    subscriber_id: week4-brownfield-cartographer
+    fields_consumed:
+      - doc_id
+      - extracted_facts.confidence
+      - extracted_facts.entity_refs
+      - entities.entity_id
+      - extracted_at
+    breaking_fields:
+      - field: extracted_facts.confidence
+        reason: scale drift from 0.0-1.0 to 0-100 breaks ranking and threshold logic.
+      - field: doc_id
+        reason: lineage node identity and cross-system joins depend on stable document IDs.
+    validation_mode: AUDIT
+    registered_at: "2026-04-02T15:10:00Z"
+    contact: week4-team@local
+
+  - contract_id: week4-lineage-snapshots
+    subscriber_id: week7-violation-attributor
+    fields_consumed:
+      - nodes.node_id
+      - nodes.metadata.path
+      - edges.source
+      - edges.target
+      - edges.relationship
+      - git_commit
+    breaking_fields:
+      - field: nodes.node_id
+        reason: attribution candidate lookup and graph-node matching depend on node IDs.
+      - field: edges.source
+        reason: blast radius traversal fails if edge source references are removed or renamed.
+      - field: edges.target
+        reason: downstream impact mapping fails if edge target references are invalid.
+    validation_mode: AUDIT
+    registered_at: "2026-04-02T15:10:00Z"
+    contact: week7-team@local
+
+  - contract_id: week5-event-records
+    subscriber_id: week7-validation-runner
+    fields_consumed:
+      - event_id
+      - event_type
+      - aggregate_id
+      - sequence_number
+      - payload
+      - occurred_at
+      - recorded_at
+    breaking_fields:
+      - field: event_type
+        reason: event schema routing and registry lookups break if event type format changes.
+      - field: sequence_number
+        reason: monotonic consistency checks fail on duplicates or gaps.
+      - field: recorded_at
+        reason: temporal integrity checks fail when recorded_at is missing or malformed.
+    validation_mode: AUDIT
+    registered_at: "2026-04-02T15:10:00Z"
+    contact: week7-team@local
+
+  - contract_id: langsmith-trace-records
+    subscriber_id: week7-ai-contract-extension
+    fields_consumed:
+      - id
+      - run_type
+      - start_time
+      - end_time
+      - total_tokens
+      - total_cost
+      - session_id
+    breaking_fields:
+      - field: run_type
+        reason: AI trace classification fails if run_type values drift outside allowed enum.
+      - field: total_tokens
+        reason: statistical drift and usage-risk metrics depend on token totals.
+      - field: end_time
+        reason: temporal ordering checks require valid end_time >= start_time.
+    validation_mode: AUDIT
+    registered_at: "2026-04-02T15:10:00Z"
+    contact: week7-ai@local
+
+  - contract_id: week2-verdict-records
+    subscriber_id: week7-ai-contract-extension
+    fields_consumed:
+      - verdict_id
+      - scores
+      - overall_verdict
+      - overall_score
+      - confidence
+      - evaluated_at
+    breaking_fields:
+      - field: overall_verdict
+        reason: output schema violation-rate metric depends on stable PASS|FAIL|WARN enum.
+      - field: scores.score
+        reason: rubric-level score validation fails if nested score structure changes.
+    validation_mode: AUDIT
+    registered_at: "2026-04-02T15:10:00Z"
+    contact: week7-ai@local
