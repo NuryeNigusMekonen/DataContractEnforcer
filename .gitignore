@@ -39,3 +39,4 @@ rubrics
 outputs_original/
 frontend/node_modules/
 frontend/dist/
+sys
