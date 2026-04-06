@@ -21,6 +21,26 @@ DEFAULT_LINEAGE_PATH = REPO_ROOT / "outputs" / "week4" / "lineage_snapshots.json
 DEFAULT_REGISTRY_PATH = REPO_ROOT / "contract_registry" / "subscriptions.yaml"
 
 
+def _as_dict(value: Any) -> dict[str, Any]:
+    return value if isinstance(value, dict) else {}
+
+
+def _as_list(value: Any) -> list[Any]:
+    return value if isinstance(value, list) else []
+
+
+def _dedupe_strings(values: list[str]) -> list[str]:
+    deduped: list[str] = []
+    seen: set[str] = set()
+    for value in values:
+        normalized = str(value or "").strip()
+        if not normalized or normalized in seen:
+            continue
+        seen.add(normalized)
+        deduped.append(normalized)
+    return deduped
+
+
 def _target_for_contract(contract_id: str) -> dict[str, Any]:
     for target in VALIDATION_TARGETS.values():
         if target["contract_id"] == contract_id:
@@ -71,13 +91,29 @@ def run_what_if(change_spec_reference: str) -> dict[str, Any]:
 
 
 def _shape_what_if(payload: dict[str, Any], path: Path | None) -> dict[str, Any]:
-    raw_status = payload.get("raw_changed_status", payload.get("status", "UNKNOWN"))
+    raw_status = payload.get("raw_changed_status") or payload.get("status") or "UNKNOWN"
     adapter_attempted = bool(payload.get("adapter_attempted"))
-    adapter_status = payload.get("adapter_status", raw_status if adapter_attempted else "NOT_ATTEMPTED")
+    adapter_status = payload.get("adapter_status")
+    if not adapter_status:
+        adapter_status = raw_status if adapter_attempted else "NOT_ATTEMPTED"
     final_verdict = payload.get("compatibility_verdict") or (adapter_status if adapter_attempted else raw_status)
-    adapter_details = payload.get("adapter_details", {})
-    baseline_summary = payload.get("baseline_summary", {})
-    raw_summary = payload.get("raw_changed_summary", {})
+    adapter_details = _as_dict(payload.get("adapter_details"))
+    baseline_summary = _as_dict(payload.get("baseline_summary"))
+    raw_summary = _as_dict(payload.get("raw_changed_summary"))
+    affected_subscribers = _as_list(payload.get("affected_subscribers"))
+    transitive_impacts = _as_list(payload.get("transitive_impacts"))
+    affected_systems = _dedupe_strings([
+        *[
+            subscriber.get("subscriber_id") or subscriber.get("id")
+            for subscriber in affected_subscribers
+            if isinstance(subscriber, dict)
+        ],
+        *[
+            impact.get("id")
+            for impact in transitive_impacts
+            if isinstance(impact, dict) and str(impact.get("kind", "")).upper() in {"SERVICE", "SUBSCRIBER", "CONTRACT"}
+        ],
+    ])
     return {
         "simulation_id": payload.get("simulation_id"),
         "contract_id": payload.get("contract_id"),
@@ -97,12 +133,8 @@ def _shape_what_if(payload: dict[str, Any], path: Path | None) -> dict[str, Any]
         },
         "compatibility_verdict": payload.get("compatibility_verdict", final_verdict),
         "final_verdict": final_verdict,
-        "affected_systems": [
-            subscriber.get("subscriber_id") or subscriber.get("id")
-            for subscriber in payload.get("affected_subscribers", [])
-            if isinstance(subscriber, dict)
-        ],
-        "affected_systems_count": len(payload.get("affected_subscribers", [])),
+        "affected_systems": affected_systems,
+        "affected_systems_count": len(affected_systems),
         "recommendation": payload.get("recommended_action"),
         "available_specs": available_change_specs(),
         "last_updated": timestamp_to_iso(best_timestamp(payload, path)),

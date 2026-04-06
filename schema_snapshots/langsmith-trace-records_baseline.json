@@ -1,33 +1,35 @@
 {
-  "written_at": "2026-04-03T17:48:14Z",
+  "written_at": "2026-04-05T21:01:27Z",
+  "contract_id": "langsmith-trace-records",
+  "source_path": "/home/nurye/Desktop/TRP1/week7/DataContractEnforcer/outputs/traces/runs.jsonl",
   "columns": {
     "completion_tokens": {
       "mean": 62.5,
-      "stddev": 89.68850415620598
-    },
-    "prompt_tokens": {
-      "mean": 375.4166666666667,
-      "stddev": 406.67789431222127
-    },
-    "total_cost": {
-      "mean": 0.001662222222222222,
-      "stddev": 0.002348496813698204
-    },
-    "total_tokens": {
-      "mean": 437.9166666666667,
-      "stddev": 490.31817192739476
-    },
-    "outputs.facts_loaded": {
-      "mean": 4.166666666666667,
-      "stddev": 0.37267799624996495
+      "stddev": 89.688504
     },
     "outputs.confidence": {
       "mean": 0.9,
       "stddev": 0.0
     },
+    "outputs.facts_loaded": {
+      "mean": 4.166667,
+      "stddev": 0.372678
+    },
     "outputs.vector_count": {
       "mean": 1.0,
       "stddev": 0.0
+    },
+    "prompt_tokens": {
+      "mean": 375.416667,
+      "stddev": 406.677894
+    },
+    "total_cost": {
+      "mean": 0.001662,
+      "stddev": 0.002348
+    },
+    "total_tokens": {
+      "mean": 437.916667,
+      "stddev": 490.318172
     }
   }
 }

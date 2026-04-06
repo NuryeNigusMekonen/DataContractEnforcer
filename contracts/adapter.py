@@ -82,6 +82,92 @@ def _inject_default(record: Record, path: str, value: Any) -> int:
     return 1
 
 
+def _set_path(record: Record, path: str, value: Any) -> int:
+    parts = path.split(".")
+    current: Any = record
+    for part in parts[:-1]:
+        if isinstance(current, dict):
+            current = current.setdefault(part, {})
+        else:
+            return 0
+    if not isinstance(current, dict):
+        return 0
+    leaf = parts[-1]
+    existing = current.get(leaf)
+    if existing == value:
+        return 0
+    current[leaf] = deepcopy(value)
+    return 1
+
+
+def _remove_path(record: Record, path: str) -> int:
+    removed = 0
+    for container, key in _iter_slots(record, path.split(".")):
+        if key in container:
+            container.pop(key)
+            removed += 1
+    return removed
+
+
+def _coerce_scalar(value: Any, target_type: str) -> Any:
+    normalized = str(target_type).lower()
+    if normalized in {"int", "integer"}:
+        return int(float(value))
+    if normalized in {"float", "number"}:
+        return float(value)
+    if normalized == "string":
+        return str(value)
+    if normalized == "boolean":
+        if isinstance(value, str):
+            return value.strip().lower() in {"true", "1", "yes"}
+        return bool(value)
+    return value
+
+
+def _coerce_path(record: Record, path: str, target_type: str) -> int:
+    changed = 0
+    for container, key in _iter_slots(record, path.split(".")):
+        value = container.get(key)
+        if value is None:
+            continue
+        try:
+            coerced = _coerce_scalar(value, target_type)
+        except (TypeError, ValueError):
+            continue
+        if coerced != value:
+            container[key] = coerced
+            changed += 1
+    return changed
+
+
+def _replace_enum_values(record: Record, path: str, replace_values: set[str], new_value: Any) -> int:
+    changed = 0
+    for container, key in _iter_slots(record, path.split(".")):
+        value = container.get(key)
+        if str(value) in replace_values:
+            container[key] = deepcopy(new_value)
+            changed += 1
+    return changed
+
+
+def _normalize_version_path(record: Record, path: str, segments: int = 2) -> int:
+    changed = 0
+    max_segments = max(int(segments or 2), 1)
+    for container, key in _iter_slots(record, path.split(".")):
+        value = container.get(key)
+        if value is None:
+            continue
+        text = str(value).strip()
+        parts = [part for part in text.split(".") if part != ""]
+        if len(parts) <= max_segments:
+            continue
+        normalized = ".".join(parts[:max_segments])
+        if normalized != text:
+            container[key] = normalized
+            changed += 1
+    return changed
+
+
 class SchemaAdapter:
     def __init__(self, contract_id: str, extra_rules: list[dict[str, Any]] | None = None):
         self.contract_id = contract_id
@@ -169,7 +255,7 @@ class SchemaAdapter:
                 {
                     key: value
                     for key, value in rule.items()
-                    if key not in {"predicate", "source_version", "target_version"}
+                    if key not in {"predicate", "description", "source_version", "target_version"}
                 },
                 sort_keys=True,
                 default=str,
@@ -187,7 +273,7 @@ class SchemaAdapter:
                 {
                     key: value
                     for key, value in rule.items()
-                    if key not in {"predicate", "source_version", "target_version"}
+                    if key not in {"predicate", "description", "source_version", "target_version"}
                 },
                 sort_keys=True,
                 default=str,
@@ -216,6 +302,18 @@ class SchemaAdapter:
                 changed = _inject_default(transformed, rule["field"], rule["value"])
             elif rule["type"] == "optional_field":
                 changed = 1 if not _path_present(transformed, rule["field"]) else 0
+            elif rule["type"] == "set_value":
+                changed = _set_path(transformed, rule["field"], rule["value"])
+            elif rule["type"] == "remove_field":
+                changed = _remove_path(transformed, rule["field"])
+            elif rule["type"] == "type_coercion":
+                changed = _coerce_path(transformed, rule["field"], str(rule.get("target_type", "")))
+            elif rule["type"] == "enum_replace":
+                replace_values = {str(item) for item in rule.get("replace_values", [])}
+                if replace_values and "new_value" in rule:
+                    changed = _replace_enum_values(transformed, rule["field"], replace_values, rule["new_value"])
+            elif rule["type"] == "version_normalize":
+                changed = _normalize_version_path(transformed, rule["field"], int(rule.get("segments", 2)))
             if changed:
                 operations.append(
                     {

@@ -22,6 +22,7 @@ from contracts.common import (
     load_jsonl,
     normalize_contract_filename,
     profile_records,
+    schema_snapshots_dir,
     utc_now,
 )
 from contracts.lineage import load_latest_lineage_snapshot, resolve_contract_lineage
@@ -73,17 +74,6 @@ def contract_title(contract_id: str, dataset: str) -> str:
     return titles.get(dataset, contract_id.replace("-", " ").replace("_", " ").title())
 
 
-def alias_filename_for(dataset: str) -> str | None:
-    return {
-        "week1_intents": "week1_intent_records",
-        "week2_verdicts": "week2_verdicts",
-        "week3_extractions": "week3_extractions",
-        "week4_lineage": "week4_lineage",
-        "week5_events": "week5_events",
-        "traces": "langsmith_traces",
-    }.get(dataset)
-
-
 def registry_subscriptions(registry_path: str | None, contract_id: str) -> list[dict[str, Any]]:
     if not registry_path:
         return []
@@ -129,11 +119,11 @@ def inject_registry(contract: dict, registry_path: str | None) -> dict:
 
 
 def numeric_baseline_path(contract_id: str) -> Path:
-    return Path("schema_snapshots") / f"{normalize_contract_filename(contract_id)}_baseline.json"
+    return schema_snapshots_dir() / f"{normalize_contract_filename(contract_id)}_baseline.json"
 
 
 def aggregated_baseline_path() -> Path:
-    return Path("schema_snapshots") / "baselines.json"
+    return schema_snapshots_dir() / "baselines.json"
 
 
 def numeric_profile_summary(profiles: dict[str, dict[str, Any]]) -> dict[str, dict[str, float]]:
@@ -152,7 +142,7 @@ def numeric_profile_summary(profiles: dict[str, dict[str, Any]]) -> dict[str, di
 
 
 def persist_numeric_baselines(contract_id: str, source: str, profiles: dict[str, dict[str, Any]]) -> dict[str, Any]:
-    schema_snapshot_dir = Path("schema_snapshots")
+    schema_snapshot_dir = schema_snapshots_dir()
     schema_snapshot_dir.mkdir(parents=True, exist_ok=True)
     numeric_columns = numeric_profile_summary(profiles)
     baseline_payload = {
@@ -346,13 +336,14 @@ def write_contract_files(contract: dict, output_dir: str) -> tuple[Path, Path]:
     }
     with dbt_path.open("w", encoding="utf-8") as handle:
         yaml.safe_dump(dbt_payload, handle, sort_keys=False)
-    alias_name = alias_filename_for(contract["dataset"])
-    if alias_name and alias_name != filename:
-        shutil.copy(contract_path, target_dir / f"{alias_name}.yaml")
-        shutil.copy(dbt_path, target_dir / f"{alias_name}_dbt.yml")
-    snapshot_dir = Path("schema_snapshots") / filename
+    snapshot_dir = schema_snapshots_dir() / filename
     snapshot_dir.mkdir(parents=True, exist_ok=True)
-    snapshot_path = snapshot_dir / f"{utc_now().replace(':', '').replace('-', '')}.yaml"
+    snapshot_stem = utc_now().replace(':', '').replace('-', '')
+    snapshot_path = snapshot_dir / f"{snapshot_stem}.yaml"
+    collision_index = 1
+    while snapshot_path.exists():
+        snapshot_path = snapshot_dir / f"{snapshot_stem}-{collision_index:02d}.yaml"
+        collision_index += 1
     shutil.copy(contract_path, snapshot_path)
     return contract_path, dbt_path
 

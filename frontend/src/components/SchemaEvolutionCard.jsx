@@ -1,5 +1,6 @@
 import { formatTimestamp } from "../utils/formatters";
 import { getStatusTone } from "../utils/status";
+import { getSystemDisplayName, replaceSystemNames } from "../utils/systemNames";
 
 function SchemaEvolutionCard({ schemaEvolution, isUpdated = false }) {
   const items = (schemaEvolution.items || []).slice(0, 6);
@@ -22,13 +23,13 @@ function SchemaEvolutionCard({ schemaEvolution, isUpdated = false }) {
         {items.map((item) => (
           <article className="list-card" key={`${item.contract_id}-${item.field_name}`}>
             <div className="list-card-top">
-              <strong>{item.contract_name}</strong>
+              <strong>{getSystemDisplayName(item.contract_name || item.contract_id, { fallback: replaceSystemNames(item.contract_name || item.contract_id) })}</strong>
               <span className={`badge badge--${getStatusTone(item.compatibility)}`}>
                 {item.compatibility}
               </span>
             </div>
-            <p>{item.field_name} • {item.change}</p>
-            <p className="muted-copy">{item.action_required}</p>
+            <p>{item.field_name} • {replaceSystemNames(item.change)}</p>
+            <p className="muted-copy">{replaceSystemNames(item.action_required)}</p>
           </article>
         ))}
         {!items.length ? <p className="empty-copy">No schema evolution data is available.</p> : null}

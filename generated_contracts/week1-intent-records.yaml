@@ -3,21 +3,27 @@ apiVersion: v3.0.0
 id: week1-intent-records
 contract_id: week1-intent-records
 dataset: week1_intents
-generated_at: '2026-04-03T14:39:57Z'
-source_path: outputs/week1/intent_records.jsonl
-record_count: 20
+schema_version: 1.0.0
+generated_at: '2026-04-06T10:25:30Z'
+source_path: /home/nurye/Desktop/TRP1/week7/DataContractEnforcer/outputs/week1/intent_records.jsonl
+record_count: 24
 info:
   title: Week 1 Intent Records
   version: 1.0.0
   owner: trp1-week7
-  description: Auto-generated contract for week 1 intent records sourced from outputs/week1/intent_records.jsonl.
+  description: Auto-generated contract for week 1 intent records sourced from /home/nurye/Desktop/TRP1/week7/DataContractEnforcer/outputs/week1/intent_records.jsonl.
 servers:
   local:
     type: local
-    path: outputs/week1/intent_records.jsonl
+    path: /home/nurye/Desktop/TRP1/week7/DataContractEnforcer/outputs/week1/intent_records.jsonl
     format: jsonl
 terms:
   usage: Internal inter-system data contract. Do not publish externally.
+versioning:
+  expected_schema_version: 1.0.0
+  supported_source_versions:
+  - 1.0.0
+  versioned_input: true
 schema: &id001
   code_refs.confidence:
     type: number
@@ -31,9 +37,13 @@ schema: &id001
   code_refs.line_end:
     type: integer
     required: true
+    warning: 'Suspicious distribution detected: observed mean 59.227 is near an extreme
+      boundary. Check for scale drift, sparse values, or a nearly constant signal.'
   code_refs.line_start:
     type: integer
     required: true
+    warning: 'Suspicious distribution detected: observed mean 29.909 is near an extreme
+      boundary. Check for scale drift, sparse values, or a nearly constant signal.'
   code_refs.symbol:
     type: string
     required: true
@@ -47,21 +57,157 @@ schema: &id001
   governance_tags:
     type: string
     required: true
+    enum:
+    - week1
+    - intent-traceability
+    - completed
+    - trace-backed
+    - in_progress
   intent_id:
     type: string
     required: true
     format: uuid
 fields: *id001
-clauses: []
+profiling:
+  structural:
+    field_names:
+    - code_refs.confidence
+    - code_refs.file
+    - code_refs.line_end
+    - code_refs.line_start
+    - code_refs.symbol
+    - created_at
+    - description
+    - governance_tags
+    - intent_id
+    required_fields:
+    - code_refs.confidence
+    - code_refs.file
+    - code_refs.line_end
+    - code_refs.line_start
+    - code_refs.symbol
+    - created_at
+    - description
+    - governance_tags
+    - intent_id
+    nullable_fields: []
+    types:
+      code_refs.confidence: number
+      code_refs.file: string
+      code_refs.line_end: integer
+      code_refs.line_start: integer
+      code_refs.symbol: string
+      created_at: string
+      description: string
+      governance_tags: string
+      intent_id: string
+  statistics:
+    code_refs.confidence:
+      min: 0.93
+      max: 0.97
+      mean: 0.95
+      stddev: 0.02
+    code_refs.line_end:
+      min: 24.0
+      max: 128.0
+      mean: 59.227273
+      stddev: 26.968722
+    code_refs.line_start:
+      min: 1.0
+      max: 89.0
+      mean: 29.909091
+      stddev: 22.708447
+  baseline_files:
+    per_contract: schema_snapshots/real/week1-intent-records_baseline.json
+    aggregate: schema_snapshots/real/baselines.json
+  llm_annotations: []
+clauses:
+- id: week1.intent_id_uuid
+  category: identifier
+  severity: error
+  description: Each intent record must expose a stable UUID identifier.
+  rule:
+    type: field_format
+    field: intent_id
+    format: uuid
+- id: week1.created_at_datetime
+  category: temporal
+  severity: error
+  description: Intent timestamps must be valid UTC date-times.
+  rule:
+    type: field_format
+    field: created_at
+    format: date-time
+- id: week1.code_refs_non_empty
+  category: traceability
+  severity: error
+  description: Each intent record should reference at least one code location.
+  rule:
+    type: array_min_items
+    field: code_refs
+    minimum: 1
+- id: week1.code_ref_confidence_unit_scale
+  category: quality
+  severity: error
+  description: Code reference confidence values must remain on the 0.0-1.0 scale.
+  rule:
+    type: numeric_range
+    field: code_refs.confidence
+    minimum: 0.0
+    maximum: 1.0
+- id: week1.code_ref_file_exists
+  category: traceability
+  severity: error
+  description: Each referenced code path must resolve to an existing file in this
+    repository.
+  rule:
+    type: repo_path_exists
+    field: code_refs.file
 quality:
   type: GeneratedChecks
   minimum_clause_count: 8
-  semantic_clause_count: 0
+  semantic_clause_count: 5
 cross_checks: []
 lineage:
-  upstream: []
+  upstream:
+  - id: service::week1-intent-tracker
+    kind: SERVICE
+    label: week1-intent-tracker
+    path: services/week1-intent-tracker/main.py
+    relationship: REVERSE_PRODUCES
+    hops: 1
+    source: lineage_graph
+    via: []
+    relationship_path:
+    - REVERSE_PRODUCES
+    confidence: 0.97
   downstream:
-  - id: week2-digital-courtroom
+  - &id002
+    id: service::week2-digital-courtroom
+    kind: SERVICE
+    label: week2-digital-courtroom
+    path: services/week2-digital-courtroom/main.py
+    relationship: CONSUMES
+    hops: 1
+    source: lineage_graph
+    via: []
+    relationship_path:
+    - CONSUMES
+    confidence: 0.95
+  - &id003
+    id: service::week7-validation-runner
+    kind: SERVICE
+    label: week7-validation-runner
+    path: services/week7-validation-runner/main.py
+    relationship: CONSUMES
+    hops: 1
+    source: lineage_graph
+    via: []
+    relationship_path:
+    - CONSUMES
+    confidence: 0.95
+  - &id004
+    id: week2-digital-courtroom
     kind: SUBSCRIBER
     relationship: CONSUMED_BY
     hops: 1
@@ -82,6 +228,41 @@ lineage:
       reason: intent-level traceability joins fail without stable identifiers.
     contact: week2-team@local
     validation_mode: AUDIT
+  - &id005
+    id: week7-validation-runner
+    kind: SUBSCRIBER
+    relationship: CONSUMED_BY
+    hops: 1
+    source: contract_graph
+    via: []
+    relationship_path:
+    - CONSUMED_BY
+    fields_consumed:
+    - intent_id
+    - code_refs.file
+    - code_refs.confidence
+    - created_at
+    breaking_fields:
+    - field: code_refs.file
+      reason: traceability validation fails if referenced file paths are missing or
+        renamed.
+    - field: intent_id
+      reason: contract-level identity checks rely on stable intent identifiers.
+    contact: week7-team@local
+    validation_mode: AUDIT
+  - id: dataset::outputs/week2/verdicts.jsonl
+    kind: TABLE
+    label: verdicts.jsonl
+    path: outputs/week2/verdicts.jsonl
+    relationship: PRODUCES
+    hops: 2
+    source: lineage_graph
+    via:
+    - service::week2-digital-courtroom
+    relationship_path:
+    - CONSUMES
+    - PRODUCES
+    confidence: 0.97
   - id: week2-verdict-records
     kind: CONTRACT
     relationship: PUBLISHES
@@ -92,7 +273,24 @@ lineage:
     relationship_path:
     - CONSUMED_BY
     - PUBLISHES
-  - id: week7-ai-contract-extension
+  - &id006
+    id: service::week7-ai-contract-extension
+    kind: SERVICE
+    label: week7-ai-contract-extension
+    path: services/week7-ai-contract-extension/main.py
+    relationship: CONSUMES
+    hops: 3
+    source: lineage_graph
+    via:
+    - service::week2-digital-courtroom
+    - dataset::outputs/week2/verdicts.jsonl
+    relationship_path:
+    - CONSUMES
+    - PRODUCES
+    - CONSUMES
+    confidence: 0.95
+  - &id007
+    id: week7-ai-contract-extension
     kind: SUBSCRIBER
     relationship: CONSUMED_BY
     hops: 3
@@ -115,13 +313,22 @@ lineage:
     - field: overall_verdict
       reason: output schema violation-rate metric depends on stable PASS|FAIL|WARN
         enum.
-    - field: scores
+    - field: scores.score
       reason: rubric-level score validation fails if nested score structure changes.
     contact: week7-ai@local
     validation_mode: AUDIT
-  graph_seeds: []
+  graph_seeds:
+  - dataset::outputs/week1/intent_records.jsonl
+downstream_consumers:
+- *id002
+- *id003
+- *id004
+- *id005
+- *id006
+- *id007
 registry:
-  path: contract_registry/subscriptions.yaml
-  subscriber_count: 1
+  path: /home/nurye/Desktop/TRP1/week7/DataContractEnforcer/contract_registry/subscriptions.yaml
+  subscriber_count: 2
   subscriber_ids:
   - week2-digital-courtroom
+  - week7-validation-runner

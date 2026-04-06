@@ -43,6 +43,20 @@ export function formatCompactNumber(value) {
   }).format(Number(value));
 }
 
+export function formatPercent(value, maximumFractionDigits = 1) {
+  if (value === null || value === undefined || value === "") {
+    return "--";
+  }
+  const numeric = Number(value);
+  if (Number.isNaN(numeric)) {
+    return String(value);
+  }
+  return new Intl.NumberFormat(undefined, {
+    style: "percent",
+    maximumFractionDigits,
+  }).format(numeric);
+}
+
 function stringifyChangeValue(value) {
   if (Array.isArray(value)) {
     return value.join(", ");

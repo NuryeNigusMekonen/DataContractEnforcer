@@ -5,13 +5,29 @@ import os
 from pathlib import Path
 import tempfile
 import unittest
+from unittest.mock import patch
 
 import yaml
 
+from contracts.common import build_field_clause
 from contracts.generator import build_contract, write_contract_files
 
 
 class ContractGeneratorTest(unittest.TestCase):
+    def test_long_error_strings_do_not_become_enum(self) -> None:
+        profile = {
+            "type": "string",
+            "required": False,
+            "cardinality": 2,
+            "sample_values": [
+                "KeyboardInterrupt()Traceback (most recent call last):\n  File \"app.py\", line 1",
+                "DomainError()Traceback (most recent call last):\n  File \"worker.py\", line 9",
+            ],
+        }
+
+        clause = build_field_clause("error", profile)
+        self.assertNotIn("enum", clause)
+
     def test_generator_profiles_contract_and_persists_baselines(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir_name:
             tmp_dir = Path(tmp_dir_name)
@@ -146,6 +162,34 @@ class ContractGeneratorTest(unittest.TestCase):
             dbt_payload = yaml.safe_load(dbt_path.read_text(encoding="utf-8"))
             column_names = [column["name"] for column in dbt_payload["models"][0]["columns"]]
             self.assertIn("extracted_facts.confidence", column_names)
+
+    def test_write_contract_files_keeps_both_snapshots_with_same_second_timestamp(self) -> None:
+        contract = {
+            "contract_id": "week3-document-refinery-extractions",
+            "dataset": "week3_extractions",
+            "fields": {"doc_id": {"type": "string", "required": True}},
+        }
+
+        with tempfile.TemporaryDirectory() as tmp_dir_name:
+            tmp_dir = Path(tmp_dir_name)
+            previous_cwd = Path.cwd()
+            try:
+                os.chdir(tmp_dir)
+                with patch("contracts.generator.utc_now", return_value="2026-04-03T23:15:00Z"):
+                    write_contract_files(dict(contract), str(tmp_dir / "generated_contracts"))
+                    write_contract_files(dict(contract), str(tmp_dir / "generated_contracts"))
+            finally:
+                os.chdir(previous_cwd)
+
+            snapshot_dir = tmp_dir / "schema_snapshots" / "week3-document-refinery-extractions"
+            snapshot_files = sorted(path.name for path in snapshot_dir.glob("*.yaml"))
+            self.assertEqual(
+                snapshot_files,
+                [
+                    "20260403T231500Z-01.yaml",
+                    "20260403T231500Z.yaml",
+                ],
+            )
 
 
 if __name__ == "__main__":

@@ -10,12 +10,18 @@ from collections import Counter
 from pathlib import Path
 import sys
 from typing import Any
-from jsonschema import ValidationError, validate
+from jsonschema import Draft7Validator, ValidationError, validate
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from contracts.common import load_jsonl, utc_now, write_jsonl
+from contracts.common import load_jsonl, schema_snapshots_dir, utc_now, write_jsonl
+from contracts.runner import validate_traces
+
+
+UUID_PATTERN = re.compile(r"^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$")
+SEMVER_PATTERN = re.compile(r"^\d+\.\d+\.\d+$")
+SHA256_PATTERN = re.compile(r"^[0-9a-f]{64}$")
 
 
 PROMPT_INPUT_SCHEMA = {
@@ -30,14 +36,168 @@ PROMPT_INPUT_SCHEMA = {
     "additionalProperties": False,
 }
 
+VERDICT_OUTPUT_SCHEMA = {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "required": [
+        "confidence",
+        "evaluated_at",
+        "overall_score",
+        "overall_verdict",
+        "rubric_id",
+        "rubric_version",
+        "scores",
+        "target_ref",
+        "verdict_id",
+    ],
+    "properties": {
+        "confidence": {"type": "number", "minimum": 0.0, "maximum": 1.0},
+        "evaluated_at": {"type": "string", "format": "date-time"},
+        "overall_score": {"type": "number", "minimum": 1.0, "maximum": 5.0},
+        "overall_verdict": {"type": "string", "enum": ["PASS", "FAIL", "WARN"]},
+        "rubric_id": {"type": "string", "pattern": SHA256_PATTERN.pattern},
+        "rubric_version": {"type": "string", "pattern": SEMVER_PATTERN.pattern},
+        "scores": {
+            "type": "object",
+            "minProperties": 1,
+            "additionalProperties": {
+                    "type": "object",
+                    "required": ["evidence", "notes", "score"],
+                    "properties": {
+                        "evidence": {
+                            "type": "array",
+                            "minItems": 1,
+                            "items": {"type": "string", "minLength": 1},
+                        },
+                        "notes": {"type": "string", "minLength": 1},
+                        "score": {"type": "integer", "minimum": 1, "maximum": 5},
+                    },
+                    "additionalProperties": False,
+            },
+        },
+        "target_ref": {"type": "string", "minLength": 1},
+        "verdict_id": {"type": "string", "pattern": UUID_PATTERN.pattern},
+    },
+    "additionalProperties": False,
+}
+
+
+TRACE_RECORD_SCHEMA = {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "required": [
+        "id",
+        "run_type",
+        "inputs",
+        "outputs",
+        "start_time",
+        "end_time",
+        "prompt_tokens",
+        "completion_tokens",
+        "total_tokens",
+        "total_cost",
+        "tags",
+    ],
+    "properties": {
+        "id": {"type": "string", "pattern": UUID_PATTERN.pattern},
+        "name": {"type": ["string", "null"]},
+        "run_type": {"type": "string", "enum": ["llm", "chain", "tool", "retriever", "embedding"]},
+        "inputs": {"type": "object"},
+        "outputs": {"type": "object"},
+        "error": {"type": ["string", "null"]},
+        "start_time": {"type": "string", "format": "date-time"},
+        "end_time": {"type": "string", "format": "date-time"},
+        "prompt_tokens": {"type": "integer", "minimum": 0},
+        "completion_tokens": {"type": "integer", "minimum": 0},
+        "total_tokens": {"type": "integer", "minimum": 0},
+        "total_cost": {"type": "number", "minimum": 0.0},
+        "tags": {
+            "type": "array",
+            "items": {"type": "string", "minLength": 1},
+        },
+        "parent_run_id": {"type": ["string", "null"]},
+        "session_id": {"type": ["string", "null"]},
+    },
+    "additionalProperties": True,
+}
+
+
+def _normalize_source_label(source_label: str | None) -> str | None:
+    if not source_label:
+        return None
+    normalized = str(source_label).strip().lower()
+    if normalized in {"real", "violated"}:
+        return normalized
+    return None
+
+
+def _infer_source_label_from_paths(*paths: str | None) -> str:
+    for candidate in paths:
+        if not candidate:
+            continue
+        lowered = str(candidate).lower()
+        if "violated" in lowered:
+            return "violated"
+    return "real"
+
+
+def _scoped_ai_snapshot_dir(source_label: str | None = None) -> Path:
+    snapshot_dir = schema_snapshots_dir()
+    if snapshot_dir != Path("schema_snapshots"):
+        return snapshot_dir
+    return Path("schema_snapshots") / (_normalize_source_label(source_label) or "real")
+
+
+def _default_ai_baseline_path(filename: str, *, source_label: str | None = None) -> Path:
+    return _scoped_ai_snapshot_dir(source_label) / filename
+
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Run AI-specific contract checks.")
-    parser.add_argument("--mode", default="all", choices=["all", "drift", "prompt", "output"])
+    parser.add_argument("--mode", default="all", choices=["all", "drift", "prompt", "output", "traces"])
     parser.add_argument("--extractions", required=False, help="Path to week3 extraction records.")
     parser.add_argument("--verdicts", required=False, help="Path to week2 verdict records.")
+    parser.add_argument("--traces", required=False, help="Path to LangSmith trace records.")
     parser.add_argument("--output", required=True, help="Output JSON path.")
     return parser.parse_args()
+
+
+def _format_error_path(error: ValidationError) -> str:
+    path_parts = [str(part) for part in error.path]
+    if path_parts:
+        return ".".join(path_parts)
+    return "$"
+
+
+def _sample_schema_errors(records: list[dict[str, Any]], schema: dict[str, Any]) -> list[dict[str, Any]]:
+    validator = Draft7Validator(schema, format_checker=Draft7Validator.FORMAT_CHECKER)
+    failures: list[dict[str, Any]] = []
+    for index, record in enumerate(records):
+        errors = sorted(validator.iter_errors(record), key=lambda item: (_format_error_path(item), item.message))
+        if not errors:
+            continue
+        error = errors[0]
+        failures.append(
+            {
+                "record_index": index,
+                "field": _format_error_path(error),
+                "message": error.message,
+            }
+        )
+    return failures
+
+
+def _combine_statuses(*statuses: str) -> str:
+    normalized = [status.upper() for status in statuses if isinstance(status, str)]
+    if any(status in {"FAIL", "ERROR"} for status in normalized):
+        return "FAIL"
+    if any(status == "WARN" for status in normalized):
+        return "WARN"
+    if any(status in {"PASS", "BASELINE_SET"} for status in normalized):
+        return "PASS"
+    if any(status == "SKIPPED" for status in normalized):
+        return "SKIPPED"
+    return "UNKNOWN"
 
 
 def tokenize(text: str) -> list[str]:
@@ -62,9 +222,15 @@ def cosine_distance(left: list[float], right: list[float]) -> float:
     return 1.0 - (dot / (left_norm * right_norm))
 
 
-def check_embedding_drift(texts: list[str], baseline_path: str = "schema_snapshots/embedding_baseline.json", threshold: float = 0.15) -> dict[str, Any]:
+def check_embedding_drift(
+    texts: list[str],
+    baseline_path: str | None = None,
+    threshold: float = 0.15,
+    *,
+    source_label: str | None = None,
+) -> dict[str, Any]:
     centroid = hashed_vector(texts)
-    path = Path(baseline_path)
+    path = Path(baseline_path) if baseline_path else _default_ai_baseline_path("embedding_baseline.json", source_label=source_label)
     if not path.exists():
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(json.dumps({"written_at": utc_now(), "centroid": centroid}, indent=2), encoding="utf-8")
@@ -119,15 +285,19 @@ def validate_prompt_inputs(records: list[dict[str, Any]]) -> dict[str, Any]:
     }
 
 
-def check_output_schema_violation_rate(
+def enforce_structured_llm_output(
     verdict_records: list[dict[str, Any]],
-    baseline_path: str = "schema_snapshots/ai_metrics_baseline.json",
+    baseline_path: str | None = None,
     warn_threshold: float = 0.02,
+    fail_threshold: float = 0.05,
+    *,
+    source_label: str | None = None,
 ) -> dict[str, Any]:
     total = len(verdict_records)
-    violations = sum(1 for record in verdict_records if record.get("overall_verdict") not in {"PASS", "FAIL", "WARN"})
+    sample_errors = _sample_schema_errors(verdict_records, VERDICT_OUTPUT_SCHEMA)
+    violations = len(sample_errors)
     rate = violations / max(total, 1)
-    path = Path(baseline_path)
+    path = Path(baseline_path) if baseline_path else _default_ai_baseline_path("ai_metrics_baseline.json", source_label=source_label)
     baseline_rate = 0.0
     trend = "stable"
     if path.exists():
@@ -139,15 +309,106 @@ def check_output_schema_violation_rate(
     else:
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(json.dumps({"written_at": utc_now(), "baseline_violation_rate": rate}, indent=2), encoding="utf-8")
+    status = "PASS"
+    if violations and rate > fail_threshold:
+        status = "FAIL"
+    elif violations or rate > warn_threshold or trend == "rising":
+        status = "WARN"
     return {
-        "status": "WARN" if rate > warn_threshold or trend == "rising" else "PASS",
+        "status": status,
         "total_outputs": total,
+        "valid_outputs": max(total - violations, 0),
         "schema_violations": violations,
         "violation_rate": round(rate, 4),
         "trend": trend,
         "baseline_violation_rate": round(baseline_rate, 4),
         "warn_threshold": round(warn_threshold, 4),
+        "fail_threshold": round(fail_threshold, 4),
+        "schema_name": "week2_structured_verdict_output",
+        "sample_errors": sample_errors[:5],
     }
+
+
+def check_output_schema_violation_rate(
+    verdict_records: list[dict[str, Any]],
+    baseline_path: str | None = None,
+    warn_threshold: float = 0.02,
+    *,
+    source_label: str | None = None,
+) -> dict[str, Any]:
+    return enforce_structured_llm_output(
+        verdict_records,
+        baseline_path=baseline_path,
+        warn_threshold=warn_threshold,
+        source_label=source_label,
+    )
+
+
+def check_langsmith_trace_schema_contracts(trace_records: list[dict[str, Any]]) -> dict[str, Any]:
+    if not trace_records:
+        return {
+            "status": "SKIPPED",
+            "total_records": 0,
+            "schema_invalid_records": 0,
+            "total_contract_checks": 0,
+            "failed_contract_checks": 0,
+            "warned_contract_checks": 0,
+            "failing_check_ids": [],
+            "sample_errors": [],
+        }
+
+    schema_errors = _sample_schema_errors(trace_records, TRACE_RECORD_SCHEMA)
+    contract_results = validate_traces(trace_records)
+    failed_contracts = [result for result in contract_results if str(result.get("status", "")).upper() in {"FAIL", "ERROR"}]
+    warned_contracts = [result for result in contract_results if str(result.get("status", "")).upper() == "WARN"]
+    passed_contracts = [result for result in contract_results if str(result.get("status", "")).upper() == "PASS"]
+
+    overall_status = _combine_statuses(
+        "FAIL" if schema_errors else "PASS",
+        *[str(result.get("status", "UNKNOWN")) for result in contract_results],
+    )
+    return {
+        "status": overall_status,
+        "total_records": len(trace_records),
+        "schema_invalid_records": len(schema_errors),
+        "valid_records": len(trace_records) - len(schema_errors),
+        "total_contract_checks": len(contract_results),
+        "passed_contract_checks": len(passed_contracts),
+        "failed_contract_checks": len(failed_contracts),
+        "warned_contract_checks": len(warned_contracts),
+        "failing_check_ids": [str(result.get("check_id", "")) for result in failed_contracts],
+        "warned_check_ids": [str(result.get("check_id", "")) for result in warned_contracts],
+        "sample_errors": schema_errors[:5],
+        "contract_messages": [str(result.get("message", "")) for result in failed_contracts[:5]],
+    }
+
+
+def build_ai_extension_report(
+    extraction_records: list[dict[str, Any]],
+    verdict_records: list[dict[str, Any]],
+    trace_records: list[dict[str, Any]],
+    *,
+    source_label: str | None = None,
+) -> dict[str, Any]:
+    texts = [
+        fact.get("text", "")
+        for record in extraction_records
+        for fact in record.get("extracted_facts", [])
+        if fact.get("text")
+    ]
+    structured_output = enforce_structured_llm_output(verdict_records, source_label=source_label)
+    report: dict[str, Any] = {
+        "generated_at": utc_now(),
+        "mode": "all",
+        "embedding_drift": check_embedding_drift(texts, source_label=source_label),
+        "prompt_input_validation": validate_prompt_inputs(extraction_records),
+        "structured_llm_output_enforcement": structured_output,
+        "llm_output_schema_rate": dict(structured_output),
+        "langsmith_trace_schema_contracts": check_langsmith_trace_schema_contracts(trace_records),
+    }
+    if source_label:
+        report["source_label"] = source_label
+    return report
 
 
 def ai_violation_records(report: dict[str, Any]) -> list[dict[str, Any]]:
@@ -184,30 +445,30 @@ def ai_violation_records(report: dict[str, Any]) -> list[dict[str, Any]]:
                 "samples": [],
             }
         )
-    output_rate = report.get("llm_output_schema_rate", {})
-    if output_rate.get("status") == "WARN":
+    structured_output = report.get("structured_llm_output_enforcement") or report.get("llm_output_schema_rate", {})
+    if structured_output.get("status") in {"WARN", "FAIL"}:
         records.append(
             {
                 "violation_id": str(uuid.uuid4()),
                 "detected_at": utc_now(),
-                "status": "WARN",
-                "severity": "LOW",
-                "check_id": "ai.llm_output_schema_rate",
+                "status": structured_output.get("status", "WARN"),
+                "severity": "MEDIUM" if structured_output.get("status") == "FAIL" else "LOW",
+                "check_id": "ai.structured_llm_output_enforcement",
                 "field_name": "overall_verdict",
                 "message": (
-                    "LLM output schema violation rate exceeded the configured threshold."
-                    if float(output_rate.get("violation_rate", 0.0)) > float(output_rate.get("warn_threshold", 0.0))
-                    else "LLM output schema violation rate is rising against the stored baseline."
+                    "Structured LLM output failed the verdict JSON Schema gate."
+                    if structured_output.get("status") == "FAIL"
+                    else "Structured LLM output produced schema-invalid verdicts that need review."
                 ),
-                "records_failing": int(output_rate.get("schema_violations", 0)),
+                "records_failing": int(structured_output.get("schema_violations", 0)),
                 "candidate_files": ["outputs/week2/verdicts.jsonl"],
                 "blame_chain": [],
                 "blast_radius": {
                     "affected_nodes": ["week2-digital-courtroom"],
-                    "affected_pipelines": ["llm-output-schema-validation"],
-                    "estimated_records": int(output_rate.get("total_outputs", 0)),
+                    "affected_pipelines": ["structured-llm-output-enforcement"],
+                    "estimated_records": int(structured_output.get("total_outputs", 0)),
                 },
-                "samples": [],
+                "samples": structured_output.get("sample_errors", []),
             }
         )
     drift = report.get("embedding_drift", {})
@@ -232,6 +493,28 @@ def ai_violation_records(report: dict[str, Any]) -> list[dict[str, Any]]:
                 "samples": [],
             }
         )
+    trace_contracts = report.get("langsmith_trace_schema_contracts", {})
+    if trace_contracts.get("status") in {"WARN", "FAIL"}:
+        records.append(
+            {
+                "violation_id": str(uuid.uuid4()),
+                "detected_at": utc_now(),
+                "status": trace_contracts.get("status", "WARN"),
+                "severity": "HIGH" if trace_contracts.get("status") == "FAIL" else "MEDIUM",
+                "check_id": "ai.langsmith_trace_schema_contracts",
+                "field_name": "id",
+                "message": "LangSmith trace rows failed the AI trace schema contract gate.",
+                "records_failing": int(trace_contracts.get("schema_invalid_records", 0)),
+                "candidate_files": ["outputs/traces/runs.jsonl"],
+                "blame_chain": [],
+                "blast_radius": {
+                    "affected_nodes": ["langsmith-trace-records", "week7-ai-contract-extension"],
+                    "affected_pipelines": ["langsmith-trace-schema-contracts"],
+                    "estimated_records": int(trace_contracts.get("total_records", 0)),
+                },
+                "samples": trace_contracts.get("sample_errors", []),
+            }
+        )
     return records
 
 
@@ -240,13 +523,20 @@ def main() -> int:
     report: dict[str, Any] = {"generated_at": utc_now(), "mode": args.mode}
     extraction_records = load_jsonl(args.extractions) if args.extractions else []
     verdict_records = load_jsonl(args.verdicts) if args.verdicts else []
+    trace_records = load_jsonl(args.traces) if args.traces else []
+    source_label = _infer_source_label_from_paths(args.extractions, args.verdicts, args.traces)
+    report["source_label"] = source_label
     if args.mode in {"all", "drift"}:
         texts = [fact.get("text", "") for record in extraction_records for fact in record.get("extracted_facts", []) if fact.get("text")]
-        report["embedding_drift"] = check_embedding_drift(texts)
+        report["embedding_drift"] = check_embedding_drift(texts, source_label=source_label)
     if args.mode in {"all", "prompt"}:
         report["prompt_input_validation"] = validate_prompt_inputs(extraction_records)
     if args.mode in {"all", "output"}:
-        report["llm_output_schema_rate"] = check_output_schema_violation_rate(verdict_records)
+        structured_output = enforce_structured_llm_output(verdict_records, source_label=source_label)
+        report["structured_llm_output_enforcement"] = structured_output
+        report["llm_output_schema_rate"] = dict(structured_output)
+    if args.mode in {"all", "traces"}:
+        report["langsmith_trace_schema_contracts"] = check_langsmith_trace_schema_contracts(trace_records)
     output_path = Path(args.output)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(json.dumps(report, indent=2), encoding="utf-8")

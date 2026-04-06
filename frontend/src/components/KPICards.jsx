@@ -3,22 +3,22 @@ import { formatCompactNumber, formatTimeValue, formatTimestamp } from "../utils/
 function KPICards({ kpi, isUpdated = false }) {
   const cards = [
     {
-      label: "Data Health Score",
+      label: "Contract Health",
       value: `${kpi.health_score ?? "--"}/100`,
-      context: kpi.health_narrative || "Live validation health across monitored contracts.",
+      context: kpi.health_narrative || "Latest end-to-end validation health across the monitored flows.",
     },
     {
-      label: "Active Critical Incidents",
+      label: "High-Risk Incidents",
       value: formatCompactNumber(kpi.incident_count),
-      context: kpi.incident_context || "No critical incidents are active.",
+      context: kpi.incident_context || "No critical incidents are active right now.",
     },
     {
-      label: "Affected Systems Count",
+      label: "Impacted Systems",
       value: formatCompactNumber(kpi.affected_systems_count),
       context: kpi.affected_systems_context || "Downstream impact is currently limited.",
     },
     {
-      label: "Last Validation Time",
+      label: "Last Validation",
       value: formatTimeValue(kpi.last_validation_time),
       context: formatTimestamp(kpi.last_validation_time),
     },

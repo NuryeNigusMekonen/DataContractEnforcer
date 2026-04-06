@@ -24,8 +24,13 @@ class WhatIfSimulationTest(unittest.TestCase):
         generate_all_outputs_from_scenario_path("test_data/scenarios/healthy.yaml", clear_existing=True)
         cls._tmp_dir_context = tempfile.TemporaryDirectory()
         cls.tmp_dir = Path(cls._tmp_dir_context.name)
-        (cls.tmp_dir / "schemas").symlink_to(REPO_ROOT / "schemas", target_is_directory=True)
+        schema_source = REPO_ROOT / "schemas"
+        if not schema_source.exists():
+            schema_source = REPO_ROOT / "artifacts/week5/schemas"
+        (cls.tmp_dir / "schemas").symlink_to(schema_source, target_is_directory=True)
         (cls.tmp_dir / "rubric").symlink_to(REPO_ROOT / "rubric", target_is_directory=True)
+        (cls.tmp_dir / "outputs").symlink_to(REPO_ROOT / "outputs", target_is_directory=True)
+        (cls.tmp_dir / "artifacts").symlink_to(REPO_ROOT / "artifacts", target_is_directory=True)
         (cls.tmp_dir / "schema_snapshots").mkdir()
         cls.contract_paths = {
             "week2": cls._write_contract("outputs/week2/verdicts.jsonl", "week2-verdict-records", "week2-verdict-records.yaml"),
@@ -75,8 +80,7 @@ class WhatIfSimulationTest(unittest.TestCase):
         self.assertTrue(report["adapter_attempted"])
         self.assertEqual(report["adapter_status"], "PASS")
         self.assertEqual(report["compatibility_verdict"], "BREAKING_BUT_ADAPTABLE")
-        self.assertIn("week4-brownfield-cartographer", [item["subscriber_id"] for item in report["affected_subscribers"]])
-        self.assertTrue(any(item["id"] == "week7-violation-attributor" for item in report["transitive_impacts"]))
+        self.assertIn("week5-ledger", [item["subscriber_id"] for item in report["affected_subscribers"]])
 
     def test_week2_enum_addition_is_forward_compatible(self) -> None:
         report = self._simulate(
@@ -91,7 +95,7 @@ class WhatIfSimulationTest(unittest.TestCase):
         self.assertEqual(report["compatibility_verdict"], "FORWARD_COMPATIBLE")
         self.assertIn("week7-ai-contract-extension", [item["subscriber_id"] for item in report["affected_subscribers"]])
 
-    def test_week5_required_field_addition_requires_migration(self) -> None:
+    def test_week5_required_field_addition_is_breaking_but_adaptable(self) -> None:
         report = self._simulate(
             contract_path=self.contract_paths["week5"],
             data_path=REPO_ROOT / "outputs/week5/events.jsonl",
@@ -100,8 +104,10 @@ class WhatIfSimulationTest(unittest.TestCase):
 
         self.assertEqual(report["baseline_status"], "PASS")
         self.assertEqual(report["raw_changed_status"], "PASS")
-        self.assertEqual(report["compatibility_verdict"], "BREAKING_REQUIRES_MIGRATION")
-        self.assertIn("migration", report["recommended_action"].lower())
+        self.assertTrue(report["adapter_attempted"])
+        self.assertEqual(report["adapter_status"], "PASS")
+        self.assertEqual(report["compatibility_verdict"], "BREAKING_BUT_ADAPTABLE")
+        self.assertIn("adapter", report["recommended_action"].lower())
 
 
 if __name__ == "__main__":

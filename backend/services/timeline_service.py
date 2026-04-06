@@ -114,7 +114,7 @@ def get_timeline(limit: int = 15) -> list[dict[str, Any]]:
                 title="Weekly enforcer summary refreshed",
                 status=str(enforcer_report.get("data_health_score", "UNKNOWN")),
                 details=enforcer_report.get("health_narrative", "Dashboard summary refreshed."),
-                source="enforcer_report/report_data.json",
+                source=enforcer_report.get("_source_path", "enforcer_report/report_data.json"),
             )
         )
 

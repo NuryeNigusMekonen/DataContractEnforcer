@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+import shutil
 import uuid
 from collections import Counter, defaultdict
 from datetime import datetime, timedelta, timezone
@@ -59,25 +60,37 @@ def to_zulu(dt: datetime) -> str:
 
 
 def sync_week1() -> None:
-    active_intents_path = ROOT / "artifacts/week1/.orchestration/active_intents.yaml"
-    trace_path = ROOT / "artifacts/week1/.orchestration/agent_trace.jsonl"
-    output_path = ROOT / "artifacts/week1/outputs/intent_records.jsonl"
+    orchestration_dir = ROOT / "artifacts/week1/.orchestration"
+    output_path = ROOT / "outputs/week1/intent_records.jsonl"
     ensure_dir(output_path.parent)
 
-    active_intents = yaml.safe_load(active_intents_path.read_text(encoding="utf-8")).get("active_intents", [])
+    active_intents: list[dict[str, Any]] = []
+    for active_intents_path in sorted(orchestration_dir.glob("active_intents*.yaml")):
+        payload = yaml.safe_load(active_intents_path.read_text(encoding="utf-8")) or {}
+        active_intents.extend(payload.get("active_intents", []))
+    deduped_intents: list[dict[str, Any]] = []
+    seen_intent_ids: set[str] = set()
+    for intent in active_intents:
+        intent_id = str(intent.get("id", "")).strip()
+        if not intent_id or intent_id in seen_intent_ids:
+            continue
+        seen_intent_ids.add(intent_id)
+        deduped_intents.append(intent)
+
     traces = []
-    with trace_path.open("r", encoding="utf-8") as handle:
-        for line in handle:
-            line = line.strip()
-            if line:
-                traces.append(json.loads(line))
+    for trace_path in sorted(orchestration_dir.glob("agent_trace*.jsonl")):
+        with trace_path.open("r", encoding="utf-8") as handle:
+            for line in handle:
+                line = line.strip()
+                if line:
+                    traces.append(json.loads(line))
 
     traces_by_intent: dict[str, list[dict[str, Any]]] = defaultdict(list)
     for record in traces:
         traces_by_intent[str(record.get("intent_id", ""))].append(record)
 
     records: list[dict[str, Any]] = []
-    for intent in active_intents:
+    for intent in deduped_intents:
         intent_id = str(intent["id"])
         related_traces = sorted(traces_by_intent.get(intent_id, []), key=lambda item: str(item.get("timestamp", "")))
         code_refs: list[dict[str, Any]] = []
@@ -201,7 +214,7 @@ def parse_week2_report(
 
 def sync_week2() -> None:
     rubric_path = ROOT / "artifacts/week2/rubric/week2_rubric.json"
-    output_path = ROOT / "artifacts/week2/outputs/verdicts.jsonl"
+    output_path = ROOT / "outputs/week2/verdicts.jsonl"
     ensure_dir(output_path.parent)
     rubric = json.loads(rubric_path.read_text(encoding="utf-8"))
     rubric_hash = sha256_file(rubric_path)
@@ -212,11 +225,14 @@ def sync_week2() -> None:
         )
         for dimension in rubric["dimensions"]
     }
-    report_paths = [
-        ROOT / "artifacts/week2/report_onself_generated/self_audit_run.md",
-        ROOT / "artifacts/week2/report_onpeer_generated/habesha_audit_from_run.md",
-        ROOT / "artifacts/week2/report_bypeer_received/report_by_peer_received.md",
+    report_dirs = [
+        ROOT / "artifacts/week2/report_onself_generated",
+        ROOT / "artifacts/week2/report_onpeer_generated",
+        ROOT / "artifacts/week2/report_bypeer_received",
     ]
+    report_paths: list[Path] = []
+    for report_dir in report_dirs:
+        report_paths.extend(sorted(report_dir.glob("*.md")))
     records = [
         parse_week2_report(path, rubric_hash, rubric_version, rubric_dimension_ids) for path in report_paths if path.exists()
     ]
@@ -237,8 +253,10 @@ def sync_week3() -> None:
     extracted_dir = ROOT / "artifacts/week3/.refinery/extracted"
     chunk_dir = ROOT / "artifacts/week3/.refinery/chunks"
     ledger_path = ROOT / "artifacts/week3/.refinery/extraction_ledger.jsonl"
-    output_path = ROOT / "artifacts/week3/outputs/extractions.jsonl"
+    rules_path = ROOT / "artifacts/week3/extraction_rules.yaml"
+    output_path = ROOT / "outputs/week3/extractions.jsonl"
     ensure_dir(output_path.parent)
+    rules_hash = sha256_file(rules_path) if rules_path.exists() else ""
 
     ledger_by_doc: dict[str, dict[str, Any]] = {}
     with ledger_path.open("r", encoding="utf-8") as handle:
@@ -282,6 +300,7 @@ def sync_week3() -> None:
                 "doc_id": stable_uuid(f"week3:{doc_id}"),
                 "source_path": str(extracted_path.resolve()),
                 "source_hash": sha256_file(extracted_path),
+                "extraction_rules_hash": rules_hash,
                 "extracted_facts": extracted_facts,
                 "entities": entities,
                 "extraction_model": ledger.get("strategy_used", "unknown"),
@@ -327,6 +346,7 @@ def sync_week3() -> None:
                         "doc_id": stable_uuid(f"week3-chunk:{chunk_path.stem}:{chunk_records_added}"),
                         "source_path": str(chunk_path.resolve()),
                         "source_hash": sha256_file(chunk_path),
+                        "extraction_rules_hash": rules_hash,
                         "extracted_facts": facts[:6],
                         "entities": fact_entities,
                         "extraction_model": f"{ledger.get('strategy_used', 'chunk-derived')}-chunk-view",
@@ -370,26 +390,164 @@ def map_week4_node(node: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+DATASET_PATH_BY_CONTRACT: dict[str, str] = {
+    "week1-intent-records": "outputs/week1/intent_records.jsonl",
+    "week2-verdict-records": "outputs/week2/verdicts.jsonl",
+    "week3-document-refinery-extractions": "outputs/week3/extractions.jsonl",
+    "week4-lineage-snapshots": "outputs/week4/lineage_snapshots.jsonl",
+    "week5-event-records": "outputs/week5/events.jsonl",
+    "langsmith-trace-records": "outputs/traces/runs.jsonl",
+}
+
+PRODUCER_SERVICE_BY_CONTRACT: dict[str, str] = {
+    "week1-intent-records": "service::week1-intent-tracker",
+    "week2-verdict-records": "service::week2-digital-courtroom",
+    "week3-document-refinery-extractions": "service::week3-document-refinery",
+    "week4-lineage-snapshots": "service::week4-brownfield-cartographer",
+    "week5-event-records": "service::week5-ledger",
+}
+
+
+def _service_path_hint(service_id: str) -> str:
+    raw = service_id.replace("service::", "", 1)
+    return f"services/{raw}/main.py"
+
+
+def _dataset_node(dataset_path: str, captured_at: str) -> dict[str, Any]:
+    return {
+        "node_id": f"dataset::{dataset_path}",
+        "type": "TABLE",
+        "label": Path(dataset_path).name,
+        "metadata": {
+            "path": dataset_path,
+            "language": "jsonl",
+            "purpose": "cross-week dataset contract boundary",
+            "last_modified": captured_at,
+        },
+    }
+
+
+def _service_node(service_id: str, captured_at: str) -> dict[str, Any]:
+    return {
+        "node_id": service_id,
+        "type": "SERVICE",
+        "label": service_id.replace("service::", "", 1),
+        "metadata": {
+            "path": _service_path_hint(service_id),
+            "language": "python",
+            "purpose": "cross-week contract consumer or producer",
+            "last_modified": captured_at,
+        },
+    }
+
+
+def canonical_week_lineage_overlay(captured_at: str) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    overlay_nodes: dict[str, dict[str, Any]] = {}
+    overlay_edges: dict[tuple[str, str, str], dict[str, Any]] = {}
+
+    # Ensure every canonical week dataset exists in the lineage snapshot.
+    for contract_id, dataset_path in DATASET_PATH_BY_CONTRACT.items():
+        dataset_node_id = f"dataset::{dataset_path}"
+        overlay_nodes[dataset_node_id] = _dataset_node(dataset_path, captured_at)
+        producer_service = PRODUCER_SERVICE_BY_CONTRACT.get(contract_id)
+        if producer_service:
+            overlay_nodes[producer_service] = _service_node(producer_service, captured_at)
+            overlay_edges[(producer_service, dataset_node_id, "PRODUCES")] = {
+                "source": producer_service,
+                "target": dataset_node_id,
+                "relationship": "PRODUCES",
+                "confidence": 0.97,
+            }
+
+    subscriptions_path = ROOT / "contract_registry/subscriptions.yaml"
+    payload = {}
+    if subscriptions_path.exists():
+        payload = yaml.safe_load(subscriptions_path.read_text(encoding="utf-8")) or {}
+    subscriptions = payload.get("subscriptions", []) if isinstance(payload, dict) else []
+    for subscription in subscriptions:
+        if not isinstance(subscription, dict):
+            continue
+        contract_id = str(subscription.get("contract_id", ""))
+        dataset_path = DATASET_PATH_BY_CONTRACT.get(contract_id)
+        if not dataset_path:
+            continue
+        subscriber = str(subscription.get("subscriber_id", "")).strip()
+        if not subscriber:
+            continue
+        service_node_id = subscriber if subscriber.startswith("service::") else f"service::{subscriber}"
+        dataset_node_id = f"dataset::{dataset_path}"
+        overlay_nodes[service_node_id] = _service_node(service_node_id, captured_at)
+        overlay_edges[(dataset_node_id, service_node_id, "CONSUMES")] = {
+            "source": dataset_node_id,
+            "target": service_node_id,
+            "relationship": "CONSUMES",
+            "confidence": 0.95,
+        }
+
+    return list(overlay_nodes.values()), list(overlay_edges.values())
+
+
+def merge_week4_graph(
+    base_nodes: list[dict[str, Any]],
+    base_edges: list[dict[str, Any]],
+    overlay_nodes: list[dict[str, Any]],
+    overlay_edges: list[dict[str, Any]],
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    merged_nodes: dict[str, dict[str, Any]] = {}
+    for node in base_nodes + overlay_nodes:
+        node_id = str(node.get("node_id", ""))
+        if not node_id:
+            continue
+        merged_nodes[node_id] = node
+
+    merged_edges: dict[tuple[str, str, str], dict[str, Any]] = {}
+    for edge in base_edges + overlay_edges:
+        source = str(edge.get("source", ""))
+        target = str(edge.get("target", ""))
+        relationship = str(edge.get("relationship", "CONSUMES"))
+        if not source or not target:
+            continue
+        key = (source, target, relationship)
+        if key in merged_edges:
+            merged_edges[key]["confidence"] = max(
+                float(merged_edges[key].get("confidence", 0.0)),
+                float(edge.get("confidence", 0.0)),
+            )
+        else:
+            merged_edges[key] = {
+                "source": source,
+                "target": target,
+                "relationship": relationship,
+                "confidence": float(edge.get("confidence", 0.95)),
+            }
+    return list(merged_nodes.values()), list(merged_edges.values())
+
+
 def sync_week4() -> None:
     lineage_graph_path = ROOT / "artifacts/week4/.cartography/lineage_graph.json"
-    output_path = ROOT / "artifacts/week4/outputs/lineage_snapshots.jsonl"
+    output_path = ROOT / "outputs/week4/lineage_snapshots.jsonl"
     ensure_dir(output_path.parent)
     graph = json.loads(lineage_graph_path.read_text(encoding="utf-8"))
+    captured_at = to_zulu(datetime.fromtimestamp(lineage_graph_path.stat().st_mtime, tz=timezone.utc))
+    base_nodes = [map_week4_node(node) for node in graph.get("nodes", [])]
+    base_edges = [
+        {
+            "source": edge.get("source"),
+            "target": edge.get("target"),
+            "relationship": edge.get("edge_type", "CONSUMES"),
+            "confidence": 0.95,
+        }
+        for edge in graph.get("edges", [])
+    ]
+    overlay_nodes, overlay_edges = canonical_week_lineage_overlay(captured_at)
+    nodes, edges = merge_week4_graph(base_nodes, base_edges, overlay_nodes, overlay_edges)
     snapshot = {
         "snapshot_id": stable_uuid(f"week4:{sha256_file(lineage_graph_path)}"),
         "codebase_root": str((ROOT / "artifacts/week4").resolve()),
         "git_commit": hashlib.sha1(lineage_graph_path.read_bytes()).hexdigest(),
-        "nodes": [map_week4_node(node) for node in graph.get("nodes", [])],
-        "edges": [
-            {
-                "source": edge.get("source"),
-                "target": edge.get("target"),
-                "relationship": edge.get("edge_type", "CONSUMES"),
-                "confidence": 0.95,
-            }
-            for edge in graph.get("edges", [])
-        ],
-        "captured_at": to_zulu(datetime.fromtimestamp(lineage_graph_path.stat().st_mtime, tz=timezone.utc)),
+        "nodes": nodes,
+        "edges": edges,
+        "captured_at": captured_at,
     }
     write_jsonl(output_path, [snapshot])
 
@@ -503,8 +661,8 @@ def source_service_for(raw: dict[str, Any]) -> str:
 
 def sync_week5() -> None:
     seed_events_path = ROOT / "artifacts/week5/data/seed_events.jsonl"
-    output_path = ROOT / "artifacts/week5/outputs/events.jsonl"
-    schema_dir = ROOT / "artifacts/week5/schemas/events"
+    output_path = ROOT / "outputs/week5/events.jsonl"
+    schema_dir = ROOT / "outputs/week5/schemas/events"
     ensure_dir(output_path.parent)
     ensure_dir(schema_dir)
 
@@ -568,6 +726,15 @@ def sync_week5() -> None:
     write_jsonl(output_path, records)
 
 
+def sync_traces() -> None:
+    source_path = ROOT / "artifacts/traces/runs.jsonl"
+    output_path = ROOT / "outputs/traces/runs.jsonl"
+    if not source_path.exists():
+        return
+    ensure_dir(output_path.parent)
+    shutil.copyfile(source_path, output_path)
+
+
 def fix_symlinks() -> None:
     symlinks = {
         ROOT / ".orchestration": "artifacts/week1/.orchestration",
@@ -575,7 +742,6 @@ def fix_symlinks() -> None:
         ROOT / ".cartography": "artifacts/week4/.cartography",
         ROOT / "rubric": "artifacts/week2/rubric",
         ROOT / "rubrics": "artifacts/week2/rubric",
-        ROOT / "schemas/events": "../artifacts/week5/schemas/events",
     }
     for path, target in symlinks.items():
         if path.exists() or path.is_symlink():
@@ -593,8 +759,9 @@ def main() -> int:
     sync_week3()
     sync_week4()
     sync_week5()
+    sync_traces()
     fix_symlinks()
-    print("Synced real week1-week5 artifacts into canonical week7 outputs.")
+    print("Synced real week1-week5 artifacts and traces directly into outputs/.")
     return 0
 
 

@@ -1,53 +1,59 @@
-import { useState } from "react";
-
 import { formatTimestamp } from "../utils/formatters";
 import { getStatusTone } from "../utils/status";
+import { formatSystemList, getSystemDisplayName, replaceSystemNames } from "../utils/systemNames";
 
 function IncidentCard({ incident, isUpdated = false }) {
-  const [showDetails, setShowDetails] = useState(false);
+  const tone = getStatusTone(incident.severity);
+  const isHealthyState =
+    tone === "pass" &&
+    !incident.week &&
+    !incident.detected_at &&
+    !(incident.affected_systems?.length);
 
   return (
     <section className={`panel ${isUpdated ? "panel--updated" : ""}`}>
       <div className="panel-heading">
         <div>
-          <p className="section-kicker">Incident And Simulation</p>
-          <h2>Current incident</h2>
+          <p className="section-kicker">Current Risk</p>
+          <h2>What needs attention now</h2>
         </div>
-        <span className={`badge badge--${getStatusTone(incident.severity)}`}>
+        <span className={`badge badge--${tone}`}>
           {incident.severity || "PASS"}
         </span>
       </div>
 
-      <article className="incident-hero">
-        <span>{incident.field || "No active incident"}</span>
-        <strong>{incident.short_message || incident.message}</strong>
-      </article>
-
-      <div className="detail-split">
-        <article className="list-card">
-          <strong>Affected systems</strong>
-          <p>
-            {incident.affected_systems?.length
-              ? incident.affected_systems.join(", ")
-              : "No downstream systems are currently impacted."}
-          </p>
+      {isHealthyState ? (
+        <article className="incident-hero incident-hero--healthy">
+          <span>All monitored flows are healthy</span>
+          <strong>{replaceSystemNames(incident.short_message || incident.message || "No active incident is blocking the current run.")}</strong>
+          <p className="muted-copy">{incident.recommended_action || "Continue monitoring live validations."}</p>
         </article>
-        <article className="list-card">
-          <strong>Recommended action</strong>
-          <p>{incident.recommended_action || "Continue monitoring."}</p>
-        </article>
-      </div>
+      ) : (
+        <>
+          <article className="incident-hero">
+            <span>{incident.field || "No active incident"}</span>
+            <strong>{replaceSystemNames(incident.short_message || incident.message)}</strong>
+          </article>
 
-      {showDetails ? (
-        <div className="incident-details">
-          <p className="muted-copy">Week: {incident.week || "Unknown"}</p>
-          <p className="muted-copy">Detected: {formatTimestamp(incident.detected_at)}</p>
-        </div>
-      ) : null}
+          <div className="detail-split">
+            <article className="list-card">
+              <strong>Affected systems</strong>
+              <p>
+                {formatSystemList(incident.affected_systems, { empty: "No downstream systems are currently impacted." })}
+              </p>
+            </article>
+            <article className="list-card">
+              <strong>Next step</strong>
+              <p>{incident.recommended_action || "Continue monitoring."}</p>
+            </article>
+          </div>
 
-      <button className="primary-button primary-button--ghost" type="button" onClick={() => setShowDetails((current) => !current)}>
-        {showDetails ? "Hide details" : "View details"}
-      </button>
+          <div className="incident-details">
+            <p className="muted-copy">System: {getSystemDisplayName(incident.week, { fallback: replaceSystemNames(incident.week) || "Unknown" })}</p>
+            <p className="muted-copy">Detected: {formatTimestamp(incident.detected_at)}</p>
+          </div>
+        </>
+      )}
     </section>
   );
 }

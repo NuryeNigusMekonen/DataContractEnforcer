@@ -3,22 +3,28 @@ apiVersion: v3.0.0
 id: week3-document-refinery-extractions
 contract_id: week3-document-refinery-extractions
 dataset: week3_extractions
-generated_at: '2026-04-03T14:40:02Z'
-source_path: outputs/week3/extractions_violated.jsonl
+schema_version: 1.0.0
+generated_at: '2026-04-06T10:25:30Z'
+source_path: /home/nurye/Desktop/TRP1/week7/DataContractEnforcer/outputs/week3/extractions.jsonl
 record_count: 50
 info:
   title: Week 3 Document Refinery Extraction Records
   version: 1.0.0
   owner: trp1-week7
   description: Auto-generated contract for week 3 document refinery extraction records
-    sourced from outputs/week3/extractions_violated.jsonl.
+    sourced from /home/nurye/Desktop/TRP1/week7/DataContractEnforcer/outputs/week3/extractions.jsonl.
 servers:
   local:
     type: local
-    path: outputs/week3/extractions_violated.jsonl
+    path: /home/nurye/Desktop/TRP1/week7/DataContractEnforcer/outputs/week3/extractions.jsonl
     format: jsonl
 terms:
   usage: Internal inter-system data contract. Do not publish externally.
+versioning:
+  expected_schema_version: 1.0.0
+  supported_source_versions:
+  - 1.0.0
+  versioned_input: true
 schema: &id001
   doc_id:
     type: string
@@ -38,7 +44,7 @@ schema: &id001
     type: number
     required: true
     minimum: 0.0
-    maximum: 86.0
+    maximum: 1.0
     description: Confidence must remain on a 0.0-1.0 scale.
   extracted_facts.entity_refs:
     type: string
@@ -50,6 +56,8 @@ schema: &id001
   extracted_facts.page_ref:
     type: integer
     required: true
+    warning: 'Suspicious distribution detected: observed mean 9.191 is near an extreme
+      boundary. Check for scale drift, sparse values, or a nearly constant signal.'
   extracted_facts.source_excerpt:
     type: string
     required: true
@@ -63,10 +71,19 @@ schema: &id001
     - strategy_b_layout_docling
     - strategy_c_local_ocr
     - chunk-derived-chunk-view
+  extraction_rules_hash:
+    type: string
+    required: true
+    pattern: ^[0-9a-f]{64}$
+    enum:
+    - 1d2d8f381fb2948985edd9eb27c36390eaa70dbf96c6086738fae39bd85ff57c
   processing_time_ms:
     type: integer
     required: true
     minimum: 1
+    warning: 'Suspicious distribution detected: observed mean 17362.380 is near an
+      extreme boundary. Check for scale drift, sparse values, or a nearly constant
+      signal.'
   source_hash:
     type: string
     required: true
@@ -77,10 +94,101 @@ schema: &id001
   token_count.input:
     type: integer
     required: true
+    warning: 'Suspicious distribution detected: observed mean 269.760 is near an extreme
+      boundary. Check for scale drift, sparse values, or a nearly constant signal.'
   token_count.output:
     type: integer
     required: true
+    warning: 'Suspicious distribution detected: observed mean 51.800 is near an extreme
+      boundary. Check for scale drift, sparse values, or a nearly constant signal.'
 fields: *id001
+profiling:
+  structural:
+    field_names:
+    - doc_id
+    - entities
+    - extracted_at
+    - extracted_facts
+    - extracted_facts.confidence
+    - extracted_facts.entity_refs
+    - extracted_facts.fact_id
+    - extracted_facts.page_ref
+    - extracted_facts.source_excerpt
+    - extracted_facts.text
+    - extraction_model
+    - extraction_rules_hash
+    - processing_time_ms
+    - source_hash
+    - source_path
+    - token_count.input
+    - token_count.output
+    required_fields:
+    - doc_id
+    - extracted_at
+    - extracted_facts.confidence
+    - extracted_facts.fact_id
+    - extracted_facts.page_ref
+    - extracted_facts.source_excerpt
+    - extracted_facts.text
+    - extraction_model
+    - extraction_rules_hash
+    - processing_time_ms
+    - source_hash
+    - source_path
+    - token_count.input
+    - token_count.output
+    nullable_fields:
+    - entities
+    - extracted_facts
+    - extracted_facts.entity_refs
+    types:
+      doc_id: string
+      entities: string
+      extracted_at: string
+      extracted_facts: string
+      extracted_facts.confidence: number
+      extracted_facts.entity_refs: string
+      extracted_facts.fact_id: string
+      extracted_facts.page_ref: integer
+      extracted_facts.source_excerpt: string
+      extracted_facts.text: string
+      extraction_model: string
+      extraction_rules_hash: string
+      processing_time_ms: integer
+      source_hash: string
+      source_path: string
+      token_count.input: integer
+      token_count.output: integer
+  statistics:
+    extracted_facts.confidence:
+      min: 0.84
+      max: 0.86
+      mean: 0.851561
+      stddev: 0.009877
+    extracted_facts.page_ref:
+      min: 1.0
+      max: 25.0
+      mean: 9.190751
+      stddev: 6.985826
+    processing_time_ms:
+      min: 200.0
+      max: 215712.0
+      mean: 17362.38
+      stddev: 44086.320221
+    token_count.input:
+      min: 0.0
+      max: 1945.0
+      mean: 269.76
+      stddev: 359.785467
+    token_count.output:
+      min: 0.0
+      max: 383.0
+      mean: 51.8
+      stddev: 69.488128
+  baseline_files:
+    per_contract: schema_snapshots/real/week3-document-refinery-extractions_baseline.json
+    aggregate: schema_snapshots/real/baselines.json
+  llm_annotations: []
 clauses:
 - id: week3.doc_id_uuid
   category: identifier
@@ -143,6 +251,15 @@ clauses:
     type: field_pattern
     field: source_hash
     pattern: ^[0-9a-f]{64}$
+- id: week3.extraction_rules_hash_sha256
+  category: integrity
+  severity: error
+  description: Extraction records must pin the exact SHA-256 hash of extraction_rules.yaml
+    used at generation time.
+  rule:
+    type: field_pattern
+    field: extraction_rules_hash
+    pattern: ^[0-9a-f]{64}$
 - id: week3.processing_time_positive
   category: operational
   severity: error
@@ -173,16 +290,77 @@ clauses:
     minimum: 0
 quality:
   type: GeneratedChecks
-  minimum_clause_count: 10
-  semantic_clause_count: 10
+  minimum_clause_count: 11
+  semantic_clause_count: 11
 cross_checks:
 - id: week3.entity_refs_exist
   type: record_rule
   field: extracted_facts.entity_refs
+- id: week3.extraction_rules_hash_exists
+  type: record_rule
+  field: extraction_rules_hash
 lineage:
-  upstream: []
+  upstream:
+  - id: service::week3-document-refinery
+    kind: SERVICE
+    label: week3-document-refinery
+    path: services/week3-document-refinery/main.py
+    relationship: REVERSE_PRODUCES
+    hops: 1
+    source: lineage_graph
+    via: []
+    relationship_path:
+    - REVERSE_PRODUCES
+    confidence: 0.97
   downstream:
-  - id: week4-brownfield-cartographer
+  - &id002
+    id: service::week5-ledger
+    kind: SERVICE
+    label: week5-ledger
+    path: services/week5-ledger/main.py
+    relationship: CONSUMES
+    hops: 1
+    source: lineage_graph
+    via: []
+    relationship_path:
+    - CONSUMES
+    confidence: 0.95
+  - &id003
+    id: service::week7-validation-runner
+    kind: SERVICE
+    label: week7-validation-runner
+    path: services/week7-validation-runner/main.py
+    relationship: CONSUMES
+    hops: 1
+    source: lineage_graph
+    via: []
+    relationship_path:
+    - CONSUMES
+    confidence: 0.95
+  - &id004
+    id: week5-ledger
+    kind: SUBSCRIBER
+    relationship: CONSUMED_BY
+    hops: 1
+    source: contract_graph
+    via: []
+    relationship_path:
+    - CONSUMED_BY
+    fields_consumed:
+    - doc_id
+    - extracted_facts.confidence
+    - extracted_facts.entity_refs
+    - extracted_at
+    breaking_fields:
+    - field: extracted_facts.confidence
+      reason: extraction-to-event projection logic breaks when confidence scale drifts.
+    - field: doc_id
+      reason: extraction history cannot be linked into immutable event streams without
+        stable document ids.
+    contact: week5-team@local
+    validation_mode: AUDIT
+  - &id005
+    id: week7-validation-runner
     kind: SUBSCRIBER
     relationship: CONSUMED_BY
     hops: 1
@@ -195,58 +373,48 @@ lineage:
     - extracted_facts.confidence
     - extracted_facts.entity_refs
     - entities.entity_id
-    - extracted_at
+    - processing_time_ms
     breaking_fields:
     - field: extracted_facts.confidence
-      reason: scale drift from 0.0-1.0 to 0-100 breaks ranking and threshold logic.
+      reason: confidence range and drift checks fail when values shift from 0.0-1.0
+        to percentages.
     - field: doc_id
-      reason: lineage node identity and cross-system joins depend on stable document
-        IDs.
-    contact: week4-team@local
+      reason: identity and lineage join checks depend on stable doc ids.
+    contact: week7-team@local
     validation_mode: AUDIT
-  - id: week4-lineage-snapshots
+  - id: dataset::outputs/week5/events.jsonl
+    kind: TABLE
+    label: events.jsonl
+    path: outputs/week5/events.jsonl
+    relationship: PRODUCES
+    hops: 2
+    source: lineage_graph
+    via:
+    - service::week5-ledger
+    relationship_path:
+    - CONSUMES
+    - PRODUCES
+    confidence: 0.97
+  - id: week5-event-records
     kind: CONTRACT
     relationship: PUBLISHES
     hops: 2
     source: contract_graph
     via:
-    - week4-brownfield-cartographer
+    - week5-ledger
     relationship_path:
     - CONSUMED_BY
     - PUBLISHES
-  - id: week7-violation-attributor
-    kind: SUBSCRIBER
-    relationship: CONSUMED_BY
-    hops: 3
-    source: contract_graph
-    via:
-    - week4-brownfield-cartographer
-    - week4-lineage-snapshots
-    relationship_path:
-    - CONSUMED_BY
-    - PUBLISHES
-    - CONSUMED_BY
-    fields_consumed:
-    - nodes.node_id
-    - nodes.metadata.path
-    - edges.source
-    - edges.target
-    - edges.relationship
-    - git_commit
-    breaking_fields:
-    - field: nodes.node_id
-      reason: attribution candidate lookup and graph-node matching depend on node
-        IDs.
-    - field: edges.source
-      reason: blast radius traversal fails if edge source references are removed or
-        renamed.
-    - field: edges.target
-      reason: downstream impact mapping fails if edge target references are invalid.
-    contact: week7-team@local
-    validation_mode: AUDIT
-  graph_seeds: []
+  graph_seeds:
+  - dataset::outputs/week3/extractions.jsonl
+downstream_consumers:
+- *id002
+- *id003
+- *id004
+- *id005
 registry:
-  path: contract_registry/subscriptions.yaml
-  subscriber_count: 1
+  path: /home/nurye/Desktop/TRP1/week7/DataContractEnforcer/contract_registry/subscriptions.yaml
+  subscriber_count: 2
   subscriber_ids:
-  - week4-brownfield-cartographer
+  - week5-ledger
+  - week7-validation-runner

@@ -3,28 +3,34 @@ apiVersion: v3.0.0
 id: week4-lineage-snapshots
 contract_id: week4-lineage-snapshots
 dataset: week4_lineage
-generated_at: '2026-04-03T14:39:58Z'
-source_path: outputs/week4/lineage_snapshots.jsonl
+schema_version: 1.0.0
+generated_at: '2026-04-06T10:25:30Z'
+source_path: /home/nurye/Desktop/TRP1/week7/DataContractEnforcer/outputs/week4/lineage_snapshots.jsonl
 record_count: 1
 info:
   title: Week 4 Lineage Snapshots
   version: 1.0.0
   owner: trp1-week7
-  description: Auto-generated contract for week 4 lineage snapshots sourced from outputs/week4/lineage_snapshots.jsonl.
+  description: Auto-generated contract for week 4 lineage snapshots sourced from /home/nurye/Desktop/TRP1/week7/DataContractEnforcer/outputs/week4/lineage_snapshots.jsonl.
 servers:
   local:
     type: local
-    path: outputs/week4/lineage_snapshots.jsonl
+    path: /home/nurye/Desktop/TRP1/week7/DataContractEnforcer/outputs/week4/lineage_snapshots.jsonl
     format: jsonl
 terms:
   usage: Internal inter-system data contract. Do not publish externally.
+versioning:
+  expected_schema_version: 1.0.0
+  supported_source_versions:
+  - 1.0.0
+  versioned_input: true
 schema: &id001
   captured_at:
     type: string
     required: true
     format: date-time
     enum:
-    - '2026-03-31T01:25:19Z'
+    - '2026-04-01T21:25:28Z'
   codebase_root:
     type: string
     required: true
@@ -61,6 +67,12 @@ schema: &id001
   nodes.label:
     type: string
     required: true
+    llm_annotation:
+      provider: local_heuristic_fallback
+      model: offline-column-annotator
+      reason: Field name 'label' is generic and benefits from semantic clarification.
+      annotation: 'LLM review: treat ''nodes.label'' as a business-semantic field
+        and document allowed meanings before new downstream consumers rely on it.'
   nodes.metadata.language:
     type: string
     required: true
@@ -68,18 +80,14 @@ schema: &id001
     type: string
     required: true
     enum:
-    - '2026-04-01T10:24:35Z'
+    - '2026-04-06T10:25:30Z'
+    - '2026-04-01T21:25:28Z'
   nodes.metadata.path:
     type: string
     required: true
   nodes.metadata.purpose:
     type: string
     required: true
-    enum:
-    - python_table_reader
-    - dataset
-    - python_file_reader
-    - python_file_writer
   nodes.node_id:
     type: string
     required: true
@@ -90,6 +98,13 @@ schema: &id001
     enum:
     - PIPELINE
     - TABLE
+    - SERVICE
+    llm_annotation:
+      provider: local_heuristic_fallback
+      model: offline-column-annotator
+      reason: Field name 'type' is generic and benefits from semantic clarification.
+      annotation: 'LLM review: treat ''nodes.type'' as a business-semantic field and
+        document allowed meanings before new downstream consumers rely on it.'
   snapshot_id:
     type: string
     required: true
@@ -97,19 +112,217 @@ schema: &id001
     enum:
     - 6d75c325-c364-5a5d-afe2-fa65b4d470ac
 fields: *id001
-clauses: []
+profiling:
+  structural:
+    field_names:
+    - captured_at
+    - codebase_root
+    - edges.confidence
+    - edges.relationship
+    - edges.source
+    - edges.target
+    - git_commit
+    - nodes.label
+    - nodes.metadata.language
+    - nodes.metadata.last_modified
+    - nodes.metadata.path
+    - nodes.metadata.purpose
+    - nodes.node_id
+    - nodes.type
+    - snapshot_id
+    required_fields:
+    - captured_at
+    - codebase_root
+    - edges.confidence
+    - edges.relationship
+    - edges.source
+    - edges.target
+    - git_commit
+    - nodes.label
+    - nodes.metadata.language
+    - nodes.metadata.last_modified
+    - nodes.metadata.path
+    - nodes.metadata.purpose
+    - nodes.node_id
+    - nodes.type
+    - snapshot_id
+    nullable_fields: []
+    types:
+      captured_at: string
+      codebase_root: string
+      edges.confidence: number
+      edges.relationship: string
+      edges.source: string
+      edges.target: string
+      git_commit: string
+      nodes.label: string
+      nodes.metadata.language: string
+      nodes.metadata.last_modified: string
+      nodes.metadata.path: string
+      nodes.metadata.purpose: string
+      nodes.node_id: string
+      nodes.type: string
+      snapshot_id: string
+  statistics:
+    edges.confidence:
+      min: 0.95
+      max: 0.97
+      mean: 0.951639
+      stddev: 0.005486
+  baseline_files:
+    per_contract: schema_snapshots/real/week4-lineage-snapshots_baseline.json
+    aggregate: schema_snapshots/real/baselines.json
+  llm_annotations:
+  - field: nodes.label
+    provider: local_heuristic_fallback
+    model: offline-column-annotator
+    prompt: 'Annotate ambiguous contract field ''nodes.label'' with type ''string''.
+      Reason: Field name ''label'' is generic and benefits from semantic clarification..
+      Sample values: [''mssql.py'', ''mssql.py:28-28'', ''mssql.py:31-31''].'
+    annotation: 'LLM review: treat ''nodes.label'' as a business-semantic field and
+      document allowed meanings before new downstream consumers rely on it.'
+    reason: Field name 'label' is generic and benefits from semantic clarification.
+  - field: nodes.type
+    provider: local_heuristic_fallback
+    model: offline-column-annotator
+    prompt: 'Annotate ambiguous contract field ''nodes.type'' with type ''string''.
+      Reason: Field name ''type'' is generic and benefits from semantic clarification..
+      Sample values: [''PIPELINE'', ''TABLE'', ''SERVICE''].'
+    annotation: 'LLM review: treat ''nodes.type'' as a business-semantic field and
+      document allowed meanings before new downstream consumers rely on it.'
+    reason: Field name 'type' is generic and benefits from semantic clarification.
+clauses:
+- id: week4.snapshot_id_uuid
+  category: identifier
+  severity: error
+  description: Lineage snapshots must expose a stable UUID snapshot_id.
+  rule:
+    type: field_format
+    field: snapshot_id
+    format: uuid
+- id: week4.git_commit_sha1
+  category: integrity
+  severity: error
+  description: git_commit must be an exact 40-character lowercase SHA-1 hash.
+  rule:
+    type: field_pattern
+    field: git_commit
+    pattern: ^[0-9a-f]{40}$
+- id: week4.edge_relationship_enum
+  category: lineage
+  severity: error
+  description: edge.relationship must remain within the six allowed lineage operations.
+  rule:
+    type: field_enum
+    field: edges.relationship
+    allowed:
+    - IMPORTS
+    - CALLS
+    - READS
+    - WRITES
+    - PRODUCES
+    - CONSUMES
+- id: week4.edge_endpoints_exist
+  category: lineage
+  severity: error
+  description: Every edge source/target must reference a node_id in the same snapshot.
+  rule:
+    type: edge_endpoints_exist
+    nodes_field: nodes
+    edges_field: edges
+    node_id_field: node_id
+    source_field: source
+    target_field: target
+- id: week4.edge_confidence_unit_scale
+  category: quality
+  severity: error
+  description: Edge confidence values must remain on the 0.0-1.0 scale.
+  rule:
+    type: numeric_range
+    field: edges.confidence
+    minimum: 0.0
+    maximum: 1.0
+- id: week4.captured_at_datetime
+  category: temporal
+  severity: error
+  description: Snapshot capture timestamps must be valid UTC date-times.
+  rule:
+    type: field_format
+    field: captured_at
+    format: date-time
 quality:
   type: GeneratedChecks
   minimum_clause_count: 8
-  semantic_clause_count: 0
+  semantic_clause_count: 6
 cross_checks:
 - id: week4.edges_reference_nodes
   type: record_rule
   field: edges
 lineage:
-  upstream: []
+  upstream:
+  - id: service::week4-brownfield-cartographer
+    kind: SERVICE
+    label: week4-brownfield-cartographer
+    path: services/week4-brownfield-cartographer/main.py
+    relationship: REVERSE_PRODUCES
+    hops: 1
+    source: lineage_graph
+    via: []
+    relationship_path:
+    - REVERSE_PRODUCES
+    confidence: 0.97
   downstream:
-  - id: week7-violation-attributor
+  - &id002
+    id: service::week2-digital-courtroom
+    kind: SERVICE
+    label: week2-digital-courtroom
+    path: services/week2-digital-courtroom/main.py
+    relationship: CONSUMES
+    hops: 1
+    source: lineage_graph
+    via: []
+    relationship_path:
+    - CONSUMES
+    confidence: 0.95
+  - &id003
+    id: service::week7-violation-attributor
+    kind: SERVICE
+    label: week7-violation-attributor
+    path: services/week7-violation-attributor/main.py
+    relationship: CONSUMES
+    hops: 1
+    source: lineage_graph
+    via: []
+    relationship_path:
+    - CONSUMES
+    confidence: 0.95
+  - &id004
+    id: week2-digital-courtroom
+    kind: SUBSCRIBER
+    relationship: CONSUMED_BY
+    hops: 1
+    source: contract_graph
+    via: []
+    relationship_path:
+    - CONSUMED_BY
+    fields_consumed:
+    - nodes.node_id
+    - edges.source
+    - edges.target
+    - edges.relationship
+    breaking_fields:
+    - field: nodes.node_id
+      reason: forensic cross-referencing of architecture artifacts depends on stable
+        node ids.
+    - field: edges.source
+      reason: upstream dependency trace checks fail if lineage edge sources are invalid.
+    - field: edges.target
+      reason: downstream dependency trace checks fail if lineage edge targets are
+        invalid.
+    contact: week2-team@local
+    validation_mode: AUDIT
+  - &id005
+    id: week7-violation-attributor
     kind: SUBSCRIBER
     relationship: CONSUMED_BY
     hops: 1
@@ -135,9 +348,129 @@ lineage:
       reason: downstream impact mapping fails if edge target references are invalid.
     contact: week7-team@local
     validation_mode: AUDIT
-  graph_seeds: []
+  - id: dataset::outputs/week2/verdicts.jsonl
+    kind: TABLE
+    label: verdicts.jsonl
+    path: outputs/week2/verdicts.jsonl
+    relationship: PRODUCES
+    hops: 2
+    source: lineage_graph
+    via:
+    - service::week2-digital-courtroom
+    relationship_path:
+    - CONSUMES
+    - PRODUCES
+    confidence: 0.97
+  - id: week2-verdict-records
+    kind: CONTRACT
+    relationship: PUBLISHES
+    hops: 2
+    source: contract_graph
+    via:
+    - week2-digital-courtroom
+    relationship_path:
+    - CONSUMED_BY
+    - PUBLISHES
+  - &id006
+    id: service::week7-ai-contract-extension
+    kind: SERVICE
+    label: week7-ai-contract-extension
+    path: services/week7-ai-contract-extension/main.py
+    relationship: CONSUMES
+    hops: 3
+    source: lineage_graph
+    via:
+    - service::week2-digital-courtroom
+    - dataset::outputs/week2/verdicts.jsonl
+    relationship_path:
+    - CONSUMES
+    - PRODUCES
+    - CONSUMES
+    confidence: 0.95
+  - &id007
+    id: service::week7-validation-runner
+    kind: SERVICE
+    label: week7-validation-runner
+    path: services/week7-validation-runner/main.py
+    relationship: CONSUMES
+    hops: 3
+    source: lineage_graph
+    via:
+    - service::week2-digital-courtroom
+    - dataset::outputs/week2/verdicts.jsonl
+    relationship_path:
+    - CONSUMES
+    - PRODUCES
+    - CONSUMES
+    confidence: 0.95
+  - &id008
+    id: week7-ai-contract-extension
+    kind: SUBSCRIBER
+    relationship: CONSUMED_BY
+    hops: 3
+    source: contract_graph
+    via:
+    - week2-digital-courtroom
+    - week2-verdict-records
+    relationship_path:
+    - CONSUMED_BY
+    - PUBLISHES
+    - CONSUMED_BY
+    fields_consumed:
+    - verdict_id
+    - scores
+    - overall_verdict
+    - overall_score
+    - confidence
+    - evaluated_at
+    breaking_fields:
+    - field: overall_verdict
+      reason: output schema violation-rate metric depends on stable PASS|FAIL|WARN
+        enum.
+    - field: scores.score
+      reason: rubric-level score validation fails if nested score structure changes.
+    contact: week7-ai@local
+    validation_mode: AUDIT
+  - &id009
+    id: week7-validation-runner
+    kind: SUBSCRIBER
+    relationship: CONSUMED_BY
+    hops: 3
+    source: contract_graph
+    via:
+    - week2-digital-courtroom
+    - week2-verdict-records
+    relationship_path:
+    - CONSUMED_BY
+    - PUBLISHES
+    - CONSUMED_BY
+    fields_consumed:
+    - overall_verdict
+    - scores.score
+    - overall_score
+    - confidence
+    - evaluated_at
+    breaking_fields:
+    - field: overall_verdict
+      reason: verdict contract validation rules require a stable PASS|FAIL|WARN enum.
+    - field: scores.score
+      reason: score-range and weighted-mean checks fail if nested score shape changes.
+    contact: week7-team@local
+    validation_mode: AUDIT
+  graph_seeds:
+  - dataset::outputs/week4/lineage_snapshots.jsonl
+downstream_consumers:
+- *id002
+- *id003
+- *id004
+- *id005
+- *id006
+- *id007
+- *id008
+- *id009
 registry:
-  path: contract_registry/subscriptions.yaml
-  subscriber_count: 1
+  path: /home/nurye/Desktop/TRP1/week7/DataContractEnforcer/contract_registry/subscriptions.yaml
+  subscriber_count: 2
   subscriber_ids:
+  - week2-digital-courtroom
   - week7-violation-attributor

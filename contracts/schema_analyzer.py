@@ -13,7 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from contracts.common import normalize_contract_filename, utc_now
+from contracts.common import normalize_contract_filename, schema_snapshots_dir, utc_now
 from contracts.evolution import build_compatibility_report
 from contracts.lineage import load_latest_lineage_snapshot, resolve_contract_lineage
 
@@ -107,7 +107,7 @@ def consumer_failure_modes(
 
 def main() -> int:
     args = parse_args()
-    snapshot_dir = Path("schema_snapshots") / normalize_contract_filename(args.contract_id)
+    snapshot_dir = schema_snapshots_dir() / normalize_contract_filename(args.contract_id)
     snapshots = load_snapshots(snapshot_dir, args.since)
     default_lineage = "outputs/week4/lineage_snapshots.jsonl"
     lineage_snapshot = load_latest_lineage_snapshot(default_lineage if Path(default_lineage).exists() else None)

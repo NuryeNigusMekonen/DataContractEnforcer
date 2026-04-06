@@ -18,6 +18,14 @@ CHANGE_SPECS_DIR = TEST_DATA_DIR / "changes"
 SCENARIOS_DIR = TEST_DATA_DIR / "scenarios"
 
 TRACE_CONTRACT = {"key": "traces", "label": "Traces", "contract_id": "langsmith-trace-records"}
+CURRENT_VALIDATION_REPORTS = (
+    "week1.json",
+    "week2.json",
+    "week3.json",
+    "week4.json",
+    "week5.json",
+    "traces.json",
+)
 
 WEEK_CONTRACTS = [
     {"key": "week1", "label": "Week 1", "contract_id": "week1-intent-records"},
@@ -126,7 +134,11 @@ def load_latest_json(folder: Path, pattern: str) -> tuple[dict[str, Any] | list[
 
 def load_validation_reports() -> list[dict[str, Any]]:
     reports: list[dict[str, Any]] = []
-    for path in sorted(VALIDATION_REPORTS_DIR.glob("*.json")):
+    canonical_paths = [VALIDATION_REPORTS_DIR / name for name in CURRENT_VALIDATION_REPORTS]
+    available_paths = [path for path in canonical_paths if path.exists()]
+    candidate_paths = available_paths if available_paths else sorted(VALIDATION_REPORTS_DIR.glob("*.json"))
+
+    for path in candidate_paths:
         payload = read_json_file(path)
         if not isinstance(payload, dict):
             continue
@@ -153,9 +165,25 @@ def latest_report_by_contract() -> dict[str, dict[str, Any]]:
 
 
 def load_violations() -> list[dict[str, Any]]:
-    live_path = VIOLATION_LOG_DIR / "live_violations.jsonl"
-    path = live_path if live_path.exists() else VIOLATION_LOG_DIR / "violations.jsonl"
+    path = VIOLATION_LOG_DIR / "violations.jsonl"
     violations = read_jsonl_file(path)
+    ai_report = load_ai_report()
+    if isinstance(ai_report, dict):
+        from contracts.ai_extensions import ai_violation_records
+
+        violations.extend(ai_violation_records(ai_report))
+
+    deduped: dict[tuple[str, str, str], dict[str, Any]] = {}
+    for violation in violations:
+        key = (
+            str(violation.get("check_id", "")),
+            str(violation.get("field_name", violation.get("column_name", ""))),
+            str(violation.get("status", "")),
+        )
+        current = deduped.get(key)
+        if current is None or int(violation.get("records_failing", 0) or 0) >= int(current.get("records_failing", 0) or 0):
+            deduped[key] = violation
+    violations = list(deduped.values())
     violations.sort(
         key=lambda violation: parse_timestamp(violation.get("detected_at")) or datetime.min.replace(tzinfo=timezone.utc),
         reverse=True,
@@ -172,8 +200,29 @@ def load_ai_report() -> dict[str, Any] | None:
 
 
 def load_enforcer_report() -> dict[str, Any] | None:
-    payload = read_json_file(ENFORCER_REPORT_DIR / "report_data.json")
-    return payload if isinstance(payload, dict) else None
+    canonical_path = ENFORCER_REPORT_DIR / "report_data.json"
+    payload = read_json_file(canonical_path)
+    if isinstance(payload, dict):
+        enriched = dict(payload)
+        enriched["_source_path"] = str(canonical_path.relative_to(REPO_ROOT))
+        return enriched
+    return None
+
+
+def load_current_run_mode() -> str:
+    summary_path = VALIDATION_REPORTS_DIR / "run_summary.json"
+    payload = read_json_file(summary_path)
+    if not isinstance(payload, dict):
+        return "real"
+    final_live = payload.get("final_live")
+    if isinstance(final_live, dict):
+        effective_mode = final_live.get("effective_mode")
+        if effective_mode in {"real", "violated"}:
+            return str(effective_mode)
+    mode = payload.get("mode")
+    if mode in {"real", "violated"}:
+        return str(mode)
+    return "real"
 
 
 def derive_week_label(value: str | None) -> str:
@@ -205,8 +254,19 @@ def combine_status(statuses: list[str]) -> str:
     return "PASS"
 
 
-def compute_health_score(total_checks: int, passed: int, warned: int) -> int:
+def count_critical_violations(results: list[dict[str, Any]] | None) -> int:
+    if not results:
+        return 0
+    return sum(
+        1
+        for result in results
+        if str(result.get("status", "")).upper() in {"FAIL", "ERROR"}
+        and str(result.get("severity", "")).upper() == "CRITICAL"
+    )
+
+
+def compute_health_score(total_checks: int, passed: int, critical_violations: int = 0) -> int:
     if total_checks <= 0:
         return 100
-    score = ((passed + (warned * 0.5)) / total_checks) * 100
+    score = ((passed / total_checks) * 100) - (max(0, critical_violations) * 20)
     return max(0, min(100, int(score)))

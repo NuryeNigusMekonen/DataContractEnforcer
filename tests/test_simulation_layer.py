@@ -55,8 +55,18 @@ def validate_dataset(system: str, healthy_records: list[JsonDict], mutated_recor
         data_dir = tmp_dir / "outputs" / system
         data_path = data_dir / file_name_for(system)
         write_jsonl(data_path, healthy_records)
-        (tmp_dir / "schemas").symlink_to(REPO_ROOT / "schemas", target_is_directory=True)
+        schema_source = REPO_ROOT / "schemas"
+        if not schema_source.exists():
+            schema_source = REPO_ROOT / "outputs" / "week5" / "schemas"
+        (tmp_dir / "schemas").symlink_to(schema_source, target_is_directory=True)
         (tmp_dir / "rubric").symlink_to(REPO_ROOT / "rubric", target_is_directory=True)
+        if system == "week5":
+            week5_schema_root = tmp_dir / "outputs" / "week5"
+            week5_schema_root.mkdir(parents=True, exist_ok=True)
+            week5_schema_source = REPO_ROOT / "outputs" / "week5" / "schemas"
+            if not week5_schema_source.exists():
+                week5_schema_source = schema_source
+            (week5_schema_root / "schemas").symlink_to(week5_schema_source, target_is_directory=True)
         previous_cwd = Path.cwd()
         try:
             os.chdir(tmp_dir)

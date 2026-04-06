@@ -210,9 +210,9 @@ ai_extensions:
 
 Clause mapping:
 
-- Structural: `run_type` enum and timestamp formats.
+- Structural: `run_type` enum, required trace fields, and timestamp formats.
 - Statistical: `total_tokens` drift check.
-- AI-specific: explicit LLM output schema violation-rate metric from Week 2 verdict outputs.
+- AI-specific: embedding drift via cosine distance, prompt input JSON Schema validation, structured Week 2 verdict output enforcement, and LangSmith trace schema contracts.
 
 ## 5) Most common production failure mode, why contracts get stale, and how this architecture prevents it
 
@@ -232,9 +232,10 @@ How this project architecture addresses staleness:
 3. Violation attribution links failing fields to candidate files and commit context, reducing mean time to diagnosis.
 4. Schema snapshots plus diff classification make schema evolution explicit instead of implicit.
 5. AI-specific checks extend coverage beyond classic tabular constraints:
-   - trace schema integrity
-   - output schema violation rate
-   - embedding/prompt-oriented drift extensions
+  - embedding drift via cosine distance
+  - prompt input JSON Schema validation
+  - structured LLM output JSON Schema enforcement
+  - LangSmith trace schema contracts
 
 Concrete project example:
 

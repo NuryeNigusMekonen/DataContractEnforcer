@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
@@ -7,6 +8,7 @@ from simulators.common import (
     ApplicationContext,
     DOCUMENT_TYPES,
     JsonDict,
+    ROOT,
     ViolationSpec,
     canonical_system_name,
     clamp,
@@ -21,6 +23,12 @@ from simulators.common import (
 
 
 ENTITY_TYPES = ["PERSON", "ORG", "LOCATION", "DATE", "AMOUNT", "OTHER"]
+EXTRACTION_RULES_PATH = ROOT / "artifacts" / "week3" / "extraction_rules.yaml"
+EXTRACTION_RULES_HASH = (
+    hashlib.sha256(EXTRACTION_RULES_PATH.read_bytes()).hexdigest()
+    if EXTRACTION_RULES_PATH.exists()
+    else fake_sha256("missing", "week3", "extraction_rules.yaml")
+)
 
 
 def _financial_entities(app: ApplicationContext, document_type: str) -> list[JsonDict]:
@@ -143,6 +151,7 @@ def generate_week3_records(
                 "doc_id": deterministic_uuid("doc", app.application_id, document_type),
                 "source_path": source_path,
                 "source_hash": fake_sha256(source_path, app.source_hash),
+                "extraction_rules_hash": EXTRACTION_RULES_HASH,
                 "extracted_facts": _extracted_facts(app, document_type, entities),
                 "entities": entities,
                 "extraction_model": fake_model_name(rng, "extraction"),
@@ -177,4 +186,3 @@ def apply_week3_violations(records: list[JsonDict], violations: list[ViolationSp
             else:
                 raise ValueError(f"unsupported week3 violation: {violation.type}")
     return mutated
-

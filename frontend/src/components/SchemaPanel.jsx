@@ -1,4 +1,5 @@
 import { formatTimestamp } from "../utils/formatters";
+import { getSystemDisplayName, replaceSystemNames } from "../utils/systemNames";
 
 function SchemaPanel({ schemaEvolution }) {
   const breakingChanges = (schemaEvolution.changes || []).filter(
@@ -24,7 +25,7 @@ function SchemaPanel({ schemaEvolution }) {
       </div>
 
       <p className="muted">
-        {schemaEvolution.contract_id || "No contract"} • Updated {formatTimestamp(schemaEvolution.last_updated)}
+        {getSystemDisplayName(schemaEvolution.contract_id, { fallback: replaceSystemNames(schemaEvolution.contract_id) || "No contract" })} • Updated {formatTimestamp(schemaEvolution.last_updated)}
       </p>
 
       <div className="stack-list">
@@ -42,8 +43,8 @@ function SchemaPanel({ schemaEvolution }) {
                 {change.compatibility_verdict}
               </span>
             </div>
-            <p>{change.rationale}</p>
-            <p className="muted">{change.migration_recommendation}</p>
+            <p>{replaceSystemNames(change.rationale)}</p>
+            <p className="muted">{replaceSystemNames(change.migration_recommendation)}</p>
           </article>
         ))}
       </div>

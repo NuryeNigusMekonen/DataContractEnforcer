@@ -2,12 +2,17 @@ import { useEffect, useState } from "react";
 
 import { formatChangeSummary, formatCompactNumber, formatTimestamp } from "../utils/formatters";
 import { getStatusTone } from "../utils/status";
+import { formatSystemList, replaceSystemNames } from "../utils/systemNames";
+
+function formatStatusLabel(value) {
+  return String(value || "UNKNOWN").replace(/_/g, " ");
+}
 
 function ComparisonBlock({ label, status, context }) {
   return (
     <article className="comparison-block">
       <span>{label}</span>
-      <strong>{status || "UNKNOWN"}</strong>
+      <strong>{formatStatusLabel(status)}</strong>
       <p>{context}</p>
     </article>
   );
@@ -15,6 +20,26 @@ function ComparisonBlock({ label, status, context }) {
 
 function WhatIfPanel({ whatIf, onRun, running, isUpdated = false }) {
   const specs = whatIf.available_specs || [];
+  const canRun = typeof onRun === "function";
+  const isMigrationCase = whatIf.raw_status === "PASS" && whatIf.final_verdict === "BREAKING_REQUIRES_MIGRATION";
+  const resolutionLabel = isMigrationCase ? "Migration path" : "Adapter recovery";
+  const resolutionStatus = isMigrationCase
+    ? "REQUIRED"
+    : whatIf.adapter_attempted
+      ? (whatIf.adapter_status || "UNKNOWN")
+      : "NO_ADAPTER_NEEDED";
+  const resolutionContext = isMigrationCase
+    ? "Current payload still passes under today's consumer contract; rollout still needs an approved subscriber migration plan."
+    : whatIf.adapter_attempted
+      ? `${whatIf.adapter_summary?.rules_applied ?? 0} rules applied`
+      : "No adapter is needed for the current payload shape.";
+  const rawLabel = isMigrationCase ? "Current consumer replay" : "Raw changed status";
+  const rawContext = isMigrationCase
+    ? "Changed payload still passes against the currently deployed consumer contract."
+    : `${formatCompactNumber(whatIf.raw_summary?.failed_checks ?? 0)} failed checks`;
+  const finalContext = isMigrationCase
+    ? "Schema change requires subscriber migration before rollout."
+    : formatStatusLabel(whatIf.compatibility_verdict || "Compatibility pending");
   const [selectedSpec, setSelectedSpec] = useState(specs[0]?.path || specs[0]?.id || "");
 
   useEffect(() => {
@@ -24,7 +49,7 @@ function WhatIfPanel({ whatIf, onRun, running, isUpdated = false }) {
   }, [selectedSpec, specs]);
 
   async function handleSubmit() {
-    if (!selectedSpec || running) {
+    if (!canRun || !selectedSpec || running) {
       return;
     }
     await onRun(selectedSpec);
@@ -38,29 +63,31 @@ function WhatIfPanel({ whatIf, onRun, running, isUpdated = false }) {
           <h2>What-if simulation</h2>
         </div>
         <span className={`badge badge--${getStatusTone(whatIf.final_verdict)}`}>
-          {whatIf.final_verdict || "UNKNOWN"}
+          {formatStatusLabel(whatIf.final_verdict)}
         </span>
       </div>
 
-      <div className="toolbar-row">
-        <label className="field field--grow">
-          <span>Proposed change</span>
-          <select value={selectedSpec} onChange={(event) => setSelectedSpec(event.target.value)}>
-            {specs.map((spec) => (
-              <option key={spec.id} value={spec.path || spec.id}>
-                {spec.label}
-              </option>
-            ))}
-          </select>
-        </label>
-        <button className="primary-button" type="button" onClick={handleSubmit} disabled={running || !selectedSpec}>
-          {running ? "Running..." : "Run simulation"}
-        </button>
-      </div>
+      {canRun ? (
+        <div className="toolbar-row">
+          <label className="field field--grow">
+            <span>Proposed change</span>
+            <select value={selectedSpec} onChange={(event) => setSelectedSpec(event.target.value)}>
+              {specs.map((spec) => (
+                <option key={spec.id} value={spec.path || spec.id}>
+                  {replaceSystemNames(spec.label, { short: true })}
+                </option>
+              ))}
+            </select>
+          </label>
+          <button className="primary-button" type="button" onClick={handleSubmit} disabled={running || !selectedSpec}>
+            {running ? "Running..." : "Run simulation"}
+          </button>
+        </div>
+      ) : null}
 
       <article className="emphasis-card">
         <span>Proposed change</span>
-        <strong>{formatChangeSummary(whatIf.proposed_change)}</strong>
+        <strong>{replaceSystemNames(formatChangeSummary(whatIf.proposed_change))}</strong>
       </article>
 
       <div className="comparison-grid">
@@ -70,26 +97,26 @@ function WhatIfPanel({ whatIf, onRun, running, isUpdated = false }) {
           context={`${formatCompactNumber(whatIf.baseline_summary?.failed_checks ?? 0)} failed checks`}
         />
         <ComparisonBlock
-          label="Raw changed status"
+          label={rawLabel}
           status={whatIf.raw_status}
-          context={`${formatCompactNumber(whatIf.raw_summary?.failed_checks ?? 0)} failed checks`}
+          context={rawContext}
         />
         <ComparisonBlock
-          label="Adapter recovery status"
-          status={whatIf.adapter_status}
-          context={`${whatIf.adapter_summary?.rules_applied ?? 0} rules applied`}
+          label={resolutionLabel}
+          status={resolutionStatus}
+          context={resolutionContext}
         />
         <ComparisonBlock
           label="Final verdict"
           status={whatIf.final_verdict}
-          context={whatIf.compatibility_verdict || "Compatibility pending"}
+          context={finalContext}
         />
       </div>
 
       <div className="detail-split">
         <article className="list-card">
-          <strong>Affected systems</strong>
-          <p>{whatIf.affected_systems?.join(", ") || "No downstream systems listed"}</p>
+          <strong>Downstream systems</strong>
+          <p>{formatSystemList(whatIf.affected_systems, { empty: "No downstream systems listed" })}</p>
         </article>
         <article className="list-card">
           <strong>Recommendation</strong>

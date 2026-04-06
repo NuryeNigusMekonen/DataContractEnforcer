@@ -1,21 +1,34 @@
 from __future__ import annotations
 
+import os
 import hashlib
 import json
 import math
 import re
 from collections import defaultdict
+from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-UUID_PATTERN = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$")
+UUID_PATTERN = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$")
 SHA256_PATTERN = re.compile(r"^[0-9a-f]{64}$")
 SHA1_PATTERN = re.compile(r"^[0-9a-f]{40}$")
 SEMVER_PATTERN = re.compile(r"^\d+\.\d+\.\d+$")
 SCHEMA_VERSION_PATTERN = re.compile(r"^\d+\.\d+$")
 PASCAL_CASE_PATTERN = re.compile(r"^[A-Z][A-Za-z0-9]*$")
+NON_ENUM_TEXT_FIELDS = {
+    "error",
+    "message",
+    "details",
+    "stack",
+    "stacktrace",
+    "traceback",
+    "exception",
+}
+MAX_ENUM_STRING_LENGTH = 120
+SCHEMA_SNAPSHOTS_SCOPE_ENV = "SCHEMA_SNAPSHOTS_SCOPE"
 
 
 def load_jsonl(path: str | Path) -> list[dict[str, Any]]:
@@ -41,6 +54,28 @@ def write_jsonl(path: str | Path, records: list[dict[str, Any]]) -> None:
 
 def ensure_parent_dir(path: str | Path) -> None:
     Path(path).parent.mkdir(parents=True, exist_ok=True)
+
+
+def schema_snapshots_dir() -> Path:
+    base_dir = Path("schema_snapshots")
+    scope = os.environ.get(SCHEMA_SNAPSHOTS_SCOPE_ENV, "").strip()
+    return base_dir / scope if scope else base_dir
+
+
+@contextmanager
+def schema_snapshot_scope(scope: str | None):
+    previous = os.environ.get(SCHEMA_SNAPSHOTS_SCOPE_ENV)
+    if scope:
+        os.environ[SCHEMA_SNAPSHOTS_SCOPE_ENV] = scope
+    else:
+        os.environ.pop(SCHEMA_SNAPSHOTS_SCOPE_ENV, None)
+    try:
+        yield
+    finally:
+        if previous is None:
+            os.environ.pop(SCHEMA_SNAPSHOTS_SCOPE_ENV, None)
+        else:
+            os.environ[SCHEMA_SNAPSHOTS_SCOPE_ENV] = previous
 
 
 def utc_now() -> str:
@@ -205,7 +240,7 @@ def build_field_clause(field_name: str, profile: dict[str, Any]) -> dict[str, An
         clause["format"] = "date-time"
     if field_name == "git_commit":
         clause["pattern"] = SHA1_PATTERN.pattern
-    if field_name in {"rubric_id", "source_hash"}:
+    if field_name in {"rubric_id", "source_hash", "extraction_rules_hash"}:
         clause["pattern"] = SHA256_PATTERN.pattern
     if field_name == "rubric_version":
         clause["pattern"] = SEMVER_PATTERN.pattern
@@ -222,10 +257,31 @@ def build_field_clause(field_name: str, profile: dict[str, Any]) -> dict[str, An
         clause["minimum"] = 0.0
     if stats and field_name == "sequence_number":
         clause["minimum"] = 1
-    if profile["type"] == "string" and profile["cardinality"] <= 10 and profile["sample_values"]:
-        if len(profile["sample_values"]) == profile["cardinality"]:
-            clause["enum"] = profile["sample_values"]
+    if _should_infer_string_enum(field_name, profile):
+        clause["enum"] = profile["sample_values"]
     return clause
+
+
+def _should_infer_string_enum(field_name: str, profile: dict[str, Any]) -> bool:
+    if profile.get("type") != "string":
+        return False
+    cardinality = int(profile.get("cardinality", 0))
+    if cardinality <= 0 or cardinality > 10:
+        return False
+    sample_values = profile.get("sample_values", [])
+    if not sample_values or len(sample_values) != cardinality:
+        return False
+    if not all(isinstance(value, str) for value in sample_values):
+        return False
+    leaf_name = field_name.rsplit(".", 1)[-1].lower()
+    if leaf_name in NON_ENUM_TEXT_FIELDS:
+        return False
+    for value in sample_values:
+        if "\n" in value:
+            return False
+        if len(value) > MAX_ENUM_STRING_LENGTH:
+            return False
+    return True
 
 
 def apply_dataset_overrides(dataset_kind: str, fields: dict[str, dict[str, Any]]) -> None:
@@ -244,6 +300,7 @@ def apply_dataset_overrides(dataset_kind: str, fields: dict[str, dict[str, Any]]
         "week3_extractions": {
             "doc_id": {"format": "uuid"},
             "source_hash": {"pattern": SHA256_PATTERN.pattern},
+            "extraction_rules_hash": {"pattern": SHA256_PATTERN.pattern},
             "entities.type": {"enum": ["PERSON", "ORG", "LOCATION", "DATE", "AMOUNT", "OTHER"]},
             "processing_time_ms": {"type": "integer", "minimum": 1},
             "extracted_at": {"format": "date-time"},
@@ -316,6 +373,78 @@ def dataset_semantic_clauses(dataset_kind: str) -> list[dict[str, Any]]:
                 "description": "Code reference confidence values must remain on the 0.0-1.0 scale.",
                 "rule": {"type": "numeric_range", "field": "code_refs.confidence", "minimum": 0.0, "maximum": 1.0},
             },
+            {
+                "id": "week1.code_ref_file_exists",
+                "category": "traceability",
+                "severity": "error",
+                "description": "Each referenced code path must resolve to an existing file in this repository.",
+                "rule": {"type": "repo_path_exists", "field": "code_refs.file"},
+            },
+        ],
+        "week2_verdicts": [
+            {
+                "id": "week2.verdict_id_uuid",
+                "category": "identifier",
+                "severity": "error",
+                "description": "Each verdict record must expose a stable UUID identifier.",
+                "rule": {"type": "field_format", "field": "verdict_id", "format": "uuid"},
+            },
+            {
+                "id": "week2.overall_verdict_enum",
+                "category": "domain",
+                "severity": "error",
+                "description": "Overall verdict must be one of PASS, FAIL, or WARN.",
+                "rule": {"type": "field_enum", "field": "overall_verdict", "allowed": ["PASS", "FAIL", "WARN"]},
+            },
+            {
+                "id": "week2.score_range",
+                "category": "quality",
+                "severity": "error",
+                "description": "Each nested criterion score must remain on the 1-5 rubric scale.",
+                "rule": {"type": "numeric_range", "field": "scores.score", "minimum": 1, "maximum": 5},
+            },
+            {
+                "id": "week2.overall_score_weighted_mean",
+                "category": "quality",
+                "severity": "error",
+                "description": "overall_score must equal the weighted mean of criterion scores.",
+                "rule": {
+                    "type": "weighted_mean_equals",
+                    "scores_field": "scores",
+                    "score_field": "score",
+                    "weight_field": "weight",
+                    "output_field": "overall_score",
+                    "tolerance": 0.001,
+                },
+            },
+            {
+                "id": "week2.rubric_id_sha256",
+                "category": "integrity",
+                "severity": "error",
+                "description": "rubric_id values must match SHA-256 formatting.",
+                "rule": {"type": "field_pattern", "field": "rubric_id", "pattern": SHA256_PATTERN.pattern},
+            },
+            {
+                "id": "week2.rubric_version_semver",
+                "category": "compatibility",
+                "severity": "error",
+                "description": "rubric_version must use semantic versioning.",
+                "rule": {"type": "field_pattern", "field": "rubric_version", "pattern": SEMVER_PATTERN.pattern},
+            },
+            {
+                "id": "week2.confidence_unit_scale",
+                "category": "quality",
+                "severity": "error",
+                "description": "Verdict confidence values must stay on a 0.0-1.0 scale.",
+                "rule": {"type": "numeric_range", "field": "confidence", "minimum": 0.0, "maximum": 1.0},
+            },
+            {
+                "id": "week2.evaluated_at_datetime",
+                "category": "temporal",
+                "severity": "error",
+                "description": "Verdict timestamps must be valid UTC date-times.",
+                "rule": {"type": "field_format", "field": "evaluated_at", "format": "date-time"},
+            },
         ],
         "week3_extractions": [
             {
@@ -373,6 +502,17 @@ def dataset_semantic_clauses(dataset_kind: str) -> list[dict[str, Any]]:
                 "rule": {
                     "type": "field_pattern",
                     "field": "source_hash",
+                    "pattern": SHA256_PATTERN.pattern,
+                },
+            },
+            {
+                "id": "week3.extraction_rules_hash_sha256",
+                "category": "integrity",
+                "severity": "error",
+                "description": "Extraction records must pin the exact SHA-256 hash of extraction_rules.yaml used at generation time.",
+                "rule": {
+                    "type": "field_pattern",
+                    "field": "extraction_rules_hash",
                     "pattern": SHA256_PATTERN.pattern,
                 },
             },
@@ -532,6 +672,107 @@ def dataset_semantic_clauses(dataset_kind: str) -> list[dict[str, Any]]:
                 },
             },
         ],
+        "week4_lineage": [
+            {
+                "id": "week4.snapshot_id_uuid",
+                "category": "identifier",
+                "severity": "error",
+                "description": "Lineage snapshots must expose a stable UUID snapshot_id.",
+                "rule": {"type": "field_format", "field": "snapshot_id", "format": "uuid"},
+            },
+            {
+                "id": "week4.git_commit_sha1",
+                "category": "integrity",
+                "severity": "error",
+                "description": "git_commit must be an exact 40-character lowercase SHA-1 hash.",
+                "rule": {"type": "field_pattern", "field": "git_commit", "pattern": SHA1_PATTERN.pattern},
+            },
+            {
+                "id": "week4.edge_relationship_enum",
+                "category": "lineage",
+                "severity": "error",
+                "description": "edge.relationship must remain within the six allowed lineage operations.",
+                "rule": {
+                    "type": "field_enum",
+                    "field": "edges.relationship",
+                    "allowed": ["IMPORTS", "CALLS", "READS", "WRITES", "PRODUCES", "CONSUMES"],
+                },
+            },
+            {
+                "id": "week4.edge_endpoints_exist",
+                "category": "lineage",
+                "severity": "error",
+                "description": "Every edge source/target must reference a node_id in the same snapshot.",
+                "rule": {
+                    "type": "edge_endpoints_exist",
+                    "nodes_field": "nodes",
+                    "edges_field": "edges",
+                    "node_id_field": "node_id",
+                    "source_field": "source",
+                    "target_field": "target",
+                },
+            },
+            {
+                "id": "week4.edge_confidence_unit_scale",
+                "category": "quality",
+                "severity": "error",
+                "description": "Edge confidence values must remain on the 0.0-1.0 scale.",
+                "rule": {"type": "numeric_range", "field": "edges.confidence", "minimum": 0.0, "maximum": 1.0},
+            },
+            {
+                "id": "week4.captured_at_datetime",
+                "category": "temporal",
+                "severity": "error",
+                "description": "Snapshot capture timestamps must be valid UTC date-times.",
+                "rule": {"type": "field_format", "field": "captured_at", "format": "date-time"},
+            },
+        ],
+        "traces": [
+            {
+                "id": "traces.id_uuid",
+                "category": "identifier",
+                "severity": "error",
+                "description": "Every trace record must expose a UUID id.",
+                "rule": {"type": "field_format", "field": "id", "format": "uuid"},
+            },
+            {
+                "id": "traces.start_end_temporal_order",
+                "category": "temporal",
+                "severity": "error",
+                "description": "end_time must be strictly after start_time.",
+                "rule": {"type": "temporal_order", "left_field": "start_time", "right_field": "end_time", "operator": "<"},
+            },
+            {
+                "id": "traces.total_tokens_sum",
+                "category": "quality",
+                "severity": "error",
+                "description": "total_tokens must equal prompt_tokens + completion_tokens.",
+                "rule": {
+                    "type": "sum_equals",
+                    "fields": ["prompt_tokens", "completion_tokens"],
+                    "output_field": "total_tokens",
+                    "tolerance": 0.0,
+                },
+            },
+            {
+                "id": "traces.run_type_enum",
+                "category": "domain",
+                "severity": "error",
+                "description": "run_type must be one of llm, chain, tool, retriever, embedding.",
+                "rule": {
+                    "type": "field_enum",
+                    "field": "run_type",
+                    "allowed": ["llm", "chain", "tool", "retriever", "embedding"],
+                },
+            },
+            {
+                "id": "traces.total_cost_non_negative",
+                "category": "quality",
+                "severity": "error",
+                "description": "total_cost values must be non-negative USD amounts.",
+                "rule": {"type": "numeric_range", "field": "total_cost", "minimum": 0.0},
+            },
+        ],
     }
     return clauses.get(dataset_kind, [])
 
@@ -544,6 +785,7 @@ def dataset_cross_checks(dataset_kind: str) -> list[dict[str, str]]:
         ],
         "week3_extractions": [
             {"id": "week3.entity_refs_exist", "type": "record_rule", "field": "extracted_facts.entity_refs"},
+            {"id": "week3.extraction_rules_hash_exists", "type": "record_rule", "field": "extraction_rules_hash"},
         ],
         "week4_lineage": [
             {"id": "week4.edges_reference_nodes", "type": "record_rule", "field": "edges"},

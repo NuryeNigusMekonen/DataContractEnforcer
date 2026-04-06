@@ -136,6 +136,49 @@ class SchemaEvolutionRunnerTest(unittest.TestCase):
         self.assertEqual(change["change_type"], "TYPE_NARROWING_SCALE_SHIFT")
         self.assertEqual(change["severity"], "CRITICAL")
 
+    def test_build_compatibility_report_uses_observed_ranges_for_same_bound_scale_shift(self) -> None:
+        source_contract = {
+            "contract_id": "week3-document-refinery-extractions",
+            "schema_version": "1.0.0",
+            "fields": {
+                "extracted_facts.confidence": {
+                    "type": "number",
+                    "required": True,
+                    "minimum": 0.0,
+                    "maximum": 1.0,
+                }
+            },
+            "profiling": {
+                "statistics": {
+                    "extracted_facts.confidence": {"min": 0.84, "max": 0.86, "mean": 0.851, "stddev": 0.01}
+                }
+            },
+        }
+        target_contract = {
+            "contract_id": "week3-document-refinery-extractions",
+            "schema_version": "1.0.0",
+            "fields": {
+                "extracted_facts.confidence": {
+                    "type": "number",
+                    "required": True,
+                    "minimum": 0.0,
+                    "maximum": 1.0,
+                }
+            },
+            "profiling": {
+                "statistics": {
+                    "extracted_facts.confidence": {"min": 84.0, "max": 86.0, "mean": 85.1, "stddev": 1.0}
+                }
+            },
+        }
+
+        report = build_compatibility_report(source_contract, target_contract)
+        change = report["changes"][0]
+        self.assertEqual(change["change_type"], "NUMERIC_SCALE_SHIFT")
+        self.assertIn("observed range 0.84 to 0.86", change["rationale"])
+        self.assertIn("observed range 84 to 86", change["rationale"])
+        self.assertIn("declared bounds remained 0 to 1", change["rationale"])
+
     def test_schema_analyzer_builds_migration_report_with_consumer_failure_modes(self) -> None:
         old_contract = {
             "kind": "DataContract",
@@ -250,7 +293,8 @@ class SchemaEvolutionRunnerTest(unittest.TestCase):
             self.assertTrue(migration_report["schema_diff"])
             self.assertTrue(migration_report["blast_radius"])
             self.assertTrue(migration_report["consumer_failure_modes"])
-            self.assertEqual(migration_report["consumer_failure_modes"][0]["subscriber_id"], "week4-brownfield-cartographer")
+            subscribers = [item.get("subscriber_id") for item in migration_report["consumer_failure_modes"]]
+            self.assertIn("week5-ledger", subscribers)
 
 
 if __name__ == "__main__":

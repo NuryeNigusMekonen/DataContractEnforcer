@@ -59,6 +59,31 @@ def _float_or_none(value: Any) -> float | None:
         return None
 
 
+def _format_numeric(value: float | None) -> str:
+    if value is None:
+        return "unknown"
+    if value.is_integer():
+        return str(int(value))
+    return f"{value:.6f}".rstrip("0").rstrip(".")
+
+
+def _range_text(minimum: Any, maximum: Any, stats: dict[str, Any] | None = None) -> str:
+    stats = stats or {}
+    observed_min = _float_or_none(stats.get("min"))
+    observed_max = _float_or_none(stats.get("max"))
+    if observed_min is not None and observed_max is not None:
+        return f"{_format_numeric(observed_min)} to {_format_numeric(observed_max)}"
+    low = _float_or_none(minimum)
+    high = _float_or_none(maximum)
+    if low is not None and high is not None:
+        return f"{_format_numeric(low)} to {_format_numeric(high)}"
+    if low is not None:
+        return f">= {_format_numeric(low)}"
+    if high is not None:
+        return f"<= {_format_numeric(high)}"
+    return "unknown"
+
+
 def _numeric_type_rank(value: Any) -> int | None:
     return NUMERIC_TYPE_ORDER.get(str(value))
 
@@ -190,6 +215,16 @@ def classify_change(
     source_percentage = _looks_like_percentage_scale(source_min, source_max, source_stats)
     target_percentage = _looks_like_percentage_scale(target_min, target_max, target_stats)
     if source_type == target_type and ((source_percentage and target_unit) or (source_unit and target_percentage)):
+        source_range_text = _range_text(source_min, source_max, source_stats)
+        target_range_text = _range_text(target_min, target_max, target_stats)
+        if source_min == target_min and source_max == target_max:
+            declared_bounds = _range_text(source_min, source_max)
+            rationale = (
+                f"{field_name}: numeric scale shifted from observed range {source_range_text} into observed range {target_range_text} "
+                f"while declared bounds remained {declared_bounds}"
+            )
+        else:
+            rationale = f"{field_name}: numeric scale shifted from range {source_range_text} into range {target_range_text}"
         return {
             "field_name": field_name,
             "change_type": "NUMERIC_SCALE_SHIFT",
@@ -197,7 +232,7 @@ def classify_change(
             "severity": "CRITICAL",
             "backward_compatible": False,
             "forward_compatible": False,
-            "rationale": f"{field_name}: numeric scale shifted {source_min},{source_max} -> {target_min},{target_max}",
+            "rationale": rationale,
         }
     if source_type != target_type:
         source_rank = _numeric_type_rank(source_type)
@@ -213,6 +248,8 @@ def classify_change(
                 "rationale": f"{field_name}: type widened {source_type} -> {target_type}",
             }
         if (source_unit and target_percentage) or (source_percentage and target_unit):
+            source_range_text = _range_text(source_min, source_max, source_stats)
+            target_range_text = _range_text(target_min, target_max, target_stats)
             return {
                 "field_name": field_name,
                 "change_type": "TYPE_NARROWING_SCALE_SHIFT",
@@ -222,7 +259,7 @@ def classify_change(
                 "forward_compatible": False,
                 "rationale": (
                     f"{field_name}: narrow type and scale shift detected "
-                    f"{source_type} {source_min},{source_max} -> {target_type} {target_min},{target_max}"
+                    f"{source_type} range {source_range_text} -> {target_type} range {target_range_text}"
                 ),
             }
         return {

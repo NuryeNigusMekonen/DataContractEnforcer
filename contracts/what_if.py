@@ -441,6 +441,149 @@ def load_adapter_rules(path: str | None, contract_id: str) -> list[dict[str, Any
     return flattened
 
 
+def infer_auto_adapter_rules(
+    contract: dict[str, Any],
+    compatibility: dict[str, Any],
+    change_spec: dict[str, Any],
+) -> list[dict[str, Any]]:
+    source_version = normalize_version(str(change_spec.get("target_version") or change_spec.get("source_version") or "2.0.0"))
+    target_version = contract_version(contract)
+    change_type = str(change_spec.get("change_type", "")).lower()
+    field = _change_field(change_spec)
+    target_field = _target_field(change_spec)
+    rules: list[dict[str, Any]] = []
+
+    if normalize_version(source_version) != normalize_version(target_version):
+        rules.append(
+            {
+                "source_version": source_version,
+                "target_version": target_version,
+                "type": "version_normalize",
+                "field": "schema_version",
+                "segments": 2,
+                "description": "Normalize payload schema_version token from semantic (x.y.z) to contract style (x.y).",
+            }
+        )
+
+    if change_type == "field_rename" and field and target_field:
+        rules.append(
+            {
+                "source_version": source_version,
+                "target_version": target_version,
+                "type": "field_rename",
+                "from": target_field,
+                "to": field,
+                "description": f"Reverse producer rename {field} -> {target_field} for current consumers.",
+            }
+        )
+
+    if change_type in {"numeric_scale_change", "range_change"} and field:
+        factor = _scale_factor(change_spec)
+        if factor not in {0.0, 1.0}:
+            rules.append(
+                {
+                    "source_version": source_version,
+                    "target_version": target_version,
+                    "type": "numeric_scaling",
+                    "field": field,
+                    "factor": 1.0 / float(factor),
+                    "description": "Reverse numeric scale shift into the currently deployed unit range.",
+                }
+            )
+
+    if change_type == "type_change" and field:
+        existing = contract.get("fields", {}).get(field, {})
+        if isinstance(existing, dict):
+            target_type = str(existing.get("type", "")).strip()
+            if target_type:
+                rules.append(
+                    {
+                        "source_version": source_version,
+                        "target_version": target_version,
+                        "type": "type_coercion",
+                        "field": field,
+                        "target_type": target_type,
+                        "description": f"Coerce {field} back to {target_type} for current consumer compatibility.",
+                    }
+                )
+
+    if change_type == "add_field" and field:
+        rules.append(
+            {
+                "source_version": source_version,
+                "target_version": target_version,
+                "type": "remove_field",
+                "field": field,
+                "description": f"Strip newly added field {field} for down-level consumers.",
+            }
+        )
+
+    if change_type == "remove_field" and field:
+        existing = contract.get("fields", {}).get(field, {})
+        if isinstance(existing, dict):
+            default_value = change_spec.get("default_value")
+            if default_value is None:
+                enum_values = existing.get("enum")
+                if isinstance(enum_values, list) and enum_values:
+                    default_value = enum_values[0]
+            if default_value is not None:
+                rules.append(
+                    {
+                        "source_version": source_version,
+                        "target_version": target_version,
+                        "type": "default_value",
+                        "field": field,
+                        "value": default_value,
+                        "description": f"Backfill removed field {field} using a safe default for current consumers.",
+                    }
+                )
+
+    if change_type == "enum_change" and field:
+        added_values = [str(value) for value in change_spec.get("added_values", [])]
+        current = contract.get("fields", {}).get(field, {})
+        fallback_value = None
+        if isinstance(current, dict):
+            enum_values = current.get("enum")
+            if isinstance(enum_values, list) and enum_values:
+                fallback_value = enum_values[0]
+        if added_values and fallback_value is not None:
+            rules.append(
+                {
+                    "source_version": source_version,
+                    "target_version": target_version,
+                    "type": "enum_replace",
+                    "field": field,
+                    "replace_values": added_values,
+                    "new_value": fallback_value,
+                    "description": f"Map newly added enum values for {field} back to an existing consumer-safe value.",
+                }
+            )
+
+    renames = compatibility.get("renames", [])
+    if isinstance(renames, list):
+        for rename in renames:
+            if not isinstance(rename, dict):
+                continue
+            from_field = str(rename.get("from", ""))
+            to_field = str(rename.get("to", ""))
+            if not from_field or not to_field:
+                continue
+            if change_type == "field_rename" and field == from_field and target_field == to_field:
+                continue
+            rules.append(
+                {
+                    "source_version": source_version,
+                    "target_version": target_version,
+                    "type": "field_rename",
+                    "from": to_field,
+                    "to": from_field,
+                    "description": f"Auto-detected rename rollback for {to_field} -> {from_field}.",
+                }
+            )
+
+    return rules
+
+
 def run_baseline_validation(contract: dict[str, Any], records: list[Record], data_path: str | Path) -> dict[str, Any]:
     return evaluate_contract_records(
         contract,
@@ -468,13 +611,36 @@ def run_adapter_validation(
     changed_records: list[Record],
     change_spec: dict[str, Any],
     adapter_rules: list[dict[str, Any]] | None = None,
+    allow_noop_success: bool = False,
 ) -> dict[str, Any]:
     contract_id = str(contract.get("contract_id", ""))
     source_version = normalize_version(str(change_spec.get("target_version") or change_spec.get("source_version") or "2.0.0"))
     target_version = contract_version(contract)
     adapter = SchemaAdapter(contract_id, extra_rules=adapter_rules or [])
     payload = adapter.transform_records(changed_records, source_version, target_version)
-    if not payload["succeeded"] or not payload["applied"]:
+    if not payload["succeeded"]:
+        return {
+            "adapter": {
+                "attempted": payload["attempted"],
+                "applied": payload["applied"],
+                "succeeded": payload["succeeded"],
+                "fallback_succeeded": False,
+                "source_version": payload["source_version"],
+                "target_version": payload["target_version"],
+                "failure_reason": payload["failure_reason"],
+                "rules_applied": adapter.summarize_rule_logs(payload),
+                "original_samples": payload.get("original_samples", [])[:3],
+                "transformed_samples": payload.get("transformed_samples", [])[:3],
+            },
+            "evaluation": {
+                "overall_status": "FAIL",
+                "record_count": len(changed_records),
+                "raw_record_count": len(changed_records),
+                "summary": {"PASS": 0, "WARN": 0, "FAIL": 1, "ERROR": 0},
+                "results": [],
+            },
+        }
+    if not payload["applied"] and not allow_noop_success:
         return {
             "adapter": {
                 "attempted": payload["attempted"],
@@ -521,6 +687,16 @@ def run_adapter_validation(
     }
 
 
+def _field_path_matches(candidate: str, changed_field: str) -> bool:
+    left = str(candidate or "").strip()
+    right = str(changed_field or "").strip()
+    if not left or not right:
+        return False
+    if left == right:
+        return True
+    return right.startswith(f"{left}.") or left.startswith(f"{right}.")
+
+
 def compute_registry_blast_radius(
     contract_id: str,
     changed_fields: list[str],
@@ -552,8 +728,14 @@ def compute_registry_blast_radius(
                 breaking_fields.append(str(item.get("field", "")))
             else:
                 breaking_fields.append(str(item))
-        impacted_breaking = [field for field in breaking_fields if field in changed]
-        impacted_consumed = [field for field in fields_consumed if field in changed]
+        impacted_breaking = [
+            field for field in breaking_fields
+            if any(_field_path_matches(field, changed_field) for changed_field in changed)
+        ]
+        impacted_consumed = [
+            field for field in fields_consumed
+            if any(_field_path_matches(field, changed_field) for changed_field in changed)
+        ]
         if changed and not impacted_breaking and not impacted_consumed:
             continue
         subscribers.append(
@@ -640,19 +822,31 @@ def classify_what_if_result(
     adapted: dict[str, Any] | None,
     compatibility: dict[str, Any],
 ) -> str:
+    compatibility_verdict = str(compatibility.get("compatibility_verdict", ""))
+    adapter_recovered = bool(
+        adapted
+        and adapted.get("evaluation", {}).get("overall_status") == "PASS"
+        and (
+            adapted.get("adapter", {}).get("applied")
+            or adapted.get("adapter", {}).get("fallback_succeeded")
+        )
+    )
     if baseline.get("overall_status") != "PASS":
         return "BREAKING"
+    if adapter_recovered:
+        if compatibility_verdict == "breaking_change":
+            return "BREAKING_BUT_ADAPTABLE"
     if raw_changed.get("overall_status") == "PASS":
-        verdict = str(compatibility.get("compatibility_verdict", "backward_compatible"))
+        verdict = compatibility_verdict or "backward_compatible"
         change_count = len([item for item in compatibility.get("changes", []) if item.get("change_type") != "NO_CHANGE"])
         if verdict == "forward_compatible":
             return "FORWARD_COMPATIBLE"
         if verdict == "backward_compatible":
             return "COMPATIBLE" if change_count == 0 else "BACKWARD_COMPATIBLE"
         return "BREAKING_REQUIRES_MIGRATION"
-    if adapted and adapted.get("evaluation", {}).get("overall_status") == "PASS" and adapted.get("adapter", {}).get("applied"):
+    if adapter_recovered:
         return "BREAKING_BUT_ADAPTABLE"
-    if str(compatibility.get("compatibility_verdict", "")) == "breaking_change":
+    if compatibility_verdict == "breaking_change":
         return "BREAKING_REQUIRES_MIGRATION"
     return "BREAKING"
 
@@ -664,8 +858,8 @@ def generate_recommendation(verdict: str, affected_subscribers: list[dict[str, A
         return "Proceed with subscriber notice, monitor validation drift, and schedule a controlled contract version bump"
     if verdict == "BREAKING_REQUIRES_MIGRATION":
         if affected_subscribers:
-            return "Do not deploy until subscribers confirm migration plans or an adapter path is available"
-        return "Do not promote the contract change until the migration path is approved"
+            return "Do not promote the contract change until affected subscribers approve a migration plan."
+        return "Do not promote the contract change until a migration plan is approved."
     if adapted and adapted.get("adapter", {}).get("attempted"):
         return "Adapter recovery failed; keep the current contract live and coordinate a consumer migration"
     return "Reject the proposed change or revise it into a backward-compatible form"
@@ -693,10 +887,19 @@ def simulate_what_if(
     raw_changed = run_changed_validation(contract, changed_payload["records"], data_path)
 
     adapted: dict[str, Any] | None = None
-    adapter_rules = load_adapter_rules(adapter_config, str(contract.get("contract_id", ""))) if adapter_config else []
-    adapter_needed = raw_changed.get("overall_status") != "PASS" or bool(adapter_rules)
+    compatibility_breaking = str(compatibility.get("compatibility_verdict", "")) == "breaking_change"
+    configured_rules = load_adapter_rules(adapter_config, str(contract.get("contract_id", ""))) if adapter_config else []
+    auto_rules = infer_auto_adapter_rules(contract, compatibility, change_spec) if compatibility_breaking else []
+    adapter_rules = [*configured_rules, *auto_rules]
+    adapter_needed = raw_changed.get("overall_status") != "PASS" or compatibility_breaking or bool(configured_rules)
     if adapter_needed:
-        adapted = run_adapter_validation(contract, changed_payload["records"], change_spec, adapter_rules)
+        adapted = run_adapter_validation(
+            contract,
+            changed_payload["records"],
+            change_spec,
+            adapter_rules,
+            allow_noop_success=bool(compatibility_breaking and raw_changed.get("overall_status") == "PASS"),
+        )
 
     verdict = classify_what_if_result(baseline, raw_changed, adapted, compatibility)
     changed_fields = changed_fields_from_report(compatibility)
@@ -722,10 +925,22 @@ def simulate_what_if(
     primary_breaking = compatibility.get("primary_breaking_change")
     if primary_breaking:
         notes.append(str(primary_breaking.get("rationale", "Primary breaking change detected.")))
-    if adapted and adapted.get("adapter", {}).get("applied"):
+    if (
+        adapted
+        and adapted.get("evaluation", {}).get("overall_status") == "PASS"
+        and adapted.get("adapter", {}).get("applied")
+    ):
         notes.append("Adapter rules restored the payload to the currently expected contract shape.")
-    elif adapted and adapted.get("adapter", {}).get("attempted") and not adapted.get("adapter", {}).get("applied"):
+    elif (
+        adapted
+        and adapted.get("evaluation", {}).get("overall_status") == "PASS"
+        and adapted.get("adapter", {}).get("fallback_succeeded")
+    ):
+        notes.append("Adapter rollback rules are available for rollout even though this sample did not require payload rewrites.")
+    elif adapted and adapted.get("adapter", {}).get("attempted"):
         notes.append("Adapter was attempted but could not recover compatibility for the simulated payload.")
+    if auto_rules:
+        notes.append(f"Auto-generated {len(auto_rules)} safe adapter rule(s) from the compatibility diff.")
 
     return {
         "simulation_id": str(uuid.uuid4()),

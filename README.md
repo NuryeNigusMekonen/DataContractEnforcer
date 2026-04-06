@@ -2,6 +2,10 @@
 
 This repository contains a runnable implementation of the Data Contract Enforcer. The runtime `outputs/` tree is rebuilt from the canonical artifacts under `artifacts/week1` through `artifacts/week7`, and the trace export under `outputs/traces` is a realistic local sample with clean and violated runs for the AI-contract flow.
 
+## Dashboard Screenshot
+
+![Data Contract Enforcer Dashboard](screenshoot/dashboard.png)
+
 ## Simulation Layer
 
 Week 7 now includes a deterministic simulation layer under `simulators/` so you can regenerate contract-facing producer outputs for Weeks 1 to 5 plus LangSmith-style traces without rerunning the original upstream projects.
@@ -106,17 +110,17 @@ python3 contracts/generator.py \
 ```
 
 Expected output:
-`generated_contracts/week3_extractions.yaml`
-`generated_contracts/week3_extractions_dbt.yml`
-`generated_contracts/week5_events.yaml`
-`generated_contracts/week5_events_dbt.yml`
+`generated_contracts/week3-document-refinery-extractions.yaml`
+`generated_contracts/week3-document-refinery-extractions_dbt.yml`
+`generated_contracts/week5-event-records.yaml`
+`generated_contracts/week5-event-records_dbt.yml`
 `schema_snapshots/week3-document-refinery-extractions/<timestamp>.yaml`
 
 3. Validate clean baseline in AUDIT mode:
 
 ```bash
 python3 contracts/runner.py \
-  --contract generated_contracts/week3_extractions.yaml \
+  --contract generated_contracts/week3-document-refinery-extractions.yaml \
   --data outputs/week3/extractions.jsonl \
   --mode AUDIT \
   --output validation_reports/clean.json
@@ -130,9 +134,10 @@ Expected output:
 ```bash
 python3 create_violation.py
 python3 contracts/runner.py \
-  --contract generated_contracts/week3_extractions.yaml \
+  --contract generated_contracts/week3-document-refinery-extractions.yaml \
   --data outputs/week3/extractions_violated.jsonl \
   --mode ENFORCE \
+  --no-adapter \
   --output validation_reports/violated.json || true
 ```
 
@@ -140,6 +145,7 @@ Expected output:
 `outputs/week3/extractions_violated.jsonl`
 `validation_reports/violated.json`
 The ENFORCE command should block (`exit code 2`) because violations were detected.
+Use `--no-adapter` for the live raw-failure demo so the confidence range check fails visibly instead of being auto-recovered.
 
 5. Attribute violation (Tier 1 transitive blast radius):
 
@@ -148,15 +154,24 @@ python3 contracts/attributor.py \
   --violation validation_reports/violated.json \
   --lineage outputs/week4/lineage_snapshots.jsonl \
   --registry contract_registry/subscriptions.yaml \
+  --live-summary \
   --output violation_log/violations.jsonl
 ```
 
 Expected output:
 `violation_log/violations.jsonl` with ranked blame-chain entries and full transitive downstream impact across local contracts and subscribers.
+When `--live-summary` is included, the terminal also prints the failing check, lineage traversal, top commit hash and author, and the downstream blast radius for live demos.
 
-6. Create second snapshot from violated data and run schema evolution:
+6. Create a clean snapshot, then a violated snapshot, and run schema evolution:
 
 ```bash
+python3 contracts/generator.py \
+  --source outputs/week3/extractions.jsonl \
+  --contract-id week3-document-refinery-extractions \
+  --lineage outputs/week4/lineage_snapshots.jsonl \
+  --registry contract_registry/subscriptions.yaml \
+  --output generated_contracts/
+
 python3 contracts/generator.py \
   --source outputs/week3/extractions_violated.jsonl \
   --contract-id week3-document-refinery-extractions \
@@ -170,6 +185,7 @@ python3 contracts/schema_analyzer.py --contract-id week3-document-refinery-extra
 Expected output:
 `validation_reports/schema_evolution.json`
 with at least one breaking change from the confidence scale shift.
+Run the clean generator immediately before the violated generator so the analyzer compares the latest clean snapshot against the latest violated snapshot.
 
 7. Run a read-only what-if simulation before accepting a producer change:
 
@@ -201,9 +217,19 @@ Expected output:
 `validation_reports/ai_extensions.json`
 `validation_reports/ai_metrics.json`
 
-Current behavior with the real week 3 extraction set:
+The AI report now publishes four explicit safeguards:
+`embedding_drift`
+`prompt_input_validation`
+`structured_llm_output_enforcement`
+`langsmith_trace_schema_contracts`
+
+For backward compatibility, `llm_output_schema_rate` remains as an alias of `structured_llm_output_enforcement`.
+
+Current behavior with the real datasets:
 `embedding_drift.status` should be `PASS`
 `prompt_input_validation.status` should be `WARN` because some refinery documents do not yield usable text previews and are intentionally quarantined
+`structured_llm_output_enforcement.status` should reflect JSON Schema validity of Week 2 verdict payloads
+`langsmith_trace_schema_contracts.status` should reflect the structural and semantic LangSmith trace checks already enforced in the trace validator
 
 9. Generate Enforcer report artifact:
 
@@ -217,7 +243,20 @@ Expected output:
 
 If `validation_reports/what_if_*.json` files are present, the report now includes a short what-if simulation summary alongside weekly violations and schema changes.
 
-After running all steps, open `enforcer_report/report_data.json` and verify:
+10. Run the integrated end-to-end flow (real + violated, with what-if included by default):
+
+```bash
+python3 scripts/run_week7_e2e.py --mode both --final-live real
+```
+
+Expected output:
+`validation_reports/e2e_run_summary.json`
+`enforcer_report/e2e_real_report_data.json` (or violated based on mode)
+`enforcer_report/e2e_real_report_YYYYMMDD.pdf` (or violated based on mode)
+
+The e2e runner now executes all change specs under `test_data/changes/`, writes per-run snapshots such as `validation_reports/e2e_real_what_if_*.json`, and includes them in the generated report bundle. Use `--skip-what-if` only if you want a faster run without simulation summaries.
+
+After running all steps, open the selected `enforcer_report/e2e_*_report_data.json` and verify:
 `data_health_score` is between 0 and 100
 `violation_count` is at least 3 after the injected and AI-warning flows
 

@@ -14,6 +14,66 @@ from contracts.common import utc_now
 JobCallable = Callable[[], dict[str, Any]]
 
 
+def _publish_week7_dashboard(*, mode: str, reason: str, skip_sync: bool) -> dict[str, Any]:
+    try:
+        from backend.services.validation_service import get_all_validation_targets
+    except ModuleNotFoundError:
+        from services.validation_service import get_all_validation_targets
+
+    from scripts.run_week7_e2e import run_mode
+
+    summary = run_mode(mode, skip_sync=skip_sync)
+    watcher = get_watcher()
+    watcher.sync_snapshot()
+
+    updated_week_keys = [target["key"] for target in get_all_validation_targets()]
+    validation = summary.get(mode, {}) if isinstance(summary.get(mode), dict) else {}
+    watcher.record_validation_result(
+        reason=reason,
+        updated_week_keys=updated_week_keys,
+        completed_at=validation.get("completed_at") or summary.get("run_at"),
+    )
+    return {
+        "summary": summary,
+        "validation": validation,
+    }
+
+
+def execute_publish_pipeline(*, mode: str) -> dict[str, Any]:
+    published = _publish_week7_dashboard(mode=mode, reason=f"publish:{mode}", skip_sync=False)
+    payload = {
+        "mode": mode,
+        "validation": published["validation"],
+        "summary": published["summary"],
+    }
+    if mode == "violated":
+        payload["injected"] = published["summary"].get("injected", [])
+    return payload
+
+
+def execute_regenerate_pipeline(
+    regenerate_outputs_fn: Callable[[str], dict[str, Any]],
+    *,
+    scenario: str,
+) -> dict[str, Any]:
+    generation = regenerate_outputs_fn(scenario)
+    published = _publish_week7_dashboard(mode="real", reason=f"regenerate:{scenario}", skip_sync=True)
+    return {
+        "generation": generation,
+        "validation": published["validation"],
+        "summary": published["summary"],
+    }
+
+
+def execute_inject_pipeline() -> dict[str, Any]:
+    published = _publish_week7_dashboard(mode="violated", reason="inject:violations", skip_sync=False)
+    return {
+        "injected": published["summary"].get("injected", []),
+        "validation": published["validation"],
+        "summary": published["summary"],
+    }
+
+
 class JobManager:
     def __init__(self) -> None:
         self._lock = threading.RLock()
@@ -99,18 +159,24 @@ def submit_regenerate_job(
     *,
     scenario: str,
 ) -> dict[str, Any]:
-    def execute() -> dict[str, Any]:
-        generation = regenerate_outputs_fn(scenario)
-        watcher = get_watcher()
-        watcher.sync_snapshot()
-        validation = watcher.force_validate_all(reason=f"regenerate:{scenario}")
-        return {
-            "generation": generation,
-            "validation": validation,
-        }
-
     return get_job_manager().create_job(
         kind="regenerate",
         description=f"Regenerate outputs for {scenario}",
-        target=execute,
+        target=lambda: execute_regenerate_pipeline(regenerate_outputs_fn, scenario=scenario),
+    )
+
+
+def submit_inject_job() -> dict[str, Any]:
+    return get_job_manager().create_job(
+        kind="inject_violations",
+        description="Inject violations from current outputs",
+        target=execute_inject_pipeline,
+    )
+
+
+def submit_publish_job(*, mode: str) -> dict[str, Any]:
+    return get_job_manager().create_job(
+        kind=f"publish_{mode}",
+        description=f"Publish dashboard with Week 7 CLI {mode} flow",
+        target=lambda: execute_publish_pipeline(mode=mode),
     )

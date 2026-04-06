@@ -11,10 +11,22 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 try:
+    from backend.services.artifact_service import get_artifact_catalog
+    from backend.services.common import load_enforcer_report
     from backend.watcher import get_watcher
+    from backend.services.lineage_service import get_lineage_map
     from backend.services.schema_service import get_schema_evolution
     from backend.services.summary_service import get_kpi_summary, get_summary, get_weeks_status
-    from backend.services.task_service import get_job_manager, submit_regenerate_job, submit_what_if_job
+    from backend.services.task_service import (
+        execute_inject_pipeline,
+        execute_publish_pipeline,
+        execute_regenerate_pipeline,
+        get_job_manager,
+        submit_inject_job,
+        submit_publish_job,
+        submit_regenerate_job,
+        submit_what_if_job,
+    )
     from backend.services.timeline_service import get_timeline, get_timeline_panel
     from backend.services.validation_service import available_scenarios, get_latest_validations, regenerate_outputs
     from backend.services.violation_service import (
@@ -27,10 +39,22 @@ try:
     )
     from backend.services.whatif_service import get_what_if, run_what_if
 except ModuleNotFoundError:
+    from services.artifact_service import get_artifact_catalog
+    from services.common import load_enforcer_report
     from watcher import get_watcher
+    from services.lineage_service import get_lineage_map
     from services.schema_service import get_schema_evolution
     from services.summary_service import get_kpi_summary, get_summary, get_weeks_status
-    from services.task_service import get_job_manager, submit_regenerate_job, submit_what_if_job
+    from services.task_service import (
+        execute_inject_pipeline,
+        execute_publish_pipeline,
+        execute_regenerate_pipeline,
+        get_job_manager,
+        submit_inject_job,
+        submit_publish_job,
+        submit_regenerate_job,
+        submit_what_if_job,
+    )
     from services.timeline_service import get_timeline, get_timeline_panel
     from services.validation_service import available_scenarios, get_latest_validations, regenerate_outputs
     from services.violation_service import (
@@ -46,22 +70,6 @@ except ModuleNotFoundError:
 
 app = Flask(__name__)
 CORS(app)
-_watcher_started = False
-
-
-def ensure_watcher_started() -> None:
-    global _watcher_started
-    if _watcher_started:
-        return
-    get_watcher().start()
-    _watcher_started = True
-
-
-@app.before_request
-def start_runtime_services() -> None:
-    ensure_watcher_started()
-
-
 @app.get("/api/summary")
 def summary() -> tuple:
     return jsonify(get_summary()), 200
@@ -122,6 +130,21 @@ def schema_evolution() -> tuple:
     return jsonify(get_schema_evolution()), 200
 
 
+@app.get("/api/lineage-map")
+def lineage_map() -> tuple:
+    return jsonify(get_lineage_map()), 200
+
+
+@app.get("/api/enforcer-report")
+def enforcer_report() -> tuple:
+    return jsonify(load_enforcer_report() or {}), 200
+
+
+@app.get("/api/artifacts")
+def artifacts() -> tuple:
+    return jsonify(get_artifact_catalog()), 200
+
+
 @app.get("/api/what-if")
 def what_if() -> tuple:
     return jsonify(get_what_if()), 200
@@ -178,13 +201,36 @@ def regenerate() -> tuple:
         )
         job["available_scenarios"] = available_scenarios()
         return jsonify(job), 202
-    generation = regenerate_outputs(scenario, clear_existing=clear_existing)
-    watcher = get_watcher()
-    watcher.sync_snapshot()
-    validation = watcher.force_validate_all(reason=f"regenerate:{scenario}")
-    return jsonify({"generation": generation, "validation": validation, "available_scenarios": available_scenarios()}), 200
+    result = execute_regenerate_pipeline(
+        lambda selected_scenario: regenerate_outputs(selected_scenario, clear_existing=clear_existing),
+        scenario=scenario,
+    )
+    result["available_scenarios"] = available_scenarios()
+    return jsonify(result), 200
+
+
+@app.post("/api/inject-violations")
+def inject_violations() -> tuple:
+    payload = request.get_json(silent=True) or {}
+    run_async = bool(payload.get("async", True))
+    if run_async:
+        job = submit_inject_job()
+        return jsonify(job), 202
+    return jsonify(execute_inject_pipeline()), 200
+
+
+@app.post("/api/publish")
+def publish_dashboard() -> tuple:
+    payload = request.get_json(silent=True) or {}
+    mode = str(payload.get("mode") or "real").strip().lower()
+    run_async = bool(payload.get("async", True))
+    if mode not in {"real", "violated"}:
+        return jsonify({"error": "mode must be real or violated"}), 400
+    if run_async:
+        job = submit_publish_job(mode=mode)
+        return jsonify(job), 202
+    return jsonify(execute_publish_pipeline(mode=mode)), 200
 
 
 if __name__ == "__main__":
-    ensure_watcher_started()
     app.run(host="0.0.0.0", port=5000, debug=True)

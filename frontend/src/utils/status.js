@@ -1,6 +1,7 @@
 const STATUS_TONES = {
   PASS: "pass",
   COMPATIBLE: "pass",
+  BACKWARD_COMPATIBLE: "pass",
   OK: "pass",
   HEALTHY: "pass",
   WARN: "warn",
@@ -11,8 +12,12 @@ const STATUS_TONES = {
   HIGH: "fail",
   CRITICAL: "fail",
   BREAKING: "breaking",
+  BREAKING_BUT_ADAPTABLE: "warn",
+  BREAKING_REQUIRES_MIGRATION: "breaking",
   FORWARD_COMPATIBLE: "breaking",
   BREAKING_CHANGE: "breaking",
+  REQUIRED: "breaking",
+  NO_ADAPTER_NEEDED: "pass",
   NOT_ATTEMPTED: "neutral",
 };
 

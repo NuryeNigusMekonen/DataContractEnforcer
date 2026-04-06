@@ -21,32 +21,32 @@ INTENT_TEMPLATES: list[dict[str, Any]] = [
         "title": "Stabilize extraction confidence normalization",
         "tags": ["week3", "quality", "confidence"],
         "code_refs": [
-            ("services/week3-document-refinery/extractor.py", "extract_financial_facts"),
-            ("services/week3-document-refinery/normalization.py", "normalize_confidence"),
+            ("contracts/runner.py", "validate_week3"),
+            ("contracts/adapter.py", "SchemaAdapter"),
         ],
     },
     {
         "title": "Enforce verdict enum safety in scoring flow",
         "tags": ["week2", "governance", "enum"],
         "code_refs": [
-            ("services/week2-digital-courtroom/scoring.py", "score_submission"),
-            ("services/week2-digital-courtroom/rubric_loader.py", "load_rubric"),
+            ("contracts/runner.py", "validate_week2"),
+            ("contracts/common.py", "dataset_semantic_clauses"),
         ],
     },
     {
         "title": "Guarantee lineage edge resolution before publication",
         "tags": ["week4", "lineage", "reliability"],
         "code_refs": [
-            ("services/week4-brownfield-cartographer/graph_builder.py", "build_edges"),
-            ("services/week4-brownfield-cartographer/node_catalog.py", "materialize_nodes"),
+            ("contracts/lineage.py", "resolve_contract_lineage"),
+            ("backend/services/lineage_service.py", "get_lineage_map"),
         ],
     },
     {
         "title": "Protect event ordering at append time",
         "tags": ["week5", "ordering", "ledger"],
         "code_refs": [
-            ("services/week5-event-ledger/append_store.py", "append_event"),
-            ("services/week5-event-ledger/sequence_guard.py", "validate_sequence"),
+            ("contracts/runner.py", "validate_week5"),
+            ("scripts/sync_real_week_artifacts.py", "sync_week5"),
         ],
     },
     {
@@ -61,16 +61,16 @@ INTENT_TEMPLATES: list[dict[str, Any]] = [
         "title": "Backfill token-cost accounting in LangSmith exports",
         "tags": ["traces", "cost", "observability"],
         "code_refs": [
-            ("services/trace-exporter/costing.py", "estimate_total_cost"),
-            ("services/trace-exporter/export_runs.py", "export_runs"),
+            ("contracts/runner.py", "validate_traces"),
+            ("scripts/sync_real_week_artifacts.py", "sync_traces"),
         ],
     },
     {
         "title": "Preserve doc lineage through compliance and decision stages",
         "tags": ["week3", "week5", "traceability"],
         "code_refs": [
-            ("services/week3-document-refinery/provenance.py", "attach_provenance"),
-            ("services/week2-digital-courtroom/decision_flow.py", "render_decision"),
+            ("contracts/attributor.py", "attribute_failure"),
+            ("contracts/what_if.py", "simulate_what_if"),
         ],
     },
 ]
@@ -131,4 +131,3 @@ def apply_week1_violations(records: list[JsonDict], violations: list[ViolationSp
             else:
                 raise ValueError(f"unsupported week1 violation: {violation.type}")
     return mutated
-

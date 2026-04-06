@@ -1,4 +1,5 @@
 import { formatTimestamp } from "../utils/formatters";
+import { getSystemDisplayName, replaceSystemNames } from "../utils/systemNames";
 
 const STATUS_CLASS = {
   PASS: "status-pass",
@@ -17,12 +18,16 @@ const CARD_CLASS = {
 function WeekStatusCard({ week, isUpdated = false }) {
   const statusClass = STATUS_CLASS[week.status] || "status-neutral";
   const cardClass = CARD_CLASS[week.status] || "week-card--neutral";
+  const displayName = getSystemDisplayName(week.week_name || week.contract_id, {
+    short: true,
+    fallback: replaceSystemNames(week.week_name || week.contract_id, { short: true }),
+  });
 
   return (
     <article className={`panel week-card ${cardClass} ${isUpdated ? "week-card--updated" : ""}`}>
       <div className="week-card-top">
         <div>
-          <p className="eyebrow">{week.week_name}</p>
+          <p className="eyebrow">{displayName}</p>
           <h3>{week.total_checks} checks</h3>
         </div>
         <span className={`status-pill ${statusClass}`}>{week.status}</span>

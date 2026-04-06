@@ -5,25 +5,99 @@ import glob
 import json
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+import sys
 from typing import Any
 import textwrap
 
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from contracts.ai_extensions import ai_violation_records
+
 
 SEVERITY_RANK = {"CRITICAL": 3, "HIGH": 2, "MEDIUM": 1, "LOW": 0}
+AI_STATUS_KEYS = (
+    "embedding_drift",
+    "prompt_input_validation",
+    "structured_llm_output_enforcement",
+    "langsmith_trace_schema_contracts",
+)
+
+
+def public_ai_report(ai_report: dict[str, Any]) -> dict[str, Any]:
+    if not isinstance(ai_report, dict):
+        return {}
+    return {
+        key: value
+        for key, value in ai_report.items()
+        if key != "llm_output_schema_rate"
+    }
+
+
+def _critical_violation_count(results: list[dict[str, Any]]) -> int:
+    return sum(
+        1
+        for result in results
+        if str(result.get("status", "")).upper() in {"FAIL", "ERROR"}
+        and str(result.get("severity", "")).upper() == "CRITICAL"
+    )
+
+def _result_status_counts(results: list[dict[str, Any]]) -> tuple[int, int, int]:
+    passed = 0
+    failed = 0
+    warned = 0
+    for result in results:
+        status = str(result.get("status", "")).upper()
+        if status == "PASS":
+            passed += 1
+        elif status in {"FAIL", "ERROR"}:
+            failed += 1
+        elif status == "WARN":
+            warned += 1
+    return passed, failed, warned
+
+
+def summarize_validation_reports(validation_reports: list[dict[str, Any]]) -> tuple[int, int, int, int, int]:
+    total_checks = 0
+    passed = 0
+    failed = 0
+    warned = 0
+    critical_violations = 0
+
+    for report in validation_reports:
+        results = report.get("results", []) if isinstance(report.get("results"), list) else []
+        summary = report.get("summary", {}) if isinstance(report.get("summary"), dict) else {}
+
+        report_total = int(report.get("total_checks", 0) or len(results))
+        report_passed = report.get("passed", summary.get("PASS"))
+        report_failed = report.get("failed", summary.get("FAIL"))
+        report_warned = report.get("warned", summary.get("WARN"))
+
+        if report_passed is None or report_failed is None or report_warned is None:
+            inferred_passed, inferred_failed, inferred_warned = _result_status_counts(results)
+            if report_passed is None:
+                report_passed = inferred_passed
+            if report_failed is None:
+                report_failed = inferred_failed
+            if report_warned is None:
+                report_warned = inferred_warned
+
+        total_checks += report_total
+        passed += int(report_passed or 0)
+        failed += int(report_failed or 0)
+        warned += int(report_warned or 0)
+        critical_violations += _critical_violation_count(results)
+
+    return total_checks, passed, failed, warned, critical_violations
+
 
 def compute_health_score(validation_reports: list[dict[str, Any]]) -> int:
-    total_checks = sum(int(report.get("total_checks", 0) or len(report.get("results", []))) for report in validation_reports)
-    passed = sum(int(report.get("passed", report.get("summary", {}).get("PASS", 0))) for report in validation_reports)
-    critical_fails = sum(
-        1
-        for report in validation_reports
-        for result in report.get("results", [])
-        if result.get("status") in {"FAIL", "ERROR"} and result.get("severity") == "CRITICAL"
-    )
+    total_checks, passed, _failed, _warned, critical_violations = summarize_validation_reports(validation_reports)
     if total_checks == 0:
         return 100
-    score = round((passed / total_checks) * 100) - (critical_fails * 20)
-    return max(0, min(100, score))
+    score = ((passed / total_checks) * 100) - (critical_violations * 20)
+    return max(0, min(100, int(score)))
 
 
 def plain_language_violation(result: dict[str, Any]) -> str:
@@ -111,10 +185,46 @@ def load_ai_report(reports_dir: str = "validation_reports") -> dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+def summarize_ai_report(ai_report: dict[str, Any]) -> tuple[int, int, int, int]:
+    total_checks = 0
+    passed = 0
+    failed = 0
+    warned = 0
+    if not isinstance(ai_report, dict):
+        return total_checks, passed, failed, warned
+
+    for key in AI_STATUS_KEYS:
+        payload = ai_report.get(key)
+        if not isinstance(payload, dict):
+            continue
+        total_checks += 1
+        status = str(payload.get("status", "UNKNOWN")).upper()
+        if status in {"PASS", "BASELINE_SET"}:
+            passed += 1
+        elif status in {"FAIL", "ERROR"}:
+            failed += 1
+        elif status == "WARN":
+            warned += 1
+    return total_checks, passed, failed, warned
+
+
 def load_schema_reports(reports_dir: str = "validation_reports") -> list[dict[str, Any]]:
     payloads: list[dict[str, Any]] = []
     for path in sorted(glob.glob(f"{reports_dir}/schema_evolution*.json")):
         payloads.append(json.loads(Path(path).read_text(encoding="utf-8")))
+    if payloads:
+        return payloads
+
+    # Fallback for e2e bundles: consume per-report embedded schema_evolution blocks.
+    for path in sorted(glob.glob(f"{reports_dir}/*.json")):
+        payload = json.loads(Path(path).read_text(encoding="utf-8"))
+        if not isinstance(payload, dict):
+            continue
+        if "results" not in payload:
+            continue
+        schema_payload = payload.get("schema_evolution")
+        if isinstance(schema_payload, dict):
+            payloads.append(schema_payload)
     return payloads
 
 
@@ -261,8 +371,11 @@ def generate_report(
     mode: str = "weekly",
 ) -> dict[str, Any]:
     reports = load_reports(reports_dir, mode=mode)
-    violations = [] if mode == "baseline" else load_violations(violations_path)
     ai_report = load_ai_report(reports_dir)
+    report_ai_payload = public_ai_report(ai_report)
+    file_violations = [] if mode == "baseline" else load_violations(violations_path)
+    ai_violations = [] if mode == "baseline" else ai_violation_records(ai_report)
+    violations = dedupe_violations(file_violations + ai_violations)
     schema_reports = [] if mode == "baseline" else load_schema_reports(reports_dir)
     what_if_reports = [] if mode == "baseline" else load_what_if_reports(reports_dir)
     all_failures = [result for result in violations if result.get("status") in {"FAIL", "ERROR", "WARN"}]
@@ -273,26 +386,45 @@ def generate_report(
         reverse=True,
     )[:3]
     now = datetime.now(timezone.utc)
-    health_score = compute_health_score(reports)
+    validation_total, validation_passed, validation_failed, validation_warned, critical_violations = summarize_validation_reports(reports)
+    ai_total, ai_passed, ai_failed, ai_warned = summarize_ai_report(report_ai_payload)
+    total_checks = validation_total + ai_total
+    passed = validation_passed + ai_passed
+    failed = validation_failed + ai_failed
+    warned = validation_warned + ai_warned
+    if total_checks == 0:
+        health_score = 100
+    else:
+        health_score = max(0, min(100, int(((passed / total_checks) * 100) - (critical_violations * 20))))
+    if failed:
+        producer_health_narrative = f"Health score is {health_score}/100 with live contract failures requiring attention."
+    elif warned:
+        producer_health_narrative = f"Health score is {health_score}/100 with warnings that need review."
+    else:
+        producer_health_narrative = f"Health score is {health_score}/100 and all monitored contracts are healthy."
     return {
         "mode": mode,
         "generated_at": now.replace(microsecond=0).isoformat().replace("+00:00", "Z"),
         "period": f"{(now - timedelta(days=7)).date()} to {now.date()}",
+        "producer_contract_health_score": health_score,
+        "producer_contract_health_narrative": producer_health_narrative,
+        # Legacy keys retained for compatibility with older consumers.
         "data_health_score": health_score,
-        "health_narrative": (
-            "No critical violations detected."
-            if health_score >= 90
-            else f"Health score dropped to {health_score}/100 due to actionable contract failures."
-        ),
+        "health_narrative": producer_health_narrative,
         "top_violations": [plain_language_violation(result) for result in top_failures],
         "total_violations_by_severity": {
             severity: len([failure for failure in violations if failure.get("severity") == severity])
             for severity in ["CRITICAL", "HIGH", "MEDIUM", "LOW"]
         },
         "violation_count": len(violations),
+        "total_checks": total_checks,
+        "passed_checks": passed,
+        "failed_checks": failed,
+        "warned_checks": warned,
+        "critical_violations": critical_violations,
         "schema_changes_detected": schema_change_summary(schema_reports),
         "what_if_simulations": what_if_summary(what_if_reports),
-        "ai_system_risk_assessment": ai_report,
+        "ai_system_risk_assessment": report_ai_payload,
         "recommendations": recommended_actions(top_failures),
     }
 
@@ -322,7 +454,10 @@ def main() -> int:
     pdf_lines = [
         "Data Contract Enforcer Report",
         f"Generated at: {report['generated_at']}",
-        f"Data Health Score: {report['data_health_score']} - {report['health_narrative']}",
+        (
+            f"Producer Contract Health Score: {report['producer_contract_health_score']} - "
+            f"{report['producer_contract_health_narrative']}"
+        ),
         "",
         "Violations This Week:",
         *violation_lines,

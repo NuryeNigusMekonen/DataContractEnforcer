@@ -69,18 +69,37 @@ class LiveValidationWatcher:
         with self._state_lock:
             return dict(self._state)
 
-    def force_validate(self, week_keys: list[str], *, reason: str) -> dict[str, Any]:
-        return self._run_validation(week_keys, reason=reason)
+    def force_validate(self, week_keys: list[str], *, reason: str, prefer_violated: bool = False) -> dict[str, Any]:
+        return self._run_validation(week_keys, reason=reason, prefer_violated=prefer_violated)
 
-    def force_validate_all(self, *, reason: str) -> dict[str, Any]:
-        return self._run_validation([target["key"] for target in get_all_validation_targets()], reason=reason)
+    def force_validate_all(self, *, reason: str, prefer_violated: bool = False) -> dict[str, Any]:
+        return self._run_validation(
+            [target["key"] for target in get_all_validation_targets()],
+            reason=reason,
+            prefer_violated=prefer_violated,
+        )
 
     def sync_snapshot(self) -> None:
         with self._state_lock:
             self._signatures = self._snapshot_signatures()
 
+    def record_validation_result(self, *, reason: str, updated_week_keys: list[str], completed_at: str | None = None) -> None:
+        unique_week_keys = list(dict.fromkeys(updated_week_keys))
+        with self._state_lock:
+            self._state.update(
+                {
+                    "status": "watching",
+                    "busy": False,
+                    "last_reason": reason,
+                    "updated_week_keys": unique_week_keys,
+                    "last_event_at": utc_now(),
+                    "last_completed_at": completed_at or utc_now(),
+                    "last_error": None,
+                    "validation_count": int(self._state.get("validation_count", 0)) + len(unique_week_keys),
+                }
+            )
+
     def _run_loop(self) -> None:
-        self._run_validation([target["key"] for target in get_all_validation_targets()], reason="startup_sync")
         while not self._stop_event.wait(self.poll_interval_seconds):
             with self._state_lock:
                 self._state["last_scan_at"] = utc_now()
@@ -93,9 +112,18 @@ class LiveValidationWatcher:
                 continue
             self._signatures = current_signatures
             if changed_week_keys:
-                self._run_validation(changed_week_keys, reason="outputs_changed")
+                with self._state_lock:
+                    self._state.update(
+                        {
+                            "status": "stale",
+                            "busy": False,
+                            "last_reason": "outputs_changed",
+                            "updated_week_keys": changed_week_keys,
+                            "last_event_at": utc_now(),
+                        }
+                    )
 
-    def _run_validation(self, week_keys: list[str], *, reason: str) -> dict[str, Any]:
+    def _run_validation(self, week_keys: list[str], *, reason: str, prefer_violated: bool = False) -> dict[str, Any]:
         unique_week_keys = list(dict.fromkeys(week_keys))
         with self._worker_lock:
             with self._state_lock:
@@ -110,7 +138,7 @@ class LiveValidationWatcher:
                     }
                 )
             try:
-                result = run_validation_batch(unique_week_keys)
+                result = run_validation_batch(unique_week_keys, prefer_violated=prefer_violated, reason=reason)
             except Exception as exc:
                 with self._state_lock:
                     self._state.update(

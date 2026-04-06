@@ -1,39 +1,24 @@
-import { useMemo } from "react";
-
 import { getStatusTone } from "../utils/status";
+import { getSystemDisplayName, replaceSystemNames } from "../utils/systemNames";
 
 function ViolationsTable({
   violations,
   severityFilter,
-  search,
   onSeverityChange,
-  onSearchChange,
-  onToggleExpanded,
-  expanded,
   isUpdated = false,
 }) {
-  const filteredRows = useMemo(() => {
-    const query = search.trim().toLowerCase();
-    if (!query) {
-      return violations;
-    }
-    return violations.filter((violation) =>
-      [violation.field, violation.week, violation.short_message]
-        .filter(Boolean)
-        .some((value) => String(value).toLowerCase().includes(query)),
-    );
-  }, [search, violations]);
+  const emptyMessage =
+    severityFilter === "ALL"
+      ? "No active contract violations in the latest run."
+      : `No ${severityFilter.toLowerCase()} severity violations in the latest run.`;
 
   return (
     <section className={`panel ${isUpdated ? "panel--updated" : ""}`}>
       <div className="panel-heading">
         <div>
           <p className="section-kicker">Issues</p>
-          <h2>Violations requiring operator attention</h2>
+          <h2>Top contract violations</h2>
         </div>
-        <button className="text-button" type="button" onClick={onToggleExpanded}>
-          {expanded ? "Show top 10" : "View all"}
-        </button>
       </div>
 
       <div className="toolbar-row">
@@ -46,30 +31,21 @@ function ViolationsTable({
             <option value="LOW">Low</option>
           </select>
         </label>
-        <label className="field field--grow">
-          <span>Search</span>
-          <input
-            type="search"
-            value={search}
-            onChange={(event) => onSearchChange(event.target.value)}
-            placeholder="Search field, week, or message"
-          />
-        </label>
       </div>
 
-      <div className="table-shell">
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>Field</th>
-              <th>Severity</th>
-              <th>Week</th>
-              <th>Short message</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredRows.length ? (
-              filteredRows.map((violation) => (
+      {violations.length ? (
+        <div className="table-shell">
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Field</th>
+                <th>Severity</th>
+                <th>Week</th>
+                <th>Short message</th>
+              </tr>
+            </thead>
+            <tbody>
+              {violations.map((violation) => (
                 <tr key={violation.violation_id}>
                   <td>{violation.field || "Unknown field"}</td>
                   <td>
@@ -77,20 +53,23 @@ function ViolationsTable({
                       {violation.severity || "UNKNOWN"}
                     </span>
                   </td>
-                  <td>{violation.week || "Unknown"}</td>
-                  <td>{violation.short_message || violation.message}</td>
+                  <td>{getSystemDisplayName(violation.week, { short: true, fallback: replaceSystemNames(violation.week, { short: true }) || "Unknown" })}</td>
+                  <td>{replaceSystemNames(violation.short_message || violation.message)}</td>
                 </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan="4" className="table-empty">
-                  No violations match the current filter.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <div className="empty-state">
+          <strong>{emptyMessage}</strong>
+          <p className="muted-copy">
+            {severityFilter === "ALL"
+              ? "The latest validation run did not produce any contract failures."
+              : "Try a broader severity filter if you want to inspect lower-priority findings."}
+          </p>
+        </div>
+      )}
     </section>
   );
 }

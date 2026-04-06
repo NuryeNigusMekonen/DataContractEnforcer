@@ -25,6 +25,8 @@ models:
     data_type: string
   - name: extraction_model
     data_type: string
+  - name: extraction_rules_hash
+    data_type: string
   - name: processing_time_ms
     data_type: int
   - name: source_hash

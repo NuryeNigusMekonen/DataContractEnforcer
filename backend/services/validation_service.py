@@ -13,8 +13,9 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from contracts.attributor import attribute_failure, contract_id_from_args_or_report
-from contracts.common import load_jsonl, sha256_file, utc_now
+from contracts.common import load_jsonl, schema_snapshot_scope, sha256_file, utc_now
 from contracts.runner import evaluate_contract_records
+from create_violation import inject_violations_from_outputs
 from scripts.generate_all_outputs import generate_all_outputs_from_scenario_path
 
 from .common import (
@@ -29,6 +30,7 @@ from .common import (
     parse_timestamp,
     read_json_file,
 )
+from .dashboard_state_service import refresh_dashboard_state
 
 
 VALIDATION_TARGETS: dict[str, dict[str, Any]] = {
@@ -38,10 +40,9 @@ VALIDATION_TARGETS: dict[str, dict[str, Any]] = {
         "contract_id": "week1-intent-records",
         "contract_candidates": [
             REPO_ROOT / "generated_contracts" / "week1-intent-records.yaml",
-            REPO_ROOT / "generated_contracts" / "week1_intent_records.yaml",
         ],
         "data_path": OUTPUTS_DIR / "week1" / "intent_records.jsonl",
-        "report_path": VALIDATION_REPORTS_DIR / "live_week1.json",
+        "report_path": VALIDATION_REPORTS_DIR / "week1.json",
     },
     "week2": {
         "key": "week2",
@@ -49,10 +50,9 @@ VALIDATION_TARGETS: dict[str, dict[str, Any]] = {
         "contract_id": "week2-verdict-records",
         "contract_candidates": [
             REPO_ROOT / "generated_contracts" / "week2-verdict-records.yaml",
-            REPO_ROOT / "generated_contracts" / "week2_verdicts.yaml",
         ],
         "data_path": OUTPUTS_DIR / "week2" / "verdicts.jsonl",
-        "report_path": VALIDATION_REPORTS_DIR / "live_week2.json",
+        "report_path": VALIDATION_REPORTS_DIR / "week2.json",
     },
     "week3": {
         "key": "week3",
@@ -60,10 +60,9 @@ VALIDATION_TARGETS: dict[str, dict[str, Any]] = {
         "contract_id": "week3-document-refinery-extractions",
         "contract_candidates": [
             REPO_ROOT / "generated_contracts" / "week3-document-refinery-extractions.yaml",
-            REPO_ROOT / "generated_contracts" / "week3_extractions.yaml",
         ],
         "data_path": OUTPUTS_DIR / "week3" / "extractions.jsonl",
-        "report_path": VALIDATION_REPORTS_DIR / "live_week3.json",
+        "report_path": VALIDATION_REPORTS_DIR / "week3.json",
     },
     "week4": {
         "key": "week4",
@@ -71,10 +70,9 @@ VALIDATION_TARGETS: dict[str, dict[str, Any]] = {
         "contract_id": "week4-lineage-snapshots",
         "contract_candidates": [
             REPO_ROOT / "generated_contracts" / "week4-lineage-snapshots.yaml",
-            REPO_ROOT / "generated_contracts" / "week4_lineage.yaml",
         ],
         "data_path": OUTPUTS_DIR / "week4" / "lineage_snapshots.jsonl",
-        "report_path": VALIDATION_REPORTS_DIR / "live_week4.json",
+        "report_path": VALIDATION_REPORTS_DIR / "week4.json",
     },
     "week5": {
         "key": "week5",
@@ -82,10 +80,9 @@ VALIDATION_TARGETS: dict[str, dict[str, Any]] = {
         "contract_id": "week5-event-records",
         "contract_candidates": [
             REPO_ROOT / "generated_contracts" / "week5-event-records.yaml",
-            REPO_ROOT / "generated_contracts" / "week5_events.yaml",
         ],
         "data_path": OUTPUTS_DIR / "week5" / "events.jsonl",
-        "report_path": VALIDATION_REPORTS_DIR / "live_week5.json",
+        "report_path": VALIDATION_REPORTS_DIR / "week5.json",
     },
     "traces": {
         "key": "traces",
@@ -93,16 +90,15 @@ VALIDATION_TARGETS: dict[str, dict[str, Any]] = {
         "contract_id": TRACE_CONTRACT["contract_id"],
         "contract_candidates": [
             REPO_ROOT / "generated_contracts" / "langsmith-trace-records.yaml",
-            REPO_ROOT / "generated_contracts" / "langsmith_traces.yaml",
         ],
         "data_path": OUTPUTS_DIR / "traces" / "runs.jsonl",
-        "report_path": VALIDATION_REPORTS_DIR / "live_traces.json",
+        "report_path": VALIDATION_REPORTS_DIR / "traces.json",
     },
 }
 
 DEFAULT_LINEAGE_PATH = OUTPUTS_DIR / "week4" / "lineage_snapshots.jsonl"
 DEFAULT_REGISTRY_PATH = REPO_ROOT / "contract_registry" / "subscriptions.yaml"
-LIVE_VIOLATIONS_PATH = VIOLATION_LOG_DIR / "live_violations.jsonl"
+VIOLATIONS_PATH = VIOLATION_LOG_DIR / "violations.jsonl"
 
 
 def _resolve_existing_path(candidates: list[Path]) -> Path:
@@ -110,6 +106,10 @@ def _resolve_existing_path(candidates: list[Path]) -> Path:
         if candidate.exists():
             return candidate
     raise FileNotFoundError(f"None of the candidate paths exist: {', '.join(str(path) for path in candidates)}")
+
+
+def _violated_variant(path: Path) -> Path:
+    return path.with_name(f"{path.stem}_violated{path.suffix}")
 
 
 def get_validation_target(week_key: str) -> dict[str, Any]:
@@ -168,13 +168,18 @@ def _build_report(*, contract: dict[str, Any], data_path: Path, report_path: Pat
     return report
 
 
-def validate_week(week_key: str) -> dict[str, Any]:
+def validate_week(week_key: str, *, prefer_violated: bool = False) -> dict[str, Any]:
     target = get_validation_target(week_key)
     contract_path = _resolve_existing_path(target["contract_candidates"])
     data_path = Path(target["data_path"])
+    if prefer_violated:
+        violated_path = _violated_variant(data_path)
+        if violated_path.exists():
+            data_path = violated_path
     report_path = Path(target["report_path"])
     contract = _load_contract(contract_path)
-    return _build_report(contract=contract, data_path=data_path, report_path=report_path)
+    with schema_snapshot_scope("violated" if prefer_violated else "real"):
+        return _build_report(contract=contract, data_path=data_path, report_path=report_path)
 
 
 def refresh_live_violations(reports: list[dict[str, Any]] | None = None) -> list[dict[str, Any]]:
@@ -222,32 +227,48 @@ def refresh_live_violations(reports: list[dict[str, Any]] | None = None) -> list
                 )
             )
 
-    LIVE_VIOLATIONS_PATH.parent.mkdir(parents=True, exist_ok=True)
-    with LIVE_VIOLATIONS_PATH.open("w", encoding="utf-8") as handle:
+    VIOLATIONS_PATH.parent.mkdir(parents=True, exist_ok=True)
+    with VIOLATIONS_PATH.open("w", encoding="utf-8") as handle:
         for record in attributed:
             handle.write(json.dumps(record, sort_keys=True) + "\n")
     return attributed
 
 
-def run_validation_batch(week_keys: list[str]) -> dict[str, Any]:
+def run_validation_batch(week_keys: list[str], *, prefer_violated: bool = False, reason: str = "manual_validation") -> dict[str, Any]:
     reports: list[dict[str, Any]] = []
     for week_key in week_keys:
-        reports.append(validate_week(week_key))
-    violations = refresh_live_violations()
+        reports.append(validate_week(week_key, prefer_violated=prefer_violated))
+    violations = refresh_live_violations(reports)
+    dashboard_state = refresh_dashboard_state(
+        reports=reports,
+        violations=violations,
+        prefer_violated=prefer_violated,
+        reason=reason,
+    )
     return {
         "validated_weeks": week_keys,
+        "prefer_violated": prefer_violated,
         "reports": reports,
         "violation_count": len(violations),
+        "dashboard_state": dashboard_state,
         "completed_at": utc_now(),
     }
 
 
-def validate_all_weeks() -> dict[str, Any]:
-    return run_validation_batch([target["key"] for target in get_all_validation_targets()])
+def validate_all_weeks(*, prefer_violated: bool = False, reason: str = "manual_validation") -> dict[str, Any]:
+    return run_validation_batch(
+        [target["key"] for target in get_all_validation_targets()],
+        prefer_violated=prefer_violated,
+        reason=reason,
+    )
 
 
 def regenerate_outputs(scenario_path: str, *, clear_existing: bool = False) -> dict[str, Any]:
     return generate_all_outputs_from_scenario_path(scenario_path, clear_existing=clear_existing)
+
+
+def inject_output_violations() -> list[dict[str, object]]:
+    return inject_violations_from_outputs()
 
 
 def available_scenarios() -> list[dict[str, Any]]:

@@ -1,101 +1,98 @@
 {
-  "generated_at": "2026-04-03T14:40:02Z",
-  "contract_id": "week3-document-refinery-extractions",
-  "status": "OK",
-  "old_snapshot": "schema_snapshots/week3-document-refinery-extractions/20260403T143958Z.yaml",
-  "new_snapshot": "schema_snapshots/week3-document-refinery-extractions/20260403T144002Z.yaml",
-  "compatibility_verdict": "BREAKING",
+  "generated_at": "2026-04-06T10:25:44Z",
+  "contract_id": "week1-intent-records",
+  "compatibility_verdict": "backward_compatible",
   "migration_checklist": [
-    "Notify downstream owners named in the lineage downstream section before release.",
-    "Ship a compatibility bridge or alias field for every renamed or narrowed field.",
-    "Re-run validation and refresh statistical baselines after the migration lands."
+    {
+      "contract_id": "week1-intent-records",
+      "change_type": "no_breaking_change",
+      "affected_subscribers": [],
+      "breaking_fields": [],
+      "subscriber_details": [],
+      "recommended_action": "no notification needed"
+    }
   ],
-  "rollback_plan": [
-    "Restore the previous contract snapshot and revert the producer change.",
-    "Replay validation on the last known-good dataset snapshot.",
-    "Pause downstream consumption until the restored contract passes clean validation."
-  ],
-  "migration_impact_report": "validation_reports/migration_impact_week3-document-refinery-extractions_20260403T144002Z.json",
   "changes": [
     {
-      "field_name": "doc_id",
-      "classification": "COMPATIBLE",
-      "rationale": "doc_id: no material change"
+      "field_name": "code_refs.confidence",
+      "change_type": "NO_CHANGE",
+      "compatibility_class": "backward_compatible",
+      "severity": "LOW",
+      "backward_compatible": true,
+      "forward_compatible": true,
+      "rationale": "code_refs.confidence: no material change"
     },
     {
-      "field_name": "entities",
-      "classification": "COMPATIBLE",
-      "rationale": "entities: no material change"
+      "field_name": "code_refs.file",
+      "change_type": "NO_CHANGE",
+      "compatibility_class": "backward_compatible",
+      "severity": "LOW",
+      "backward_compatible": true,
+      "forward_compatible": true,
+      "rationale": "code_refs.file: no material change"
     },
     {
-      "field_name": "extracted_at",
-      "classification": "COMPATIBLE",
-      "rationale": "extracted_at: no material change"
+      "field_name": "code_refs.line_end",
+      "change_type": "NO_CHANGE",
+      "compatibility_class": "backward_compatible",
+      "severity": "LOW",
+      "backward_compatible": true,
+      "forward_compatible": true,
+      "rationale": "code_refs.line_end: no material change"
     },
     {
-      "field_name": "extracted_facts",
-      "classification": "COMPATIBLE",
-      "rationale": "extracted_facts: no material change"
+      "field_name": "code_refs.line_start",
+      "change_type": "NO_CHANGE",
+      "compatibility_class": "backward_compatible",
+      "severity": "LOW",
+      "backward_compatible": true,
+      "forward_compatible": true,
+      "rationale": "code_refs.line_start: no material change"
     },
     {
-      "field_name": "extracted_facts.confidence",
-      "classification": "BREAKING",
-      "rationale": "extracted_facts.confidence: maximum changed 1.0 -> 86.0"
+      "field_name": "code_refs.symbol",
+      "change_type": "NO_CHANGE",
+      "compatibility_class": "backward_compatible",
+      "severity": "LOW",
+      "backward_compatible": true,
+      "forward_compatible": true,
+      "rationale": "code_refs.symbol: no material change"
     },
     {
-      "field_name": "extracted_facts.entity_refs",
-      "classification": "COMPATIBLE",
-      "rationale": "extracted_facts.entity_refs: no material change"
+      "field_name": "created_at",
+      "change_type": "NO_CHANGE",
+      "compatibility_class": "backward_compatible",
+      "severity": "LOW",
+      "backward_compatible": true,
+      "forward_compatible": true,
+      "rationale": "created_at: no material change"
     },
     {
-      "field_name": "extracted_facts.fact_id",
-      "classification": "COMPATIBLE",
-      "rationale": "extracted_facts.fact_id: no material change"
+      "field_name": "description",
+      "change_type": "NO_CHANGE",
+      "compatibility_class": "backward_compatible",
+      "severity": "LOW",
+      "backward_compatible": true,
+      "forward_compatible": true,
+      "rationale": "description: no material change"
     },
     {
-      "field_name": "extracted_facts.page_ref",
-      "classification": "COMPATIBLE",
-      "rationale": "extracted_facts.page_ref: no material change"
+      "field_name": "governance_tags",
+      "change_type": "NO_CHANGE",
+      "compatibility_class": "backward_compatible",
+      "severity": "LOW",
+      "backward_compatible": true,
+      "forward_compatible": true,
+      "rationale": "governance_tags: no material change"
     },
     {
-      "field_name": "extracted_facts.source_excerpt",
-      "classification": "COMPATIBLE",
-      "rationale": "extracted_facts.source_excerpt: no material change"
-    },
-    {
-      "field_name": "extracted_facts.text",
-      "classification": "COMPATIBLE",
-      "rationale": "extracted_facts.text: no material change"
-    },
-    {
-      "field_name": "extraction_model",
-      "classification": "COMPATIBLE",
-      "rationale": "extraction_model: no material change"
-    },
-    {
-      "field_name": "processing_time_ms",
-      "classification": "COMPATIBLE",
-      "rationale": "processing_time_ms: no material change"
-    },
-    {
-      "field_name": "source_hash",
-      "classification": "COMPATIBLE",
-      "rationale": "source_hash: no material change"
-    },
-    {
-      "field_name": "source_path",
-      "classification": "COMPATIBLE",
-      "rationale": "source_path: no material change"
-    },
-    {
-      "field_name": "token_count.input",
-      "classification": "COMPATIBLE",
-      "rationale": "token_count.input: no material change"
-    },
-    {
-      "field_name": "token_count.output",
-      "classification": "COMPATIBLE",
-      "rationale": "token_count.output: no material change"
+      "field_name": "intent_id",
+      "change_type": "NO_CHANGE",
+      "compatibility_class": "backward_compatible",
+      "severity": "LOW",
+      "backward_compatible": true,
+      "forward_compatible": true,
+      "rationale": "intent_id: no material change"
     }
   ]
 }

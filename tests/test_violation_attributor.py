@@ -6,7 +6,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from contracts.attributor import attribute_failure, build_blame_chain
+from contracts.attributor import attribute_failure, build_blame_chain, primary_live_summary_record, render_live_summary
 
 
 class ViolationAttributorTest(unittest.TestCase):
@@ -158,6 +158,56 @@ class ViolationAttributorTest(unittest.TestCase):
             self.assertEqual(record["blame_chain"][0]["confidence_score"], 0.5)
             self.assertEqual(record["blast_radius"]["affected_nodes"], ["service::week4-brownfield-cartographer"])
             self.assertEqual(record["blast_radius"]["affected_pipelines"], ["service::week4-brownfield-cartographer"])
+
+    def test_render_live_summary_includes_failing_check_commit_and_lineage(self) -> None:
+        record = {
+            "check_id": "extracted_facts.confidence.range",
+            "field_name": "extracted_facts.confidence",
+            "blame_chain": [
+                {
+                    "file_path": "create_violation.py",
+                    "commit_hash": "abc123",
+                    "author": "owner@local",
+                    "rank": 1,
+                }
+            ],
+            "blast_radius": {
+                "affected_nodes": [
+                    "week4-brownfield-cartographer",
+                    "week4-lineage-snapshots",
+                    "week7-violation-attributor",
+                ],
+                "lineage": [
+                    {"id": "week4-brownfield-cartographer", "hops": 1},
+                    {"id": "week4-lineage-snapshots", "hops": 2},
+                    {"id": "week7-violation-attributor", "hops": 3},
+                ],
+            },
+        }
+
+        summary = render_live_summary(record)
+
+        self.assertIn("ViolationAttributor live summary", summary)
+        self.assertIn("Failing check: extracted_facts.confidence.range", summary)
+        self.assertIn("Top cause: create_violation.py", summary)
+        self.assertIn("Commit: abc123", summary)
+        self.assertIn("Author: owner@local", summary)
+        self.assertIn(
+            "Lineage traversal: extracted_facts.confidence.range -> week4-brownfield-cartographer -> week4-lineage-snapshots -> week7-violation-attributor",
+            summary,
+        )
+        self.assertIn("Blast radius: week4-brownfield-cartographer, week4-lineage-snapshots, week7-violation-attributor", summary)
+
+    def test_primary_live_summary_record_prefers_confidence_range(self) -> None:
+        records = [
+            {"check_id": "extracted_facts.confidence.drift"},
+            {"check_id": "week3.confidence_unit_scale"},
+            {"check_id": "extracted_facts.confidence.range"},
+        ]
+
+        primary = primary_live_summary_record(records)
+
+        self.assertEqual(primary, {"check_id": "extracted_facts.confidence.range"})
 
 
 if __name__ == "__main__":

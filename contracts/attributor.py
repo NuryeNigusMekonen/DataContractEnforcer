@@ -28,6 +28,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--contract", required=False, help="Path to the generated contract YAML (optional fallback).")
     parser.add_argument("--output", required=False, help="Output JSONL path for attributed violations.")
     parser.add_argument("--since", default="14 days ago", help="Window for git log traversal.")
+    parser.add_argument(
+        "--live-summary",
+        action="store_true",
+        help="Print a concise terminal summary with failing check, lineage traversal, top commit, and blast radius.",
+    )
     return parser.parse_args()
 
 
@@ -587,6 +592,58 @@ def contract_id_from_args_or_report(report: dict[str, Any], contract_path: str |
     return ""
 
 
+def _lineage_path(record: dict[str, Any]) -> list[str]:
+    blast_radius = record.get("blast_radius", {})
+    lineage = blast_radius.get("lineage", [])
+    ordered = sorted(lineage, key=lambda entry: int(entry.get("hops", 0)))
+    return [str(entry.get("id", "")) for entry in ordered if entry.get("id")]
+
+
+def _top_blame(record: dict[str, Any]) -> dict[str, Any]:
+    blame_chain = record.get("blame_chain", [])
+    return blame_chain[0] if blame_chain else {}
+
+
+def primary_live_summary_record(records: list[dict[str, Any]]) -> dict[str, Any] | None:
+    if not records:
+        return None
+    preferred_checks = [
+        "extracted_facts.confidence.range",
+        "week3.confidence_unit_scale",
+        "extracted_facts.confidence.drift",
+    ]
+    for check_id in preferred_checks:
+        for record in records:
+            if str(record.get("check_id", "")) == check_id:
+                return record
+    return records[0]
+
+
+def render_live_summary(record: dict[str, Any]) -> str:
+    top_blame = _top_blame(record)
+    lineage_path = _lineage_path(record)
+    failing_check = str(record.get("check_id", ""))
+    field_name = str(record.get("field_name", ""))
+    top_file = str(top_blame.get("file_path", "unknown"))
+    top_commit = str(top_blame.get("commit_hash", "unknown"))
+    top_author = str(top_blame.get("author", "unknown"))
+    affected_nodes = record.get("blast_radius", {}).get("affected_nodes", [])
+    first_hop = lineage_path[0] if lineage_path else "none"
+    traversal = " -> ".join([failing_check, *lineage_path]) if lineage_path else failing_check
+    lines = [
+        "ViolationAttributor live summary",
+        f"Failing check: {failing_check}",
+        f"Field: {field_name}",
+        f"Top cause: {top_file}",
+        f"Commit: {top_commit}",
+        f"Author: {top_author}",
+        f"Lineage traversal: {traversal}",
+        f"First downstream hop: {first_hop}",
+        f"Blast radius: {', '.join(str(node) for node in affected_nodes) if affected_nodes else 'none'}",
+    ]
+    return "\n".join(lines)
+
+
 def main() -> int:
     args = parse_args()
     report = json.loads(Path(args.violation).read_text(encoding="utf-8"))
@@ -626,6 +683,10 @@ def main() -> int:
             indent=2,
         )
     )
+    if args.live_summary:
+        primary_record = primary_live_summary_record(attributed)
+        if primary_record is not None:
+            print(render_live_summary(primary_record))
     return 0
 
 

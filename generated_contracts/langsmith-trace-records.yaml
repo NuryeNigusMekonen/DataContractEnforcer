@@ -3,25 +3,33 @@ apiVersion: v3.0.0
 id: langsmith-trace-records
 contract_id: langsmith-trace-records
 dataset: traces
-generated_at: '2026-04-03T14:39:58Z'
-source_path: outputs/traces/runs.jsonl
+schema_version: 1.0.0
+generated_at: '2026-04-06T10:25:31Z'
+source_path: /home/nurye/Desktop/TRP1/week7/DataContractEnforcer/outputs/traces/runs.jsonl
 record_count: 237
 info:
   title: LangSmith Trace Records
   version: 1.0.0
   owner: trp1-week7
-  description: Auto-generated contract for langsmith trace records sourced from outputs/traces/runs.jsonl.
+  description: Auto-generated contract for langsmith trace records sourced from /home/nurye/Desktop/TRP1/week7/DataContractEnforcer/outputs/traces/runs.jsonl.
 servers:
   local:
     type: local
-    path: outputs/traces/runs.jsonl
+    path: /home/nurye/Desktop/TRP1/week7/DataContractEnforcer/outputs/traces/runs.jsonl
     format: jsonl
 terms:
   usage: Internal inter-system data contract. Do not publish externally.
+versioning:
+  expected_schema_version: 1.0.0
+  supported_source_versions:
+  - 1.0.0
+  versioned_input: true
 schema: &id001
   completion_tokens:
     type: integer
     required: true
+    warning: 'Suspicious distribution detected: observed mean 0.000 is near an extreme
+      boundary. Check for scale drift, sparse values, or a nearly constant signal.'
   end_time:
     type: string
     required: true
@@ -29,117 +37,6 @@ schema: &id001
   error:
     type: string
     required: false
-    enum:
-    - "KeyboardInterrupt()Traceback (most recent call last):\n\n\n  File \"/home/nurye/Desktop/TRP1/week3/document-intelligence-pipeline/document-intelligence-refinery/.venv/lib/python3.12/site-packages/langgraph/_internal/_runnable.py\"\
-      , line 656, in invoke\n    input = context.run(step.invoke, input, config, **kwargs)\n\
-      \            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\n\n  File \"\
-      /home/nurye/Desktop/TRP1/week3/document-intelligence-pipeline/document-intelligence-refinery/.venv/lib/python3.12/site-packages/langgraph/_internal/_runnable.py\"\
-      , line 400, in invoke\n    ret = self.func(*args, **kwargs)\n          ^^^^^^^^^^^^^^^^^^^^^^^^^^\n\
-      \n\n  File \"/home/nurye/Desktop/TRP1/week3/document-intelligence-pipeline/document-intelligence-refinery/src/agents/query_agent.py\"\
-      , line 1200, in execute_node\n    hits, navigation_sections, used_section_scope\
-      \ = self._semantic_search_with_sections_meta(\n                            \
-      \                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\n\n  File\
-      \ \"/home/nurye/Desktop/TRP1/week3/document-intelligence-pipeline/document-intelligence-refinery/src/agents/query_agent.py\"\
-      , line 220, in _semantic_search_with_sections_meta\n    return self.semantic_search_tool(doc_id,\
-      \ query, top_k=top_k), [], False\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\
-      \n\n  File \"/home/nurye/Desktop/TRP1/week3/document-intelligence-pipeline/document-intelligence-refinery/src/agents/query_agent.py\"\
-      , line 98, in semantic_search_tool\n    self.vector_index.build(doc_id, ldus)\n\
-      \n\n  File \"/home/nurye/Desktop/TRP1/week3/document-intelligence-pipeline/document-intelligence-refinery/src/refinery/vector_store.py\"\
-      , line 96, in build\n    collection.upsert(ids=ids, documents=docs, metadatas=metadatas_list)\
-      \  # type: ignore[arg-type]\n    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\
-      \n\n  File \"/home/nurye/Desktop/TRP1/week3/document-intelligence-pipeline/document-intelligence-refinery/.venv/lib/python3.12/site-packages/chromadb/api/models/Collection.py\"\
-      , line 494, in upsert\n    upsert_request = self._validate_and_prepare_upsert_request(\n\
-      \                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\n\n  File\
-      \ \"/home/nurye/Desktop/TRP1/week3/document-intelligence-pipeline/document-intelligence-refinery/.venv/lib/python3.12/site-packages/chromadb/api/models/CollectionCommon.py\"\
-      , line 103, in wrapper\n    return func(self, *args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\
-      \n\n  File \"/home/nurye/Desktop/TRP1/week3/document-intelligence-pipeline/document-intelligence-refinery/.venv/lib/python3.12/site-packages/chromadb/api/models/CollectionCommon.py\"\
-      , line 448, in _validate_and_prepare_upsert_request\n    upsert_embeddings =\
-      \ self._embed_record_set(record_set=upsert_records)\n                      \
-      \  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\n\n  File \"/home/nurye/Desktop/TRP1/week3/document-intelligence-pipeline/document-intelligence-refinery/.venv/lib/python3.12/site-packages/chromadb/api/models/CollectionCommon.py\"\
-      , line 724, in _embed_record_set\n    return self._embed(\n           ^^^^^^^^^^^^\n\
-      \n\n  File \"/home/nurye/Desktop/TRP1/week3/document-intelligence-pipeline/document-intelligence-refinery/.venv/lib/python3.12/site-packages/chromadb/api/models/CollectionCommon.py\"\
-      , line 748, in _embed\n    return config_ef(input=input)\n           ^^^^^^^^^^^^^^^^^^^^^^\n\
-      \n\n  File \"/home/nurye/Desktop/TRP1/week3/document-intelligence-pipeline/document-intelligence-refinery/.venv/lib/python3.12/site-packages/chromadb/api/types.py\"\
-      , line 859, in __call__\n    result = call(self, input)\n             ^^^^^^^^^^^^^^^^^\n\
-      \n\n  File \"/home/nurye/Desktop/TRP1/week3/document-intelligence-pipeline/document-intelligence-refinery/.venv/lib/python3.12/site-packages/chromadb/api/types.py\"\
-      , line 959, in __call__\n    return ONNXMiniLM_L6_V2()(input)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^\n\
-      \n\n  File \"/home/nurye/Desktop/TRP1/week3/document-intelligence-pipeline/document-intelligence-refinery/.venv/lib/python3.12/site-packages/chromadb/api/types.py\"\
-      , line 859, in __call__\n    result = call(self, input)\n             ^^^^^^^^^^^^^^^^^\n\
-      \n\n  File \"/home/nurye/Desktop/TRP1/week3/document-intelligence-pipeline/document-intelligence-refinery/.venv/lib/python3.12/site-packages/chromadb/utils/embedding_functions/onnx_mini_lm_l6_v2.py\"\
-      , line 273, in __call__\n    embeddings = self._forward(input)\n           \
-      \      ^^^^^^^^^^^^^^^^^^^^\n\n\n  File \"/home/nurye/Desktop/TRP1/week3/document-intelligence-pipeline/document-intelligence-refinery/.venv/lib/python3.12/site-packages/chromadb/utils/embedding_functions/onnx_mini_lm_l6_v2.py\"\
-      , line 182, in _forward\n    model_output = self.model.run(None, onnx_input)\n\
-      \                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\n\n  File \"/home/nurye/Desktop/TRP1/week3/document-intelligence-pipeline/document-intelligence-refinery/.venv/lib/python3.12/site-packages/onnxruntime/capi/onnxruntime_inference_collection.py\"\
-      , line 296, in run\n    return self._sess.run(output_names, input_feed, run_options)\n\
-      \           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\n\nKeyboardInterrupt"
-    - "KeyboardInterrupt()Traceback (most recent call last):\n\n\n  File \"/home/nurye/Desktop/TRP1/week3/document-intelligence-pipeline/document-intelligence-refinery/.venv/lib/python3.12/site-packages/langgraph/pregel/main.py\"\
-      , line 2727, in stream\n    for _ in runner.tick(\n\n\n  File \"/home/nurye/Desktop/TRP1/week3/document-intelligence-pipeline/document-intelligence-refinery/.venv/lib/python3.12/site-packages/langgraph/pregel/_runner.py\"\
-      , line 167, in tick\n    run_with_retry(\n\n\n  File \"/home/nurye/Desktop/TRP1/week3/document-intelligence-pipeline/document-intelligence-refinery/.venv/lib/python3.12/site-packages/langgraph/pregel/_retry.py\"\
-      , line 96, in run_with_retry\n    return task.proc.invoke(task.input, config)\n\
-      \           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\n\n  File \"/home/nurye/Desktop/TRP1/week3/document-intelligence-pipeline/document-intelligence-refinery/.venv/lib/python3.12/site-packages/langgraph/_internal/_runnable.py\"\
-      , line 656, in invoke\n    input = context.run(step.invoke, input, config, **kwargs)\n\
-      \            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\n\n  File \"\
-      /home/nurye/Desktop/TRP1/week3/document-intelligence-pipeline/document-intelligence-refinery/.venv/lib/python3.12/site-packages/langgraph/_internal/_runnable.py\"\
-      , line 400, in invoke\n    ret = self.func(*args, **kwargs)\n          ^^^^^^^^^^^^^^^^^^^^^^^^^^\n\
-      \n\n  File \"/home/nurye/Desktop/TRP1/week3/document-intelligence-pipeline/document-intelligence-refinery/src/agents/query_agent.py\"\
-      , line 1200, in execute_node\n    hits, navigation_sections, used_section_scope\
-      \ = self._semantic_search_with_sections_meta(\n                            \
-      \                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\n\n  File\
-      \ \"/home/nurye/Desktop/TRP1/week3/document-intelligence-pipeline/document-intelligence-refinery/src/agents/query_agent.py\"\
-      , line 220, in _semantic_search_with_sections_meta\n    return self.semantic_search_tool(doc_id,\
-      \ query, top_k=top_k), [], False\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\
-      \n\n  File \"/home/nurye/Desktop/TRP1/week3/document-intelligence-pipeline/document-intelligence-refinery/src/agents/query_agent.py\"\
-      , line 98, in semantic_search_tool\n    self.vector_index.build(doc_id, ldus)\n\
-      \n\n  File \"/home/nurye/Desktop/TRP1/week3/document-intelligence-pipeline/document-intelligence-refinery/src/refinery/vector_store.py\"\
-      , line 96, in build\n    collection.upsert(ids=ids, documents=docs, metadatas=metadatas_list)\
-      \  # type: ignore[arg-type]\n    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\
-      \n\n  File \"/home/nurye/Desktop/TRP1/week3/document-intelligence-pipeline/document-intelligence-refinery/.venv/lib/python3.12/site-packages/chromadb/api/models/Collection.py\"\
-      , line 494, in upsert\n    upsert_request = self._validate_and_prepare_upsert_request(\n\
-      \                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\n\n  File\
-      \ \"/home/nurye/Desktop/TRP1/week3/document-intelligence-pipeline/document-intelligence-refinery/.venv/lib/python3.12/site-packages/chromadb/api/models/CollectionCommon.py\"\
-      , line 103, in wrapper\n    return func(self, *args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\
-      \n\n  File \"/home/nurye/Desktop/TRP1/week3/document-intelligence-pipeline/document-intelligence-refinery/.venv/lib/python3.12/site-packages/chromadb/api/models/CollectionCommon.py\"\
-      , line 448, in _validate_and_prepare_upsert_request\n    upsert_embeddings =\
-      \ self._embed_record_set(record_set=upsert_records)\n                      \
-      \  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\n\n  File \"/home/nurye/Desktop/TRP1/week3/document-intelligence-pipeline/document-intelligence-refinery/.venv/lib/python3.12/site-packages/chromadb/api/models/CollectionCommon.py\"\
-      , line 724, in _embed_record_set\n    return self._embed(\n           ^^^^^^^^^^^^\n\
-      \n\n  File \"/home/nurye/Desktop/TRP1/week3/document-intelligence-pipeline/document-intelligence-refinery/.venv/lib/python3.12/site-packages/chromadb/api/models/CollectionCommon.py\"\
-      , line 748, in _embed\n    return config_ef(input=input)\n           ^^^^^^^^^^^^^^^^^^^^^^\n\
-      \n\n  File \"/home/nurye/Desktop/TRP1/week3/document-intelligence-pipeline/document-intelligence-refinery/.venv/lib/python3.12/site-packages/chromadb/api/types.py\"\
-      , line 859, in __call__\n    result = call(self, input)\n             ^^^^^^^^^^^^^^^^^\n\
-      \n\n  File \"/home/nurye/Desktop/TRP1/week3/document-intelligence-pipeline/document-intelligence-refinery/.venv/lib/python3.12/site-packages/chromadb/api/types.py\"\
-      , line 959, in __call__\n    return ONNXMiniLM_L6_V2()(input)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^\n\
-      \n\n  File \"/home/nurye/Desktop/TRP1/week3/document-intelligence-pipeline/document-intelligence-refinery/.venv/lib/python3.12/site-packages/chromadb/api/types.py\"\
-      , line 859, in __call__\n    result = call(self, input)\n             ^^^^^^^^^^^^^^^^^\n\
-      \n\n  File \"/home/nurye/Desktop/TRP1/week3/document-intelligence-pipeline/document-intelligence-refinery/.venv/lib/python3.12/site-packages/chromadb/utils/embedding_functions/onnx_mini_lm_l6_v2.py\"\
-      , line 273, in __call__\n    embeddings = self._forward(input)\n           \
-      \      ^^^^^^^^^^^^^^^^^^^^\n\n\n  File \"/home/nurye/Desktop/TRP1/week3/document-intelligence-pipeline/document-intelligence-refinery/.venv/lib/python3.12/site-packages/chromadb/utils/embedding_functions/onnx_mini_lm_l6_v2.py\"\
-      , line 182, in _forward\n    model_output = self.model.run(None, onnx_input)\n\
-      \                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\n\n  File \"/home/nurye/Desktop/TRP1/week3/document-intelligence-pipeline/document-intelligence-refinery/.venv/lib/python3.12/site-packages/onnxruntime/capi/onnxruntime_inference_collection.py\"\
-      , line 296, in run\n    return self._sess.run(output_names, input_feed, run_options)\n\
-      \           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\n\nKeyboardInterrupt"
-    - "DomainError(\"Fraud workflow validation failed: missing=['screening_model_version'],\
-      \ errors=['none'].\")Traceback (most recent call last):\n\n\n  File \"/home/nurye/Desktop/TRP1/week5/ledger-agentic-event-store/.venv/lib/python3.12/site-packages/langgraph/utils/runnable.py\"\
-      , line 583, in ainvoke\n    input = await step.ainvoke(input, config, **kwargs)\n\
-      \            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\n\n  File \"/home/nurye/Desktop/TRP1/week5/ledger-agentic-event-store/.venv/lib/python3.12/site-packages/langgraph/utils/runnable.py\"\
-      , line 371, in ainvoke\n    ret = await asyncio.create_task(coro, context=context)\n\
-      \          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\n\n  File \"/home/nurye/Desktop/TRP1/week5/ledger-agentic-event-store/src/agents/workflow_engine.py\"\
-      , line 1380, in _fraud_validate_inputs_node\n    raise DomainError(\n\n\nsrc.models.events.DomainError:\
-      \ Fraud workflow validation failed: missing=['screening_model_version'], errors=['none']."
-    - "DomainError(\"Fraud workflow validation failed: missing=['screening_model_version'],\
-      \ errors=['none'].\")Traceback (most recent call last):\n\n\n  File \"/home/nurye/Desktop/TRP1/week5/ledger-agentic-event-store/.venv/lib/python3.12/site-packages/langgraph/pregel/__init__.py\"\
-      , line 2274, in astream\n    async for _ in runner.atick(\n\n\n  File \"/home/nurye/Desktop/TRP1/week5/ledger-agentic-event-store/.venv/lib/python3.12/site-packages/langgraph/pregel/runner.py\"\
-      , line 444, in atick\n    await arun_with_retry(\n\n\n  File \"/home/nurye/Desktop/TRP1/week5/ledger-agentic-event-store/.venv/lib/python3.12/site-packages/langgraph/pregel/retry.py\"\
-      , line 128, in arun_with_retry\n    return await task.proc.ainvoke(task.input,\
-      \ config)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\n\n  File\
-      \ \"/home/nurye/Desktop/TRP1/week5/ledger-agentic-event-store/.venv/lib/python3.12/site-packages/langgraph/utils/runnable.py\"\
-      , line 583, in ainvoke\n    input = await step.ainvoke(input, config, **kwargs)\n\
-      \            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\n\n  File \"/home/nurye/Desktop/TRP1/week5/ledger-agentic-event-store/.venv/lib/python3.12/site-packages/langgraph/utils/runnable.py\"\
-      , line 371, in ainvoke\n    ret = await asyncio.create_task(coro, context=context)\n\
-      \          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\n\n  File \"/home/nurye/Desktop/TRP1/week5/ledger-agentic-event-store/src/agents/workflow_engine.py\"\
-      , line 1380, in _fraud_validate_inputs_node\n    raise DomainError(\n\n\nsrc.models.events.DomainError:\
-      \ Fraud workflow validation failed: missing=['screening_model_version'], errors=['none'].\n\
-      \n\nDuring task with name 'validate_inputs' and id '9b68d526-c0d8-37cc-cdf1-06c8fc491939'"
   id:
     type: string
     required: true
@@ -162,9 +59,13 @@ schema: &id001
   inputs.append_result.events.event_version:
     type: integer
     required: false
+    warning: 'Suspicious distribution detected: observed mean 1.000 is near an extreme
+      boundary. Check for scale drift, sparse values, or a nearly constant signal.'
   inputs.append_result.events.global_position:
     type: integer
     required: false
+    warning: 'Suspicious distribution detected: observed mean 19.000 is near an extreme
+      boundary. Check for scale drift, sparse values, or a nearly constant signal.'
   inputs.append_result.events.metadata.actor_id:
     type: string
     required: false
@@ -192,6 +93,8 @@ schema: &id001
   inputs.append_result.events.payload.analysis_duration_ms:
     type: integer
     required: false
+    warning: 'Suspicious distribution detected: observed mean 145.000 is near an extreme
+      boundary. Check for scale drift, sparse values, or a nearly constant signal.'
   inputs.append_result.events.payload.application_id:
     type: string
     required: false
@@ -233,6 +136,9 @@ schema: &id001
   inputs.append_result.events.payload.recommended_limit_usd:
     type: number
     required: false
+    warning: 'Suspicious distribution detected: observed mean 95000.000 is near an
+      extreme boundary. Check for scale drift, sparse values, or a nearly constant
+      signal.'
   inputs.append_result.events.payload.regulatory_basis:
     type: string
     required: false
@@ -275,9 +181,13 @@ schema: &id001
   inputs.append_result.events.stream_position:
     type: integer
     required: false
+    warning: 'Suspicious distribution detected: observed mean 6.667 is near an extreme
+      boundary. Check for scale drift, sparse values, or a nearly constant signal.'
   inputs.append_result.new_stream_version:
     type: integer
     required: false
+    warning: 'Suspicious distribution detected: observed mean 8.000 is near an extreme
+      boundary. Check for scale drift, sparse values, or a nearly constant signal.'
   inputs.append_result.stream_id:
     type: string
     required: false
@@ -302,6 +212,8 @@ schema: &id001
   inputs.command.analysis_duration_ms:
     type: integer
     required: false
+    warning: 'Suspicious distribution detected: observed mean 145.000 is near an extreme
+      boundary. Check for scale drift, sparse values, or a nearly constant signal.'
   inputs.command.anomaly_flags:
     type: string
     required: false
@@ -365,9 +277,15 @@ schema: &id001
   inputs.command.recommended_limit_usd:
     type: number
     required: false
+    warning: 'Suspicious distribution detected: observed mean 95000.000 is near an
+      extreme boundary. Check for scale drift, sparse values, or a nearly constant
+      signal.'
   inputs.command.requested_amount_usd:
     type: number
     required: false
+    warning: 'Suspicious distribution detected: observed mean 500000.000 is near an
+      extreme boundary. Check for scale drift, sparse values, or a nearly constant
+      signal.'
   inputs.command.risk_tier:
     type: string
     required: false
@@ -407,6 +325,9 @@ schema: &id001
   inputs.context_snapshot.credit_analysis.recommended_limit_usd:
     type: number
     required: false
+    warning: 'Suspicious distribution detected: observed mean 95000.000 is near an
+      extreme boundary. Check for scale drift, sparse values, or a nearly constant
+      signal.'
   inputs.context_snapshot.credit_analysis.risk_tier:
     type: string
     required: false
@@ -425,15 +346,23 @@ schema: &id001
   inputs.context_snapshot.docpkg_event_count:
     type: integer
     required: false
+    warning: 'Suspicious distribution detected: observed mean 0.000 is near an extreme
+      boundary. Check for scale drift, sparse values, or a nearly constant signal.'
   inputs.context_snapshot.document_count:
     type: integer
     required: false
+    warning: 'Suspicious distribution detected: observed mean 1.000 is near an extreme
+      boundary. Check for scale drift, sparse values, or a nearly constant signal.'
   inputs.context_snapshot.existing_loan_events:
     type: integer
     required: false
+    warning: 'Suspicious distribution detected: observed mean 0.000 is near an extreme
+      boundary. Check for scale drift, sparse values, or a nearly constant signal.'
   inputs.context_snapshot.loan_event_count:
     type: integer
     required: false
+    warning: 'Suspicious distribution detected: observed mean 3.000 is near an extreme
+      boundary. Check for scale drift, sparse values, or a nearly constant signal.'
   inputs.context_snapshot.prepared_output.agent_id:
     type: string
     required: false
@@ -455,9 +384,13 @@ schema: &id001
   inputs.context_snapshot.refinery_document_count:
     type: integer
     required: false
+    warning: 'Suspicious distribution detected: observed mean 1.000 is near an extreme
+      boundary. Check for scale drift, sparse values, or a nearly constant signal.'
   inputs.context_snapshot.refinery_plan.document_count:
     type: integer
     required: false
+    warning: 'Suspicious distribution detected: observed mean 1.000 is near an extreme
+      boundary. Check for scale drift, sparse values, or a nearly constant signal.'
   inputs.context_snapshot.refinery_plan.enabled:
     type: boolean
     required: false
@@ -499,6 +432,8 @@ schema: &id001
   inputs.hits.bounding_box:
     type: number
     required: false
+    warning: 'Suspicious distribution detected: observed mean 257.666 is near an extreme
+      boundary. Check for scale drift, sparse values, or a nearly constant signal.'
   inputs.hits.chunk_type:
     type: string
     required: false
@@ -518,6 +453,8 @@ schema: &id001
   inputs.hits.page_refs.bbox:
     type: number
     required: false
+    warning: 'Suspicious distribution detected: observed mean 260.842 is near an extreme
+      boundary. Check for scale drift, sparse values, or a nearly constant signal.'
   inputs.hits.page_refs.content_hash:
     type: string
     required: false
@@ -527,6 +464,8 @@ schema: &id001
   inputs.hits.page_refs.page_number:
     type: integer
     required: false
+    warning: 'Suspicious distribution detected: observed mean 30.092 is near an extreme
+      boundary. Check for scale drift, sparse values, or a nearly constant signal.'
   inputs.hits.page_refs.ref_type:
     type: string
     required: false
@@ -550,6 +489,8 @@ schema: &id001
   inputs.hits.provenance_chain.steps.bbox:
     type: number
     required: false
+    warning: 'Suspicious distribution detected: observed mean 260.842 is near an extreme
+      boundary. Check for scale drift, sparse values, or a nearly constant signal.'
   inputs.hits.provenance_chain.steps.content_hash:
     type: string
     required: false
@@ -559,6 +500,8 @@ schema: &id001
   inputs.hits.provenance_chain.steps.page_number:
     type: integer
     required: false
+    warning: 'Suspicious distribution detected: observed mean 30.092 is near an extreme
+      boundary. Check for scale drift, sparse values, or a nearly constant signal.'
   inputs.hits.provenance_chain.steps.ref_type:
     type: string
     required: false
@@ -579,21 +522,29 @@ schema: &id001
   inputs.hits.token_count:
     type: integer
     required: false
+    warning: 'Suspicious distribution detected: observed mean 140.000 is near an extreme
+      boundary. Check for scale drift, sparse values, or a nearly constant signal.'
   inputs.judicial_verdict:
     type: string
     required: false
   inputs.metrics.total_cost_usd:
     type: number
     required: false
+    warning: 'Suspicious distribution detected: observed mean 0.000 is near an extreme
+      boundary. Check for scale drift, sparse values, or a nearly constant signal.'
   inputs.metrics.total_llm_calls:
     type: integer
     required: false
   inputs.metrics.total_nodes_executed:
     type: integer
     required: false
+    warning: 'Suspicious distribution detected: observed mean 2.649 is near an extreme
+      boundary. Check for scale drift, sparse values, or a nearly constant signal.'
   inputs.metrics.total_tokens_used:
     type: integer
     required: false
+    warning: 'Suspicious distribution detected: observed mean 0.000 is near an extreme
+      boundary. Check for scale drift, sparse values, or a nearly constant signal.'
   inputs.navigation_sections:
     type: string
     required: false
@@ -608,15 +559,24 @@ schema: &id001
   inputs.pre_extracted_evidence./tmp/pytest-of-nurye/pytest-0/test_submit_workflow_uses_refi0/company-a.txt.facts.net_income:
     type: number
     required: false
+    warning: 'Suspicious distribution detected: observed mean 180000.000 is near an
+      extreme boundary. Check for scale drift, sparse values, or a nearly constant
+      signal.'
   ? inputs.pre_extracted_evidence./tmp/pytest-of-nurye/pytest-0/test_submit_workflow_uses_refi0/company-a.txt.facts.total_assets
   : type: number
     required: false
+    warning: 'Suspicious distribution detected: observed mean 2100000.000 is near
+      an extreme boundary. Check for scale drift, sparse values, or a nearly constant
+      signal.'
   ? inputs.pre_extracted_evidence./tmp/pytest-of-nurye/pytest-0/test_submit_workflow_uses_refi0/company-a.txt.facts.total_liabilities
   : type: string
     required: false
   ? inputs.pre_extracted_evidence./tmp/pytest-of-nurye/pytest-0/test_submit_workflow_uses_refi0/company-a.txt.facts.total_revenue
   : type: number
     required: false
+    warning: 'Suspicious distribution detected: observed mean 1000000.000 is near
+      an extreme boundary. Check for scale drift, sparse values, or a nearly constant
+      signal.'
   inputs.question:
     type: string
     required: false
@@ -629,6 +589,12 @@ schema: &id001
   inputs.result:
     type: string
     required: false
+    llm_annotation:
+      provider: local_heuristic_fallback
+      model: offline-column-annotator
+      reason: Field name 'result' is generic and benefits from semantic clarification.
+      annotation: 'LLM review: treat ''inputs.result'' as a business-semantic field
+        and document allowed meanings before new downstream consumers rely on it.'
   inputs.route:
     type: string
     required: false
@@ -669,6 +635,12 @@ schema: &id001
   name:
     type: string
     required: true
+    llm_annotation:
+      provider: local_heuristic_fallback
+      model: offline-column-annotator
+      reason: Field name 'name' is generic and benefits from semantic clarification.
+      annotation: 'LLM review: treat ''name'' as a business-semantic field and document
+        allowed meanings before new downstream consumers rely on it.'
   outputs.answer:
     type: string
     required: false
@@ -690,9 +662,13 @@ schema: &id001
   outputs.append_result.events.event_version:
     type: integer
     required: false
+    warning: 'Suspicious distribution detected: observed mean 1.000 is near an extreme
+      boundary. Check for scale drift, sparse values, or a nearly constant signal.'
   outputs.append_result.events.global_position:
     type: integer
     required: false
+    warning: 'Suspicious distribution detected: observed mean 19.000 is near an extreme
+      boundary. Check for scale drift, sparse values, or a nearly constant signal.'
   outputs.append_result.events.metadata.actor_id:
     type: string
     required: false
@@ -720,6 +696,8 @@ schema: &id001
   outputs.append_result.events.payload.analysis_duration_ms:
     type: integer
     required: false
+    warning: 'Suspicious distribution detected: observed mean 145.000 is near an extreme
+      boundary. Check for scale drift, sparse values, or a nearly constant signal.'
   outputs.append_result.events.payload.application_id:
     type: string
     required: false
@@ -761,6 +739,9 @@ schema: &id001
   outputs.append_result.events.payload.recommended_limit_usd:
     type: number
     required: false
+    warning: 'Suspicious distribution detected: observed mean 95000.000 is near an
+      extreme boundary. Check for scale drift, sparse values, or a nearly constant
+      signal.'
   outputs.append_result.events.payload.regulatory_basis:
     type: string
     required: false
@@ -803,9 +784,13 @@ schema: &id001
   outputs.append_result.events.stream_position:
     type: integer
     required: false
+    warning: 'Suspicious distribution detected: observed mean 6.667 is near an extreme
+      boundary. Check for scale drift, sparse values, or a nearly constant signal.'
   outputs.append_result.new_stream_version:
     type: integer
     required: false
+    warning: 'Suspicious distribution detected: observed mean 8.000 is near an extreme
+      boundary. Check for scale drift, sparse values, or a nearly constant signal.'
   outputs.append_result.stream_id:
     type: string
     required: false
@@ -830,6 +815,8 @@ schema: &id001
   outputs.command.analysis_duration_ms:
     type: integer
     required: false
+    warning: 'Suspicious distribution detected: observed mean 145.000 is near an extreme
+      boundary. Check for scale drift, sparse values, or a nearly constant signal.'
   outputs.command.anomaly_flags:
     type: string
     required: false
@@ -893,9 +880,15 @@ schema: &id001
   outputs.command.recommended_limit_usd:
     type: number
     required: false
+    warning: 'Suspicious distribution detected: observed mean 95000.000 is near an
+      extreme boundary. Check for scale drift, sparse values, or a nearly constant
+      signal.'
   outputs.command.requested_amount_usd:
     type: number
     required: false
+    warning: 'Suspicious distribution detected: observed mean 500000.000 is near an
+      extreme boundary. Check for scale drift, sparse values, or a nearly constant
+      signal.'
   outputs.command.risk_tier:
     type: string
     required: false
@@ -941,6 +934,9 @@ schema: &id001
   outputs.context_snapshot.credit_analysis.recommended_limit_usd:
     type: number
     required: false
+    warning: 'Suspicious distribution detected: observed mean 95000.000 is near an
+      extreme boundary. Check for scale drift, sparse values, or a nearly constant
+      signal.'
   outputs.context_snapshot.credit_analysis.risk_tier:
     type: string
     required: false
@@ -959,15 +955,23 @@ schema: &id001
   outputs.context_snapshot.docpkg_event_count:
     type: integer
     required: false
+    warning: 'Suspicious distribution detected: observed mean 0.000 is near an extreme
+      boundary. Check for scale drift, sparse values, or a nearly constant signal.'
   outputs.context_snapshot.document_count:
     type: integer
     required: false
+    warning: 'Suspicious distribution detected: observed mean 1.000 is near an extreme
+      boundary. Check for scale drift, sparse values, or a nearly constant signal.'
   outputs.context_snapshot.existing_loan_events:
     type: integer
     required: false
+    warning: 'Suspicious distribution detected: observed mean 0.000 is near an extreme
+      boundary. Check for scale drift, sparse values, or a nearly constant signal.'
   outputs.context_snapshot.loan_event_count:
     type: integer
     required: false
+    warning: 'Suspicious distribution detected: observed mean 3.000 is near an extreme
+      boundary. Check for scale drift, sparse values, or a nearly constant signal.'
   outputs.context_snapshot.prepared_output.agent_id:
     type: string
     required: false
@@ -989,9 +993,13 @@ schema: &id001
   outputs.context_snapshot.refinery_document_count:
     type: integer
     required: false
+    warning: 'Suspicious distribution detected: observed mean 1.000 is near an extreme
+      boundary. Check for scale drift, sparse values, or a nearly constant signal.'
   outputs.context_snapshot.refinery_plan.document_count:
     type: integer
     required: false
+    warning: 'Suspicious distribution detected: observed mean 1.000 is near an extreme
+      boundary. Check for scale drift, sparse values, or a nearly constant signal.'
   outputs.context_snapshot.refinery_plan.enabled:
     type: boolean
     required: false
@@ -1047,6 +1055,8 @@ schema: &id001
   outputs.evidence.line_range:
     type: integer
     required: true
+    warning: 'Suspicious distribution detected: observed mean 31.312 is near an extreme
+      boundary. Check for scale drift, sparse values, or a nearly constant signal.'
   outputs.evidence.module:
     type: string
     required: true
@@ -1061,6 +1071,8 @@ schema: &id001
   outputs.hits.bounding_box:
     type: number
     required: true
+    warning: 'Suspicious distribution detected: observed mean 258.139 is near an extreme
+      boundary. Check for scale drift, sparse values, or a nearly constant signal.'
   outputs.hits.chunk_type:
     type: string
     required: true
@@ -1080,6 +1092,8 @@ schema: &id001
   outputs.hits.page_refs.bbox:
     type: number
     required: true
+    warning: 'Suspicious distribution detected: observed mean 261.994 is near an extreme
+      boundary. Check for scale drift, sparse values, or a nearly constant signal.'
   outputs.hits.page_refs.content_hash:
     type: string
     required: true
@@ -1095,6 +1109,8 @@ schema: &id001
   outputs.hits.page_refs.page_number:
     type: integer
     required: true
+    warning: 'Suspicious distribution detected: observed mean 30.208 is near an extreme
+      boundary. Check for scale drift, sparse values, or a nearly constant signal.'
   outputs.hits.page_refs.ref_type:
     type: string
     required: true
@@ -1118,6 +1134,8 @@ schema: &id001
   outputs.hits.provenance_chain.steps.bbox:
     type: number
     required: true
+    warning: 'Suspicious distribution detected: observed mean 261.994 is near an extreme
+      boundary. Check for scale drift, sparse values, or a nearly constant signal.'
   outputs.hits.provenance_chain.steps.content_hash:
     type: string
     required: true
@@ -1133,6 +1151,8 @@ schema: &id001
   outputs.hits.provenance_chain.steps.page_number:
     type: integer
     required: true
+    warning: 'Suspicious distribution detected: observed mean 30.208 is near an extreme
+      boundary. Check for scale drift, sparse values, or a nearly constant signal.'
   outputs.hits.provenance_chain.steps.ref_type:
     type: string
     required: true
@@ -1153,6 +1173,8 @@ schema: &id001
   outputs.hits.token_count:
     type: integer
     required: true
+    warning: 'Suspicious distribution detected: observed mean 145.045 is near an extreme
+      boundary. Check for scale drift, sparse values, or a nearly constant signal.'
   outputs.judicial_verdict:
     type: string
     required: false
@@ -1185,6 +1207,8 @@ schema: &id001
   outputs.judicial_verdict.final_score:
     type: integer
     required: false
+    warning: 'Suspicious distribution detected: observed mean 3.400 is near an extreme
+      boundary. Check for scale drift, sparse values, or a nearly constant signal.'
   outputs.judicial_verdict.judge_opinions.argument:
     type: string
     required: false
@@ -1215,21 +1239,36 @@ schema: &id001
   outputs.judicial_verdict.judge_opinions.score:
     type: integer
     required: false
+    warning: 'Suspicious distribution detected: observed mean 3.733 is near an extreme
+      boundary. Check for scale drift, sparse values, or a nearly constant signal.'
+    llm_annotation:
+      provider: local_heuristic_fallback
+      model: offline-column-annotator
+      reason: Field name 'score' is generic and benefits from semantic clarification.
+      annotation: 'LLM review: treat ''outputs.judicial_verdict.judge_opinions.score''
+        as a business-semantic field and document allowed meanings before new downstream
+        consumers rely on it.'
   outputs.judicial_verdict.remediation_plan:
     type: string
     required: false
   outputs.metrics.total_cost_usd:
     type: number
     required: false
+    warning: 'Suspicious distribution detected: observed mean 0.000 is near an extreme
+      boundary. Check for scale drift, sparse values, or a nearly constant signal.'
   outputs.metrics.total_llm_calls:
     type: integer
     required: false
   outputs.metrics.total_nodes_executed:
     type: integer
     required: false
+    warning: 'Suspicious distribution detected: observed mean 2.743 is near an extreme
+      boundary. Check for scale drift, sparse values, or a nearly constant signal.'
   outputs.metrics.total_tokens_used:
     type: integer
     required: false
+    warning: 'Suspicious distribution detected: observed mean 0.000 is near an extreme
+      boundary. Check for scale drift, sparse values, or a nearly constant signal.'
   outputs.navigation_sections:
     type: string
     required: false
@@ -1252,18 +1291,29 @@ schema: &id001
   ? outputs.pre_extracted_evidence./tmp/pytest-of-nurye/pytest-0/test_submit_workflow_uses_refi0/company-a.txt.facts.net_income
   : type: number
     required: false
+    warning: 'Suspicious distribution detected: observed mean 180000.000 is near an
+      extreme boundary. Check for scale drift, sparse values, or a nearly constant
+      signal.'
   ? outputs.pre_extracted_evidence./tmp/pytest-of-nurye/pytest-0/test_submit_workflow_uses_refi0/company-a.txt.facts.total_assets
   : type: number
     required: false
+    warning: 'Suspicious distribution detected: observed mean 2100000.000 is near
+      an extreme boundary. Check for scale drift, sparse values, or a nearly constant
+      signal.'
   ? outputs.pre_extracted_evidence./tmp/pytest-of-nurye/pytest-0/test_submit_workflow_uses_refi0/company-a.txt.facts.total_liabilities
   : type: string
     required: false
   ? outputs.pre_extracted_evidence./tmp/pytest-of-nurye/pytest-0/test_submit_workflow_uses_refi0/company-a.txt.facts.total_revenue
   : type: number
     required: false
+    warning: 'Suspicious distribution detected: observed mean 1000000.000 is near
+      an extreme boundary. Check for scale drift, sparse values, or a nearly constant
+      signal.'
   outputs.provenance_chain.bbox:
     type: number
     required: false
+    warning: 'Suspicious distribution detected: observed mean 269.357 is near an extreme
+      boundary. Check for scale drift, sparse values, or a nearly constant signal.'
   outputs.provenance_chain.cell_range:
     type: string
     required: false
@@ -1279,6 +1329,8 @@ schema: &id001
   outputs.provenance_chain.page_number:
     type: integer
     required: false
+    warning: 'Suspicious distribution detected: observed mean 26.726 is near an extreme
+      boundary. Check for scale drift, sparse values, or a nearly constant signal.'
   outputs.provenance_chain.ref_type:
     type: string
     required: false
@@ -1302,9 +1354,17 @@ schema: &id001
   outputs.result:
     type: string
     required: false
+    llm_annotation:
+      provider: local_heuristic_fallback
+      model: offline-column-annotator
+      reason: Field name 'result' is generic and benefits from semantic clarification.
+      annotation: 'LLM review: treat ''outputs.result'' as a business-semantic field
+        and document allowed meanings before new downstream consumers rely on it.'
   outputs.result.complexity:
     type: number
     required: false
+    warning: 'Suspicious distribution detected: observed mean 19.500 is near an extreme
+      boundary. Check for scale drift, sparse values, or a nearly constant signal.'
   outputs.result.direct_nodes:
     type: string
     required: false
@@ -1324,6 +1384,8 @@ schema: &id001
   outputs.result.evidence.line_range:
     type: integer
     required: true
+    warning: 'Suspicious distribution detected: observed mean 31.312 is near an extreme
+      boundary. Check for scale drift, sparse values, or a nearly constant signal.'
   outputs.result.evidence.module:
     type: string
     required: true
@@ -1365,6 +1427,8 @@ schema: &id001
   outputs.result.evidence_contract.line_range:
     type: integer
     required: true
+    warning: 'Suspicious distribution detected: observed mean 31.312 is near an extreme
+      boundary. Check for scale drift, sparse values, or a nearly constant signal.'
   outputs.result.evidence_contract.location:
     type: string
     required: true
@@ -1393,9 +1457,13 @@ schema: &id001
   outputs.result.impact_count:
     type: integer
     required: false
+    warning: 'Suspicious distribution detected: observed mean 147.000 is near an extreme
+      boundary. Check for scale drift, sparse values, or a nearly constant signal.'
   outputs.result.impacted_nodes.depth:
     type: integer
     required: true
+    warning: 'Suspicious distribution detected: observed mean 3.095 is near an extreme
+      boundary. Check for scale drift, sparse values, or a nearly constant signal.'
   outputs.result.impacted_nodes.evidence.analysis_method:
     type: string
     required: true
@@ -1404,6 +1472,8 @@ schema: &id001
   outputs.result.impacted_nodes.evidence.line_range:
     type: integer
     required: true
+    warning: 'Suspicious distribution detected: observed mean 1.000 is near an extreme
+      boundary. Check for scale drift, sparse values, or a nearly constant signal.'
   outputs.result.impacted_nodes.evidence.module:
     type: string
     required: true
@@ -1451,6 +1521,8 @@ schema: &id001
   outputs.result.judicial_verdict.final_score:
     type: integer
     required: false
+    warning: 'Suspicious distribution detected: observed mean 3.400 is near an extreme
+      boundary. Check for scale drift, sparse values, or a nearly constant signal.'
   outputs.result.judicial_verdict.judge_opinions.argument:
     type: string
     required: false
@@ -1481,6 +1553,15 @@ schema: &id001
   outputs.result.judicial_verdict.judge_opinions.score:
     type: integer
     required: false
+    warning: 'Suspicious distribution detected: observed mean 3.733 is near an extreme
+      boundary. Check for scale drift, sparse values, or a nearly constant signal.'
+    llm_annotation:
+      provider: local_heuristic_fallback
+      model: offline-column-annotator
+      reason: Field name 'score' is generic and benefits from semantic clarification.
+      annotation: 'LLM review: treat ''outputs.result.judicial_verdict.judge_opinions.score''
+        as a business-semantic field and document allowed meanings before new downstream
+        consumers rely on it.'
   outputs.result.judicial_verdict.remediation_plan:
     type: string
     required: false
@@ -1492,6 +1573,8 @@ schema: &id001
   outputs.result.match_count:
     type: integer
     required: false
+    warning: 'Suspicious distribution detected: observed mean 20.000 is near an extreme
+      boundary. Check for scale drift, sparse values, or a nearly constant signal.'
   outputs.result.matches.display_name:
     type: string
     required: false
@@ -1518,6 +1601,8 @@ schema: &id001
   outputs.result.matches.evidence.line_range:
     type: integer
     required: false
+    warning: 'Suspicious distribution detected: observed mean 237.625 is near an extreme
+      boundary. Check for scale drift, sparse values, or a nearly constant signal.'
   outputs.result.matches.evidence.module:
     type: string
     required: false
@@ -1566,21 +1651,6 @@ schema: &id001
   outputs.result.matches.purpose:
     type: string
     required: false
-    enum:
-    - This function likely integrates with an extension or plugin boundary. It belongs
-      to internal helper in src/meltano/core/plugin/base.py and supports the module's
-      domain_entry_points_public responsibilities.
-    - This function likely integrates with an extension or plugin boundary. It belongs
-      to internal helper in src/meltano/core/plugin/error.py and supports the module's
-      domain_entry_points_public responsibilities.
-    - This class appears to encapsulate integrates with an extension or plugin boundary
-      within src/meltano/core/plugin/utility.py, giving the module a reusable object-oriented
-      interface. It extends BasePlugin.
-    - This function likely integrates with an extension or plugin boundary. It belongs
-      to internal helper in src/meltano/core/plugin/project_plugin.py and supports
-      the module's domain_entry_points_public responsibilities.
-    - This class appears to encapsulate configures runtime behavior within tests/meltano/core/plugin/test_plugin_config_service.py,
-      giving the module a reusable object-oriented interface.
   outputs.result.matches.signature:
     type: string
     required: false
@@ -1590,12 +1660,6 @@ schema: &id001
   outputs.result.message:
     type: string
     required: false
-    enum:
-    - No lineage nodes found for 'dataset::orders'.
-    - Found 147 impacted modules from 'src/meltano/cli/run.py'.
-    - Ranked implementation candidates using semantic vector similarity.
-    - Module summary grounded in static graph metadata for 'src/meltano/core/plugin_invoker.py'.
-    - Module summary grounded in static graph metadata for 'src/meltano/cli/cli.py'.
   outputs.result.module:
     type: string
     required: false
@@ -1605,6 +1669,8 @@ schema: &id001
   outputs.result.node_count:
     type: integer
     required: false
+    warning: 'Suspicious distribution detected: observed mean 0.000 is near an extreme
+      boundary. Check for scale drift, sparse values, or a nearly constant signal.'
   outputs.result.nodes:
     type: string
     required: false
@@ -1614,13 +1680,6 @@ schema: &id001
   outputs.result.purpose:
     type: string
     required: false
-    enum:
-    - This module primarily handles SQL transformation or query logic, 21 public entry
-      points. It appears in the python layer and exposes key behaviors through code-defined
-      interfaces. [Documentation Drift Suspected]
-    - This module primarily handles 3 public entry points. It appears in the python
-      layer and exposes key behaviors through code-defined interfaces. [Documentation
-      Drift Suspected]
   outputs.result.query:
     type: string
     required: false
@@ -1678,9 +1737,12 @@ schema: &id001
   parent_run_id:
     type: string
     required: false
+    format: uuid
   prompt_tokens:
     type: integer
     required: true
+    warning: 'Suspicious distribution detected: observed mean 0.000 is near an extreme
+      boundary. Check for scale drift, sparse values, or a nearly constant signal.'
   run_type:
     type: string
     required: true
@@ -1709,16 +1771,1619 @@ schema: &id001
     type: number
     required: true
     minimum: 0.0
+    warning: 'Suspicious distribution detected: observed mean 0.000 is near an extreme
+      boundary. Check for scale drift, sparse values, or a nearly constant signal.'
   total_tokens:
     type: integer
     required: true
+    warning: 'Suspicious distribution detected: observed mean 0.000 is near an extreme
+      boundary. Check for scale drift, sparse values, or a nearly constant signal.'
     minimum: 0
 fields: *id001
-clauses: []
+profiling:
+  structural:
+    field_names:
+    - completion_tokens
+    - end_time
+    - error
+    - id
+    - inputs.append_result.events.event_id
+    - inputs.append_result.events.event_type
+    - inputs.append_result.events.event_version
+    - inputs.append_result.events.global_position
+    - inputs.append_result.events.metadata.actor_id
+    - inputs.append_result.events.metadata.causation_id
+    - inputs.append_result.events.metadata.correlation_id
+    - inputs.append_result.events.payload.agent_id
+    - inputs.append_result.events.payload.analysis_duration_ms
+    - inputs.append_result.events.payload.application_id
+    - inputs.append_result.events.payload.assigned_agent_id
+    - inputs.append_result.events.payload.confidence_score
+    - inputs.append_result.events.payload.docpkg_stream_id
+    - inputs.append_result.events.payload.input_data_hash
+    - inputs.append_result.events.payload.model_version
+    - inputs.append_result.events.payload.priority
+    - inputs.append_result.events.payload.recommended_limit_usd
+    - inputs.append_result.events.payload.regulatory_basis
+    - inputs.append_result.events.payload.requested_at
+    - inputs.append_result.events.payload.risk_tier
+    - inputs.append_result.events.payload.session_id
+    - inputs.append_result.events.payload.source
+    - inputs.append_result.events.recorded_at
+    - inputs.append_result.events.stream_id
+    - inputs.append_result.events.stream_position
+    - inputs.append_result.new_stream_version
+    - inputs.append_result.stream_id
+    - inputs.arg
+    - inputs.command.agent_id
+    - inputs.command.analysis_duration_ms
+    - inputs.command.anomaly_flags
+    - inputs.command.applicant_id
+    - inputs.command.application_id
+    - inputs.command.auto_orchestrate_lifecycle
+    - inputs.command.causation_id
+    - inputs.command.confidence_score
+    - inputs.command.correlation_id
+    - inputs.command.document_path
+    - inputs.command.document_paths
+    - inputs.command.fraud_score
+    - inputs.command.input_data_hash
+    - inputs.command.loan_purpose
+    - inputs.command.model_version
+    - inputs.command.process_documents_after_submit
+    - inputs.command.recommended_limit_usd
+    - inputs.command.requested_amount_usd
+    - inputs.command.risk_tier
+    - inputs.command.screening_model_version
+    - inputs.command.session_id
+    - inputs.command.submission_channel
+    - inputs.command.submitted_at
+    - inputs.context_snapshot.credit_analysis.confidence_score
+    - inputs.context_snapshot.credit_analysis.rationale
+    - inputs.context_snapshot.credit_analysis.recommended_limit_usd
+    - inputs.context_snapshot.credit_analysis.risk_tier
+    - inputs.context_snapshot.credit_plan.model_version
+    - inputs.context_snapshot.credit_plan.target_output
+    - inputs.context_snapshot.docpkg_event_count
+    - inputs.context_snapshot.document_count
+    - inputs.context_snapshot.existing_loan_events
+    - inputs.context_snapshot.loan_event_count
+    - inputs.context_snapshot.prepared_output.agent_id
+    - inputs.context_snapshot.prepared_output.event_type
+    - inputs.context_snapshot.prepared_output.has_pre_extracted_evidence
+    - inputs.context_snapshot.prepared_output.session_id
+    - inputs.context_snapshot.refinery_document_count
+    - inputs.context_snapshot.refinery_plan.document_count
+    - inputs.context_snapshot.refinery_plan.enabled
+    - inputs.context_snapshot.refinery_quality_assessment
+    - inputs.context_snapshot.refinery_strategies
+    - inputs.correlation_id
+    - inputs.direction
+    - inputs.doc_id
+    - inputs.document_paths
+    - inputs.error
+    - inputs.evidence
+    - inputs.hits.bounding_box
+    - inputs.hits.chunk_type
+    - inputs.hits.content
+    - inputs.hits.content_hash
+    - inputs.hits.ldu_id
+    - inputs.hits.page_refs.bbox
+    - inputs.hits.page_refs.content_hash
+    - inputs.hits.page_refs.doc_name
+    - inputs.hits.page_refs.page_number
+    - inputs.hits.page_refs.ref_type
+    - inputs.hits.page_refs.section_path
+    - inputs.hits.parent_section
+    - inputs.hits.parent_section_path
+    - inputs.hits.provenance_chain.chain_type
+    - inputs.hits.provenance_chain.steps.bbox
+    - inputs.hits.provenance_chain.steps.content_hash
+    - inputs.hits.provenance_chain.steps.doc_name
+    - inputs.hits.provenance_chain.steps.page_number
+    - inputs.hits.provenance_chain.steps.ref_type
+    - inputs.hits.provenance_chain.steps.section_path
+    - inputs.hits.relationships
+    - inputs.hits.structured_payload.headers
+    - inputs.hits.structured_payload.rows
+    - inputs.hits.token_count
+    - inputs.judicial_verdict
+    - inputs.metrics.total_cost_usd
+    - inputs.metrics.total_llm_calls
+    - inputs.metrics.total_nodes_executed
+    - inputs.metrics.total_tokens_used
+    - inputs.navigation_sections
+    - inputs.pre_extracted_evidence./tmp/pytest-of-nurye/pytest-0/test_submit_workflow_uses_refi0/company-a.txt.extraction_context.strategy_used
+    - inputs.pre_extracted_evidence./tmp/pytest-of-nurye/pytest-0/test_submit_workflow_uses_refi0/company-a.txt.facts.ebitda
+    - inputs.pre_extracted_evidence./tmp/pytest-of-nurye/pytest-0/test_submit_workflow_uses_refi0/company-a.txt.facts.net_income
+    - inputs.pre_extracted_evidence./tmp/pytest-of-nurye/pytest-0/test_submit_workflow_uses_refi0/company-a.txt.facts.total_assets
+    - inputs.pre_extracted_evidence./tmp/pytest-of-nurye/pytest-0/test_submit_workflow_uses_refi0/company-a.txt.facts.total_liabilities
+    - inputs.pre_extracted_evidence./tmp/pytest-of-nurye/pytest-0/test_submit_workflow_uses_refi0/company-a.txt.facts.total_revenue
+    - inputs.question
+    - inputs.result
+    - inputs.route
+    - inputs.semantic_query
+    - inputs.tool
+    - inputs.tool_trace
+    - inputs.used_section_scope
+    - inputs.writer
+    - name
+    - outputs.answer
+    - outputs.append_result.events.event_id
+    - outputs.append_result.events.event_type
+    - outputs.append_result.events.event_version
+    - outputs.append_result.events.global_position
+    - outputs.append_result.events.metadata.actor_id
+    - outputs.append_result.events.metadata.causation_id
+    - outputs.append_result.events.metadata.correlation_id
+    - outputs.append_result.events.payload.agent_id
+    - outputs.append_result.events.payload.analysis_duration_ms
+    - outputs.append_result.events.payload.application_id
+    - outputs.append_result.events.payload.assigned_agent_id
+    - outputs.append_result.events.payload.confidence_score
+    - outputs.append_result.events.payload.docpkg_stream_id
+    - outputs.append_result.events.payload.input_data_hash
+    - outputs.append_result.events.payload.model_version
+    - outputs.append_result.events.payload.priority
+    - outputs.append_result.events.payload.recommended_limit_usd
+    - outputs.append_result.events.payload.regulatory_basis
+    - outputs.append_result.events.payload.requested_at
+    - outputs.append_result.events.payload.risk_tier
+    - outputs.append_result.events.payload.session_id
+    - outputs.append_result.events.payload.source
+    - outputs.append_result.events.recorded_at
+    - outputs.append_result.events.stream_id
+    - outputs.append_result.events.stream_position
+    - outputs.append_result.new_stream_version
+    - outputs.append_result.stream_id
+    - outputs.arg
+    - outputs.command.agent_id
+    - outputs.command.analysis_duration_ms
+    - outputs.command.anomaly_flags
+    - outputs.command.applicant_id
+    - outputs.command.application_id
+    - outputs.command.auto_orchestrate_lifecycle
+    - outputs.command.causation_id
+    - outputs.command.confidence_score
+    - outputs.command.correlation_id
+    - outputs.command.document_path
+    - outputs.command.document_paths
+    - outputs.command.fraud_score
+    - outputs.command.input_data_hash
+    - outputs.command.loan_purpose
+    - outputs.command.model_version
+    - outputs.command.process_documents_after_submit
+    - outputs.command.recommended_limit_usd
+    - outputs.command.requested_amount_usd
+    - outputs.command.risk_tier
+    - outputs.command.screening_model_version
+    - outputs.command.session_id
+    - outputs.command.submission_channel
+    - outputs.command.submitted_at
+    - outputs.confidence
+    - outputs.context_snapshot.credit_analysis.confidence_score
+    - outputs.context_snapshot.credit_analysis.rationale
+    - outputs.context_snapshot.credit_analysis.recommended_limit_usd
+    - outputs.context_snapshot.credit_analysis.risk_tier
+    - outputs.context_snapshot.credit_plan.model_version
+    - outputs.context_snapshot.credit_plan.target_output
+    - outputs.context_snapshot.docpkg_event_count
+    - outputs.context_snapshot.document_count
+    - outputs.context_snapshot.existing_loan_events
+    - outputs.context_snapshot.loan_event_count
+    - outputs.context_snapshot.prepared_output.agent_id
+    - outputs.context_snapshot.prepared_output.event_type
+    - outputs.context_snapshot.prepared_output.has_pre_extracted_evidence
+    - outputs.context_snapshot.prepared_output.session_id
+    - outputs.context_snapshot.refinery_document_count
+    - outputs.context_snapshot.refinery_plan.document_count
+    - outputs.context_snapshot.refinery_plan.enabled
+    - outputs.context_snapshot.refinery_quality_assessment
+    - outputs.context_snapshot.refinery_strategies
+    - outputs.correlation_id
+    - outputs.direction
+    - outputs.doc_id
+    - outputs.document_paths
+    - outputs.error
+    - outputs.evidence
+    - outputs.evidence.analysis_method
+    - outputs.evidence.line_range
+    - outputs.evidence.module
+    - outputs.evidence.node
+    - outputs.evidence.source_file
+    - outputs.hits.bounding_box
+    - outputs.hits.chunk_type
+    - outputs.hits.content
+    - outputs.hits.content_hash
+    - outputs.hits.ldu_id
+    - outputs.hits.page_refs.bbox
+    - outputs.hits.page_refs.content_hash
+    - outputs.hits.page_refs.doc_name
+    - outputs.hits.page_refs.page_number
+    - outputs.hits.page_refs.ref_type
+    - outputs.hits.page_refs.section_path
+    - outputs.hits.parent_section
+    - outputs.hits.parent_section_path
+    - outputs.hits.provenance_chain.chain_type
+    - outputs.hits.provenance_chain.steps.bbox
+    - outputs.hits.provenance_chain.steps.content_hash
+    - outputs.hits.provenance_chain.steps.doc_name
+    - outputs.hits.provenance_chain.steps.page_number
+    - outputs.hits.provenance_chain.steps.ref_type
+    - outputs.hits.provenance_chain.steps.section_path
+    - outputs.hits.relationships
+    - outputs.hits.structured_payload.headers
+    - outputs.hits.structured_payload.rows
+    - outputs.hits.token_count
+    - outputs.judicial_verdict
+    - outputs.judicial_verdict.applied_rules
+    - outputs.judicial_verdict.dimension_id
+    - outputs.judicial_verdict.dimension_name
+    - outputs.judicial_verdict.dissent
+    - outputs.judicial_verdict.final_score
+    - outputs.judicial_verdict.judge_opinions.argument
+    - outputs.judicial_verdict.judge_opinions.cited_evidence
+    - outputs.judicial_verdict.judge_opinions.criterion_id
+    - outputs.judicial_verdict.judge_opinions.judge
+    - outputs.judicial_verdict.judge_opinions.score
+    - outputs.judicial_verdict.remediation_plan
+    - outputs.metrics.total_cost_usd
+    - outputs.metrics.total_llm_calls
+    - outputs.metrics.total_nodes_executed
+    - outputs.metrics.total_tokens_used
+    - outputs.navigation_sections
+    - outputs.output
+    - outputs.pre_extracted_evidence./tmp/pytest-of-nurye/pytest-0/test_submit_workflow_uses_refi0/company-a.txt.extraction_context.strategy_used
+    - outputs.pre_extracted_evidence./tmp/pytest-of-nurye/pytest-0/test_submit_workflow_uses_refi0/company-a.txt.facts.ebitda
+    - outputs.pre_extracted_evidence./tmp/pytest-of-nurye/pytest-0/test_submit_workflow_uses_refi0/company-a.txt.facts.net_income
+    - outputs.pre_extracted_evidence./tmp/pytest-of-nurye/pytest-0/test_submit_workflow_uses_refi0/company-a.txt.facts.total_assets
+    - outputs.pre_extracted_evidence./tmp/pytest-of-nurye/pytest-0/test_submit_workflow_uses_refi0/company-a.txt.facts.total_liabilities
+    - outputs.pre_extracted_evidence./tmp/pytest-of-nurye/pytest-0/test_submit_workflow_uses_refi0/company-a.txt.facts.total_revenue
+    - outputs.provenance_chain.bbox
+    - outputs.provenance_chain.cell_range
+    - outputs.provenance_chain.content_hash
+    - outputs.provenance_chain.doc_name
+    - outputs.provenance_chain.line_range
+    - outputs.provenance_chain.page_number
+    - outputs.provenance_chain.ref_type
+    - outputs.provenance_chain.section_path
+    - outputs.provenance_chain.sheet_name
+    - outputs.question
+    - outputs.result
+    - outputs.result.complexity
+    - outputs.result.direct_nodes
+    - outputs.result.direction
+    - outputs.result.evidence.analysis_method
+    - outputs.result.evidence.line_range
+    - outputs.result.evidence.module
+    - outputs.result.evidence.node
+    - outputs.result.evidence.source_file
+    - outputs.result.evidence_contract.analysis_method
+    - outputs.result.evidence_contract.confidence
+    - outputs.result.evidence_contract.content
+    - outputs.result.evidence_contract.found
+    - outputs.result.evidence_contract.goal
+    - outputs.result.evidence_contract.line_range
+    - outputs.result.evidence_contract.location
+    - outputs.result.evidence_contract.module
+    - outputs.result.evidence_contract.node
+    - outputs.result.evidence_contract.rationale
+    - outputs.result.evidence_contract.source_file
+    - outputs.result.evidence_contract.transformation_type
+    - outputs.result.impact_count
+    - outputs.result.impacted_nodes.depth
+    - outputs.result.impacted_nodes.evidence.analysis_method
+    - outputs.result.impacted_nodes.evidence.line_range
+    - outputs.result.impacted_nodes.evidence.module
+    - outputs.result.impacted_nodes.evidence.source_file
+    - outputs.result.impacted_nodes.node
+    - outputs.result.impacted_nodes.node_type
+    - outputs.result.judicial_verdict.applied_rules
+    - outputs.result.judicial_verdict.dimension_id
+    - outputs.result.judicial_verdict.dimension_name
+    - outputs.result.judicial_verdict.dissent
+    - outputs.result.judicial_verdict.final_score
+    - outputs.result.judicial_verdict.judge_opinions.argument
+    - outputs.result.judicial_verdict.judge_opinions.cited_evidence
+    - outputs.result.judicial_verdict.judge_opinions.criterion_id
+    - outputs.result.judicial_verdict.judge_opinions.judge
+    - outputs.result.judicial_verdict.judge_opinions.score
+    - outputs.result.judicial_verdict.remediation_plan
+    - outputs.result.language
+    - outputs.result.match_count
+    - outputs.result.matches.display_name
+    - outputs.result.matches.domain_cluster
+    - outputs.result.matches.entity_id
+    - outputs.result.matches.entity_kind
+    - outputs.result.matches.evidence.analysis_method
+    - outputs.result.matches.evidence.line_range
+    - outputs.result.matches.evidence.module
+    - outputs.result.matches.evidence.source_file
+    - outputs.result.matches.language
+    - outputs.result.matches.module
+    - outputs.result.matches.path
+    - outputs.result.matches.public_api
+    - outputs.result.matches.purpose
+    - outputs.result.matches.signature
+    - outputs.result.matches.similarity_score
+    - outputs.result.message
+    - outputs.result.module
+    - outputs.result.node_count
+    - outputs.result.nodes
+    - outputs.result.public_api
+    - outputs.result.purpose
+    - outputs.result.query
+    - outputs.result.target
+    - outputs.result.target_type
+    - outputs.route
+    - outputs.semantic_query
+    - outputs.tool
+    - outputs.tool_trace
+    - outputs.used_section_scope
+    - outputs.writer
+    - parent_run_id
+    - prompt_tokens
+    - run_type
+    - session_id
+    - start_time
+    - tags
+    - total_cost
+    - total_tokens
+    required_fields:
+    - completion_tokens
+    - end_time
+    - id
+    - name
+    - outputs.evidence.analysis_method
+    - outputs.evidence.line_range
+    - outputs.evidence.module
+    - outputs.evidence.source_file
+    - outputs.hits.bounding_box
+    - outputs.hits.chunk_type
+    - outputs.hits.content
+    - outputs.hits.content_hash
+    - outputs.hits.ldu_id
+    - outputs.hits.page_refs.bbox
+    - outputs.hits.page_refs.content_hash
+    - outputs.hits.page_refs.doc_name
+    - outputs.hits.page_refs.page_number
+    - outputs.hits.page_refs.ref_type
+    - outputs.hits.page_refs.section_path
+    - outputs.hits.parent_section
+    - outputs.hits.provenance_chain.chain_type
+    - outputs.hits.provenance_chain.steps.bbox
+    - outputs.hits.provenance_chain.steps.content_hash
+    - outputs.hits.provenance_chain.steps.doc_name
+    - outputs.hits.provenance_chain.steps.page_number
+    - outputs.hits.provenance_chain.steps.ref_type
+    - outputs.hits.provenance_chain.steps.section_path
+    - outputs.hits.token_count
+    - outputs.result.evidence.analysis_method
+    - outputs.result.evidence.line_range
+    - outputs.result.evidence.module
+    - outputs.result.evidence.source_file
+    - outputs.result.evidence_contract.analysis_method
+    - outputs.result.evidence_contract.confidence
+    - outputs.result.evidence_contract.content
+    - outputs.result.evidence_contract.found
+    - outputs.result.evidence_contract.goal
+    - outputs.result.evidence_contract.line_range
+    - outputs.result.evidence_contract.location
+    - outputs.result.evidence_contract.module
+    - outputs.result.evidence_contract.node
+    - outputs.result.evidence_contract.rationale
+    - outputs.result.evidence_contract.source_file
+    - outputs.result.evidence_contract.transformation_type
+    - outputs.result.impacted_nodes.depth
+    - outputs.result.impacted_nodes.evidence.analysis_method
+    - outputs.result.impacted_nodes.evidence.line_range
+    - outputs.result.impacted_nodes.evidence.module
+    - outputs.result.impacted_nodes.evidence.source_file
+    - outputs.result.impacted_nodes.node
+    - outputs.result.impacted_nodes.node_type
+    - prompt_tokens
+    - run_type
+    - session_id
+    - start_time
+    - total_cost
+    - total_tokens
+    nullable_fields:
+    - error
+    - inputs.append_result.events.event_id
+    - inputs.append_result.events.event_type
+    - inputs.append_result.events.event_version
+    - inputs.append_result.events.global_position
+    - inputs.append_result.events.metadata.actor_id
+    - inputs.append_result.events.metadata.causation_id
+    - inputs.append_result.events.metadata.correlation_id
+    - inputs.append_result.events.payload.agent_id
+    - inputs.append_result.events.payload.analysis_duration_ms
+    - inputs.append_result.events.payload.application_id
+    - inputs.append_result.events.payload.assigned_agent_id
+    - inputs.append_result.events.payload.confidence_score
+    - inputs.append_result.events.payload.docpkg_stream_id
+    - inputs.append_result.events.payload.input_data_hash
+    - inputs.append_result.events.payload.model_version
+    - inputs.append_result.events.payload.priority
+    - inputs.append_result.events.payload.recommended_limit_usd
+    - inputs.append_result.events.payload.regulatory_basis
+    - inputs.append_result.events.payload.requested_at
+    - inputs.append_result.events.payload.risk_tier
+    - inputs.append_result.events.payload.session_id
+    - inputs.append_result.events.payload.source
+    - inputs.append_result.events.recorded_at
+    - inputs.append_result.events.stream_id
+    - inputs.append_result.events.stream_position
+    - inputs.append_result.new_stream_version
+    - inputs.append_result.stream_id
+    - inputs.arg
+    - inputs.command.agent_id
+    - inputs.command.analysis_duration_ms
+    - inputs.command.anomaly_flags
+    - inputs.command.applicant_id
+    - inputs.command.application_id
+    - inputs.command.auto_orchestrate_lifecycle
+    - inputs.command.causation_id
+    - inputs.command.confidence_score
+    - inputs.command.correlation_id
+    - inputs.command.document_path
+    - inputs.command.document_paths
+    - inputs.command.fraud_score
+    - inputs.command.input_data_hash
+    - inputs.command.loan_purpose
+    - inputs.command.model_version
+    - inputs.command.process_documents_after_submit
+    - inputs.command.recommended_limit_usd
+    - inputs.command.requested_amount_usd
+    - inputs.command.risk_tier
+    - inputs.command.screening_model_version
+    - inputs.command.session_id
+    - inputs.command.submission_channel
+    - inputs.command.submitted_at
+    - inputs.context_snapshot.credit_analysis.confidence_score
+    - inputs.context_snapshot.credit_analysis.rationale
+    - inputs.context_snapshot.credit_analysis.recommended_limit_usd
+    - inputs.context_snapshot.credit_analysis.risk_tier
+    - inputs.context_snapshot.credit_plan.model_version
+    - inputs.context_snapshot.credit_plan.target_output
+    - inputs.context_snapshot.docpkg_event_count
+    - inputs.context_snapshot.document_count
+    - inputs.context_snapshot.existing_loan_events
+    - inputs.context_snapshot.loan_event_count
+    - inputs.context_snapshot.prepared_output.agent_id
+    - inputs.context_snapshot.prepared_output.event_type
+    - inputs.context_snapshot.prepared_output.has_pre_extracted_evidence
+    - inputs.context_snapshot.prepared_output.session_id
+    - inputs.context_snapshot.refinery_document_count
+    - inputs.context_snapshot.refinery_plan.document_count
+    - inputs.context_snapshot.refinery_plan.enabled
+    - inputs.context_snapshot.refinery_quality_assessment
+    - inputs.context_snapshot.refinery_strategies
+    - inputs.correlation_id
+    - inputs.direction
+    - inputs.doc_id
+    - inputs.document_paths
+    - inputs.error
+    - inputs.evidence
+    - inputs.hits.bounding_box
+    - inputs.hits.chunk_type
+    - inputs.hits.content
+    - inputs.hits.content_hash
+    - inputs.hits.ldu_id
+    - inputs.hits.page_refs.bbox
+    - inputs.hits.page_refs.content_hash
+    - inputs.hits.page_refs.doc_name
+    - inputs.hits.page_refs.page_number
+    - inputs.hits.page_refs.ref_type
+    - inputs.hits.page_refs.section_path
+    - inputs.hits.parent_section
+    - inputs.hits.parent_section_path
+    - inputs.hits.provenance_chain.chain_type
+    - inputs.hits.provenance_chain.steps.bbox
+    - inputs.hits.provenance_chain.steps.content_hash
+    - inputs.hits.provenance_chain.steps.doc_name
+    - inputs.hits.provenance_chain.steps.page_number
+    - inputs.hits.provenance_chain.steps.ref_type
+    - inputs.hits.provenance_chain.steps.section_path
+    - inputs.hits.relationships
+    - inputs.hits.structured_payload.headers
+    - inputs.hits.structured_payload.rows
+    - inputs.hits.token_count
+    - inputs.judicial_verdict
+    - inputs.metrics.total_cost_usd
+    - inputs.metrics.total_llm_calls
+    - inputs.metrics.total_nodes_executed
+    - inputs.metrics.total_tokens_used
+    - inputs.navigation_sections
+    - inputs.pre_extracted_evidence./tmp/pytest-of-nurye/pytest-0/test_submit_workflow_uses_refi0/company-a.txt.extraction_context.strategy_used
+    - inputs.pre_extracted_evidence./tmp/pytest-of-nurye/pytest-0/test_submit_workflow_uses_refi0/company-a.txt.facts.ebitda
+    - inputs.pre_extracted_evidence./tmp/pytest-of-nurye/pytest-0/test_submit_workflow_uses_refi0/company-a.txt.facts.net_income
+    - inputs.pre_extracted_evidence./tmp/pytest-of-nurye/pytest-0/test_submit_workflow_uses_refi0/company-a.txt.facts.total_assets
+    - inputs.pre_extracted_evidence./tmp/pytest-of-nurye/pytest-0/test_submit_workflow_uses_refi0/company-a.txt.facts.total_liabilities
+    - inputs.pre_extracted_evidence./tmp/pytest-of-nurye/pytest-0/test_submit_workflow_uses_refi0/company-a.txt.facts.total_revenue
+    - inputs.question
+    - inputs.result
+    - inputs.route
+    - inputs.semantic_query
+    - inputs.tool
+    - inputs.tool_trace
+    - inputs.used_section_scope
+    - inputs.writer
+    - outputs.answer
+    - outputs.append_result.events.event_id
+    - outputs.append_result.events.event_type
+    - outputs.append_result.events.event_version
+    - outputs.append_result.events.global_position
+    - outputs.append_result.events.metadata.actor_id
+    - outputs.append_result.events.metadata.causation_id
+    - outputs.append_result.events.metadata.correlation_id
+    - outputs.append_result.events.payload.agent_id
+    - outputs.append_result.events.payload.analysis_duration_ms
+    - outputs.append_result.events.payload.application_id
+    - outputs.append_result.events.payload.assigned_agent_id
+    - outputs.append_result.events.payload.confidence_score
+    - outputs.append_result.events.payload.docpkg_stream_id
+    - outputs.append_result.events.payload.input_data_hash
+    - outputs.append_result.events.payload.model_version
+    - outputs.append_result.events.payload.priority
+    - outputs.append_result.events.payload.recommended_limit_usd
+    - outputs.append_result.events.payload.regulatory_basis
+    - outputs.append_result.events.payload.requested_at
+    - outputs.append_result.events.payload.risk_tier
+    - outputs.append_result.events.payload.session_id
+    - outputs.append_result.events.payload.source
+    - outputs.append_result.events.recorded_at
+    - outputs.append_result.events.stream_id
+    - outputs.append_result.events.stream_position
+    - outputs.append_result.new_stream_version
+    - outputs.append_result.stream_id
+    - outputs.arg
+    - outputs.command.agent_id
+    - outputs.command.analysis_duration_ms
+    - outputs.command.anomaly_flags
+    - outputs.command.applicant_id
+    - outputs.command.application_id
+    - outputs.command.auto_orchestrate_lifecycle
+    - outputs.command.causation_id
+    - outputs.command.confidence_score
+    - outputs.command.correlation_id
+    - outputs.command.document_path
+    - outputs.command.document_paths
+    - outputs.command.fraud_score
+    - outputs.command.input_data_hash
+    - outputs.command.loan_purpose
+    - outputs.command.model_version
+    - outputs.command.process_documents_after_submit
+    - outputs.command.recommended_limit_usd
+    - outputs.command.requested_amount_usd
+    - outputs.command.risk_tier
+    - outputs.command.screening_model_version
+    - outputs.command.session_id
+    - outputs.command.submission_channel
+    - outputs.command.submitted_at
+    - outputs.confidence
+    - outputs.context_snapshot.credit_analysis.confidence_score
+    - outputs.context_snapshot.credit_analysis.rationale
+    - outputs.context_snapshot.credit_analysis.recommended_limit_usd
+    - outputs.context_snapshot.credit_analysis.risk_tier
+    - outputs.context_snapshot.credit_plan.model_version
+    - outputs.context_snapshot.credit_plan.target_output
+    - outputs.context_snapshot.docpkg_event_count
+    - outputs.context_snapshot.document_count
+    - outputs.context_snapshot.existing_loan_events
+    - outputs.context_snapshot.loan_event_count
+    - outputs.context_snapshot.prepared_output.agent_id
+    - outputs.context_snapshot.prepared_output.event_type
+    - outputs.context_snapshot.prepared_output.has_pre_extracted_evidence
+    - outputs.context_snapshot.prepared_output.session_id
+    - outputs.context_snapshot.refinery_document_count
+    - outputs.context_snapshot.refinery_plan.document_count
+    - outputs.context_snapshot.refinery_plan.enabled
+    - outputs.context_snapshot.refinery_quality_assessment
+    - outputs.context_snapshot.refinery_strategies
+    - outputs.correlation_id
+    - outputs.direction
+    - outputs.doc_id
+    - outputs.document_paths
+    - outputs.error
+    - outputs.evidence
+    - outputs.evidence.node
+    - outputs.hits.parent_section_path
+    - outputs.hits.relationships
+    - outputs.hits.structured_payload.headers
+    - outputs.hits.structured_payload.rows
+    - outputs.judicial_verdict
+    - outputs.judicial_verdict.applied_rules
+    - outputs.judicial_verdict.dimension_id
+    - outputs.judicial_verdict.dimension_name
+    - outputs.judicial_verdict.dissent
+    - outputs.judicial_verdict.final_score
+    - outputs.judicial_verdict.judge_opinions.argument
+    - outputs.judicial_verdict.judge_opinions.cited_evidence
+    - outputs.judicial_verdict.judge_opinions.criterion_id
+    - outputs.judicial_verdict.judge_opinions.judge
+    - outputs.judicial_verdict.judge_opinions.score
+    - outputs.judicial_verdict.remediation_plan
+    - outputs.metrics.total_cost_usd
+    - outputs.metrics.total_llm_calls
+    - outputs.metrics.total_nodes_executed
+    - outputs.metrics.total_tokens_used
+    - outputs.navigation_sections
+    - outputs.output
+    - outputs.pre_extracted_evidence./tmp/pytest-of-nurye/pytest-0/test_submit_workflow_uses_refi0/company-a.txt.extraction_context.strategy_used
+    - outputs.pre_extracted_evidence./tmp/pytest-of-nurye/pytest-0/test_submit_workflow_uses_refi0/company-a.txt.facts.ebitda
+    - outputs.pre_extracted_evidence./tmp/pytest-of-nurye/pytest-0/test_submit_workflow_uses_refi0/company-a.txt.facts.net_income
+    - outputs.pre_extracted_evidence./tmp/pytest-of-nurye/pytest-0/test_submit_workflow_uses_refi0/company-a.txt.facts.total_assets
+    - outputs.pre_extracted_evidence./tmp/pytest-of-nurye/pytest-0/test_submit_workflow_uses_refi0/company-a.txt.facts.total_liabilities
+    - outputs.pre_extracted_evidence./tmp/pytest-of-nurye/pytest-0/test_submit_workflow_uses_refi0/company-a.txt.facts.total_revenue
+    - outputs.provenance_chain.bbox
+    - outputs.provenance_chain.cell_range
+    - outputs.provenance_chain.content_hash
+    - outputs.provenance_chain.doc_name
+    - outputs.provenance_chain.line_range
+    - outputs.provenance_chain.page_number
+    - outputs.provenance_chain.ref_type
+    - outputs.provenance_chain.section_path
+    - outputs.provenance_chain.sheet_name
+    - outputs.question
+    - outputs.result
+    - outputs.result.complexity
+    - outputs.result.direct_nodes
+    - outputs.result.direction
+    - outputs.result.evidence.node
+    - outputs.result.impact_count
+    - outputs.result.judicial_verdict.applied_rules
+    - outputs.result.judicial_verdict.dimension_id
+    - outputs.result.judicial_verdict.dimension_name
+    - outputs.result.judicial_verdict.dissent
+    - outputs.result.judicial_verdict.final_score
+    - outputs.result.judicial_verdict.judge_opinions.argument
+    - outputs.result.judicial_verdict.judge_opinions.cited_evidence
+    - outputs.result.judicial_verdict.judge_opinions.criterion_id
+    - outputs.result.judicial_verdict.judge_opinions.judge
+    - outputs.result.judicial_verdict.judge_opinions.score
+    - outputs.result.judicial_verdict.remediation_plan
+    - outputs.result.language
+    - outputs.result.match_count
+    - outputs.result.matches.display_name
+    - outputs.result.matches.domain_cluster
+    - outputs.result.matches.entity_id
+    - outputs.result.matches.entity_kind
+    - outputs.result.matches.evidence.analysis_method
+    - outputs.result.matches.evidence.line_range
+    - outputs.result.matches.evidence.module
+    - outputs.result.matches.evidence.source_file
+    - outputs.result.matches.language
+    - outputs.result.matches.module
+    - outputs.result.matches.path
+    - outputs.result.matches.public_api
+    - outputs.result.matches.purpose
+    - outputs.result.matches.signature
+    - outputs.result.matches.similarity_score
+    - outputs.result.message
+    - outputs.result.module
+    - outputs.result.node_count
+    - outputs.result.nodes
+    - outputs.result.public_api
+    - outputs.result.purpose
+    - outputs.result.query
+    - outputs.result.target
+    - outputs.result.target_type
+    - outputs.route
+    - outputs.semantic_query
+    - outputs.tool
+    - outputs.tool_trace
+    - outputs.used_section_scope
+    - outputs.writer
+    - parent_run_id
+    - tags
+    types:
+      completion_tokens: integer
+      end_time: string
+      error: string
+      id: string
+      inputs.append_result.events.event_id: string
+      inputs.append_result.events.event_type: string
+      inputs.append_result.events.event_version: integer
+      inputs.append_result.events.global_position: integer
+      inputs.append_result.events.metadata.actor_id: string
+      inputs.append_result.events.metadata.causation_id: string
+      inputs.append_result.events.metadata.correlation_id: string
+      inputs.append_result.events.payload.agent_id: string
+      inputs.append_result.events.payload.analysis_duration_ms: integer
+      inputs.append_result.events.payload.application_id: string
+      inputs.append_result.events.payload.assigned_agent_id: string
+      inputs.append_result.events.payload.confidence_score: number
+      inputs.append_result.events.payload.docpkg_stream_id: string
+      inputs.append_result.events.payload.input_data_hash: string
+      inputs.append_result.events.payload.model_version: string
+      inputs.append_result.events.payload.priority: string
+      inputs.append_result.events.payload.recommended_limit_usd: number
+      inputs.append_result.events.payload.regulatory_basis: string
+      inputs.append_result.events.payload.requested_at: string
+      inputs.append_result.events.payload.risk_tier: string
+      inputs.append_result.events.payload.session_id: string
+      inputs.append_result.events.payload.source: string
+      inputs.append_result.events.recorded_at: string
+      inputs.append_result.events.stream_id: string
+      inputs.append_result.events.stream_position: integer
+      inputs.append_result.new_stream_version: integer
+      inputs.append_result.stream_id: string
+      inputs.arg: string
+      inputs.command.agent_id: string
+      inputs.command.analysis_duration_ms: integer
+      inputs.command.anomaly_flags: string
+      inputs.command.applicant_id: string
+      inputs.command.application_id: string
+      inputs.command.auto_orchestrate_lifecycle: boolean
+      inputs.command.causation_id: string
+      inputs.command.confidence_score: number
+      inputs.command.correlation_id: string
+      inputs.command.document_path: string
+      inputs.command.document_paths: string
+      inputs.command.fraud_score: number
+      inputs.command.input_data_hash: string
+      inputs.command.loan_purpose: string
+      inputs.command.model_version: string
+      inputs.command.process_documents_after_submit: boolean
+      inputs.command.recommended_limit_usd: number
+      inputs.command.requested_amount_usd: number
+      inputs.command.risk_tier: string
+      inputs.command.screening_model_version: string
+      inputs.command.session_id: string
+      inputs.command.submission_channel: string
+      inputs.command.submitted_at: string
+      inputs.context_snapshot.credit_analysis.confidence_score: number
+      inputs.context_snapshot.credit_analysis.rationale: string
+      inputs.context_snapshot.credit_analysis.recommended_limit_usd: number
+      inputs.context_snapshot.credit_analysis.risk_tier: string
+      inputs.context_snapshot.credit_plan.model_version: string
+      inputs.context_snapshot.credit_plan.target_output: string
+      inputs.context_snapshot.docpkg_event_count: integer
+      inputs.context_snapshot.document_count: integer
+      inputs.context_snapshot.existing_loan_events: integer
+      inputs.context_snapshot.loan_event_count: integer
+      inputs.context_snapshot.prepared_output.agent_id: string
+      inputs.context_snapshot.prepared_output.event_type: string
+      inputs.context_snapshot.prepared_output.has_pre_extracted_evidence: boolean
+      inputs.context_snapshot.prepared_output.session_id: string
+      inputs.context_snapshot.refinery_document_count: integer
+      inputs.context_snapshot.refinery_plan.document_count: integer
+      inputs.context_snapshot.refinery_plan.enabled: boolean
+      inputs.context_snapshot.refinery_quality_assessment: string
+      inputs.context_snapshot.refinery_strategies: string
+      inputs.correlation_id: string
+      inputs.direction: string
+      inputs.doc_id: string
+      inputs.document_paths: string
+      inputs.error: string
+      inputs.evidence: string
+      inputs.hits.bounding_box: number
+      inputs.hits.chunk_type: string
+      inputs.hits.content: string
+      inputs.hits.content_hash: string
+      inputs.hits.ldu_id: string
+      inputs.hits.page_refs.bbox: number
+      inputs.hits.page_refs.content_hash: string
+      inputs.hits.page_refs.doc_name: string
+      inputs.hits.page_refs.page_number: integer
+      inputs.hits.page_refs.ref_type: string
+      inputs.hits.page_refs.section_path: string
+      inputs.hits.parent_section: string
+      inputs.hits.parent_section_path: string
+      inputs.hits.provenance_chain.chain_type: string
+      inputs.hits.provenance_chain.steps.bbox: number
+      inputs.hits.provenance_chain.steps.content_hash: string
+      inputs.hits.provenance_chain.steps.doc_name: string
+      inputs.hits.provenance_chain.steps.page_number: integer
+      inputs.hits.provenance_chain.steps.ref_type: string
+      inputs.hits.provenance_chain.steps.section_path: string
+      inputs.hits.relationships: string
+      inputs.hits.structured_payload.headers: string
+      inputs.hits.structured_payload.rows: string
+      inputs.hits.token_count: integer
+      inputs.judicial_verdict: string
+      inputs.metrics.total_cost_usd: number
+      inputs.metrics.total_llm_calls: integer
+      inputs.metrics.total_nodes_executed: integer
+      inputs.metrics.total_tokens_used: integer
+      inputs.navigation_sections: string
+      ? inputs.pre_extracted_evidence./tmp/pytest-of-nurye/pytest-0/test_submit_workflow_uses_refi0/company-a.txt.extraction_context.strategy_used
+      : string
+      inputs.pre_extracted_evidence./tmp/pytest-of-nurye/pytest-0/test_submit_workflow_uses_refi0/company-a.txt.facts.ebitda: string
+      inputs.pre_extracted_evidence./tmp/pytest-of-nurye/pytest-0/test_submit_workflow_uses_refi0/company-a.txt.facts.net_income: number
+      ? inputs.pre_extracted_evidence./tmp/pytest-of-nurye/pytest-0/test_submit_workflow_uses_refi0/company-a.txt.facts.total_assets
+      : number
+      ? inputs.pre_extracted_evidence./tmp/pytest-of-nurye/pytest-0/test_submit_workflow_uses_refi0/company-a.txt.facts.total_liabilities
+      : string
+      ? inputs.pre_extracted_evidence./tmp/pytest-of-nurye/pytest-0/test_submit_workflow_uses_refi0/company-a.txt.facts.total_revenue
+      : number
+      inputs.question: string
+      inputs.result: string
+      inputs.route: string
+      inputs.semantic_query: string
+      inputs.tool: string
+      inputs.tool_trace: string
+      inputs.used_section_scope: boolean
+      inputs.writer: string
+      name: string
+      outputs.answer: string
+      outputs.append_result.events.event_id: string
+      outputs.append_result.events.event_type: string
+      outputs.append_result.events.event_version: integer
+      outputs.append_result.events.global_position: integer
+      outputs.append_result.events.metadata.actor_id: string
+      outputs.append_result.events.metadata.causation_id: string
+      outputs.append_result.events.metadata.correlation_id: string
+      outputs.append_result.events.payload.agent_id: string
+      outputs.append_result.events.payload.analysis_duration_ms: integer
+      outputs.append_result.events.payload.application_id: string
+      outputs.append_result.events.payload.assigned_agent_id: string
+      outputs.append_result.events.payload.confidence_score: number
+      outputs.append_result.events.payload.docpkg_stream_id: string
+      outputs.append_result.events.payload.input_data_hash: string
+      outputs.append_result.events.payload.model_version: string
+      outputs.append_result.events.payload.priority: string
+      outputs.append_result.events.payload.recommended_limit_usd: number
+      outputs.append_result.events.payload.regulatory_basis: string
+      outputs.append_result.events.payload.requested_at: string
+      outputs.append_result.events.payload.risk_tier: string
+      outputs.append_result.events.payload.session_id: string
+      outputs.append_result.events.payload.source: string
+      outputs.append_result.events.recorded_at: string
+      outputs.append_result.events.stream_id: string
+      outputs.append_result.events.stream_position: integer
+      outputs.append_result.new_stream_version: integer
+      outputs.append_result.stream_id: string
+      outputs.arg: string
+      outputs.command.agent_id: string
+      outputs.command.analysis_duration_ms: integer
+      outputs.command.anomaly_flags: string
+      outputs.command.applicant_id: string
+      outputs.command.application_id: string
+      outputs.command.auto_orchestrate_lifecycle: boolean
+      outputs.command.causation_id: string
+      outputs.command.confidence_score: number
+      outputs.command.correlation_id: string
+      outputs.command.document_path: string
+      outputs.command.document_paths: string
+      outputs.command.fraud_score: number
+      outputs.command.input_data_hash: string
+      outputs.command.loan_purpose: string
+      outputs.command.model_version: string
+      outputs.command.process_documents_after_submit: boolean
+      outputs.command.recommended_limit_usd: number
+      outputs.command.requested_amount_usd: number
+      outputs.command.risk_tier: string
+      outputs.command.screening_model_version: string
+      outputs.command.session_id: string
+      outputs.command.submission_channel: string
+      outputs.command.submitted_at: string
+      outputs.confidence: number
+      outputs.context_snapshot.credit_analysis.confidence_score: number
+      outputs.context_snapshot.credit_analysis.rationale: string
+      outputs.context_snapshot.credit_analysis.recommended_limit_usd: number
+      outputs.context_snapshot.credit_analysis.risk_tier: string
+      outputs.context_snapshot.credit_plan.model_version: string
+      outputs.context_snapshot.credit_plan.target_output: string
+      outputs.context_snapshot.docpkg_event_count: integer
+      outputs.context_snapshot.document_count: integer
+      outputs.context_snapshot.existing_loan_events: integer
+      outputs.context_snapshot.loan_event_count: integer
+      outputs.context_snapshot.prepared_output.agent_id: string
+      outputs.context_snapshot.prepared_output.event_type: string
+      outputs.context_snapshot.prepared_output.has_pre_extracted_evidence: boolean
+      outputs.context_snapshot.prepared_output.session_id: string
+      outputs.context_snapshot.refinery_document_count: integer
+      outputs.context_snapshot.refinery_plan.document_count: integer
+      outputs.context_snapshot.refinery_plan.enabled: boolean
+      outputs.context_snapshot.refinery_quality_assessment: string
+      outputs.context_snapshot.refinery_strategies: string
+      outputs.correlation_id: string
+      outputs.direction: string
+      outputs.doc_id: string
+      outputs.document_paths: string
+      outputs.error: string
+      outputs.evidence: string
+      outputs.evidence.analysis_method: string
+      outputs.evidence.line_range: integer
+      outputs.evidence.module: string
+      outputs.evidence.node: string
+      outputs.evidence.source_file: string
+      outputs.hits.bounding_box: number
+      outputs.hits.chunk_type: string
+      outputs.hits.content: string
+      outputs.hits.content_hash: string
+      outputs.hits.ldu_id: string
+      outputs.hits.page_refs.bbox: number
+      outputs.hits.page_refs.content_hash: string
+      outputs.hits.page_refs.doc_name: string
+      outputs.hits.page_refs.page_number: integer
+      outputs.hits.page_refs.ref_type: string
+      outputs.hits.page_refs.section_path: string
+      outputs.hits.parent_section: string
+      outputs.hits.parent_section_path: string
+      outputs.hits.provenance_chain.chain_type: string
+      outputs.hits.provenance_chain.steps.bbox: number
+      outputs.hits.provenance_chain.steps.content_hash: string
+      outputs.hits.provenance_chain.steps.doc_name: string
+      outputs.hits.provenance_chain.steps.page_number: integer
+      outputs.hits.provenance_chain.steps.ref_type: string
+      outputs.hits.provenance_chain.steps.section_path: string
+      outputs.hits.relationships: string
+      outputs.hits.structured_payload.headers: string
+      outputs.hits.structured_payload.rows: string
+      outputs.hits.token_count: integer
+      outputs.judicial_verdict: string
+      outputs.judicial_verdict.applied_rules: string
+      outputs.judicial_verdict.dimension_id: string
+      outputs.judicial_verdict.dimension_name: string
+      outputs.judicial_verdict.dissent: string
+      outputs.judicial_verdict.final_score: integer
+      outputs.judicial_verdict.judge_opinions.argument: string
+      outputs.judicial_verdict.judge_opinions.cited_evidence: string
+      outputs.judicial_verdict.judge_opinions.criterion_id: string
+      outputs.judicial_verdict.judge_opinions.judge: string
+      outputs.judicial_verdict.judge_opinions.score: integer
+      outputs.judicial_verdict.remediation_plan: string
+      outputs.metrics.total_cost_usd: number
+      outputs.metrics.total_llm_calls: integer
+      outputs.metrics.total_nodes_executed: integer
+      outputs.metrics.total_tokens_used: integer
+      outputs.navigation_sections: string
+      outputs.output: string
+      ? outputs.pre_extracted_evidence./tmp/pytest-of-nurye/pytest-0/test_submit_workflow_uses_refi0/company-a.txt.extraction_context.strategy_used
+      : string
+      outputs.pre_extracted_evidence./tmp/pytest-of-nurye/pytest-0/test_submit_workflow_uses_refi0/company-a.txt.facts.ebitda: string
+      ? outputs.pre_extracted_evidence./tmp/pytest-of-nurye/pytest-0/test_submit_workflow_uses_refi0/company-a.txt.facts.net_income
+      : number
+      ? outputs.pre_extracted_evidence./tmp/pytest-of-nurye/pytest-0/test_submit_workflow_uses_refi0/company-a.txt.facts.total_assets
+      : number
+      ? outputs.pre_extracted_evidence./tmp/pytest-of-nurye/pytest-0/test_submit_workflow_uses_refi0/company-a.txt.facts.total_liabilities
+      : string
+      ? outputs.pre_extracted_evidence./tmp/pytest-of-nurye/pytest-0/test_submit_workflow_uses_refi0/company-a.txt.facts.total_revenue
+      : number
+      outputs.provenance_chain.bbox: number
+      outputs.provenance_chain.cell_range: string
+      outputs.provenance_chain.content_hash: string
+      outputs.provenance_chain.doc_name: string
+      outputs.provenance_chain.line_range: string
+      outputs.provenance_chain.page_number: integer
+      outputs.provenance_chain.ref_type: string
+      outputs.provenance_chain.section_path: string
+      outputs.provenance_chain.sheet_name: string
+      outputs.question: string
+      outputs.result: string
+      outputs.result.complexity: number
+      outputs.result.direct_nodes: string
+      outputs.result.direction: string
+      outputs.result.evidence.analysis_method: string
+      outputs.result.evidence.line_range: integer
+      outputs.result.evidence.module: string
+      outputs.result.evidence.node: string
+      outputs.result.evidence.source_file: string
+      outputs.result.evidence_contract.analysis_method: string
+      outputs.result.evidence_contract.confidence: number
+      outputs.result.evidence_contract.content: string
+      outputs.result.evidence_contract.found: boolean
+      outputs.result.evidence_contract.goal: string
+      outputs.result.evidence_contract.line_range: integer
+      outputs.result.evidence_contract.location: string
+      outputs.result.evidence_contract.module: string
+      outputs.result.evidence_contract.node: string
+      outputs.result.evidence_contract.rationale: string
+      outputs.result.evidence_contract.source_file: string
+      outputs.result.evidence_contract.transformation_type: string
+      outputs.result.impact_count: integer
+      outputs.result.impacted_nodes.depth: integer
+      outputs.result.impacted_nodes.evidence.analysis_method: string
+      outputs.result.impacted_nodes.evidence.line_range: integer
+      outputs.result.impacted_nodes.evidence.module: string
+      outputs.result.impacted_nodes.evidence.source_file: string
+      outputs.result.impacted_nodes.node: string
+      outputs.result.impacted_nodes.node_type: string
+      outputs.result.judicial_verdict.applied_rules: string
+      outputs.result.judicial_verdict.dimension_id: string
+      outputs.result.judicial_verdict.dimension_name: string
+      outputs.result.judicial_verdict.dissent: string
+      outputs.result.judicial_verdict.final_score: integer
+      outputs.result.judicial_verdict.judge_opinions.argument: string
+      outputs.result.judicial_verdict.judge_opinions.cited_evidence: string
+      outputs.result.judicial_verdict.judge_opinions.criterion_id: string
+      outputs.result.judicial_verdict.judge_opinions.judge: string
+      outputs.result.judicial_verdict.judge_opinions.score: integer
+      outputs.result.judicial_verdict.remediation_plan: string
+      outputs.result.language: string
+      outputs.result.match_count: integer
+      outputs.result.matches.display_name: string
+      outputs.result.matches.domain_cluster: string
+      outputs.result.matches.entity_id: string
+      outputs.result.matches.entity_kind: string
+      outputs.result.matches.evidence.analysis_method: string
+      outputs.result.matches.evidence.line_range: integer
+      outputs.result.matches.evidence.module: string
+      outputs.result.matches.evidence.source_file: string
+      outputs.result.matches.language: string
+      outputs.result.matches.module: string
+      outputs.result.matches.path: string
+      outputs.result.matches.public_api: string
+      outputs.result.matches.purpose: string
+      outputs.result.matches.signature: string
+      outputs.result.matches.similarity_score: number
+      outputs.result.message: string
+      outputs.result.module: string
+      outputs.result.node_count: integer
+      outputs.result.nodes: string
+      outputs.result.public_api: string
+      outputs.result.purpose: string
+      outputs.result.query: string
+      outputs.result.target: string
+      outputs.result.target_type: string
+      outputs.route: string
+      outputs.semantic_query: string
+      outputs.tool: string
+      outputs.tool_trace: string
+      outputs.used_section_scope: boolean
+      outputs.writer: string
+      parent_run_id: string
+      prompt_tokens: integer
+      run_type: string
+      session_id: string
+      start_time: string
+      tags: string
+      total_cost: number
+      total_tokens: integer
+  statistics:
+    completion_tokens:
+      min: 0.0
+      max: 0.0
+      mean: 0.0
+      stddev: 0.0
+    inputs.append_result.events.event_version:
+      min: 1.0
+      max: 1.0
+      mean: 1.0
+      stddev: 0.0
+    inputs.append_result.events.global_position:
+      min: 14.0
+      max: 22.0
+      mean: 19.0
+      stddev: 3.559026
+    inputs.append_result.events.payload.analysis_duration_ms:
+      min: 145.0
+      max: 145.0
+      mean: 145.0
+      stddev: 0.0
+    inputs.append_result.events.payload.confidence_score:
+      min: 0.87
+      max: 0.87
+      mean: 0.87
+      stddev: 0.0
+    inputs.append_result.events.payload.recommended_limit_usd:
+      min: 95000.0
+      max: 95000.0
+      mean: 95000.0
+      stddev: 0.0
+    inputs.append_result.events.stream_position:
+      min: 4.0
+      max: 11.0
+      mean: 6.666667
+      stddev: 3.091206
+    inputs.append_result.new_stream_version:
+      min: 5.0
+      max: 11.0
+      mean: 8.0
+      stddev: 3.0
+    inputs.command.analysis_duration_ms:
+      min: 145.0
+      max: 145.0
+      mean: 145.0
+      stddev: 0.0
+    inputs.command.confidence_score:
+      min: 0.87
+      max: 0.87
+      mean: 0.87
+      stddev: 0.0
+    inputs.command.fraud_score:
+      min: 0.15
+      max: 0.15
+      mean: 0.15
+      stddev: 0.0
+    inputs.command.recommended_limit_usd:
+      min: 95000.0
+      max: 95000.0
+      mean: 95000.0
+      stddev: 0.0
+    inputs.command.requested_amount_usd:
+      min: 500000.0
+      max: 500000.0
+      mean: 500000.0
+      stddev: 0.0
+    inputs.context_snapshot.credit_analysis.confidence_score:
+      min: 0.87
+      max: 0.87
+      mean: 0.87
+      stddev: 0.0
+    inputs.context_snapshot.credit_analysis.recommended_limit_usd:
+      min: 95000.0
+      max: 95000.0
+      mean: 95000.0
+      stddev: 0.0
+    inputs.context_snapshot.docpkg_event_count:
+      min: 0.0
+      max: 0.0
+      mean: 0.0
+      stddev: 0.0
+    inputs.context_snapshot.document_count:
+      min: 1.0
+      max: 1.0
+      mean: 1.0
+      stddev: 0.0
+    inputs.context_snapshot.existing_loan_events:
+      min: 0.0
+      max: 0.0
+      mean: 0.0
+      stddev: 0.0
+    inputs.context_snapshot.loan_event_count:
+      min: 3.0
+      max: 3.0
+      mean: 3.0
+      stddev: 0.0
+    inputs.context_snapshot.refinery_document_count:
+      min: 1.0
+      max: 1.0
+      mean: 1.0
+      stddev: 0.0
+    inputs.context_snapshot.refinery_plan.document_count:
+      min: 1.0
+      max: 1.0
+      mean: 1.0
+      stddev: 0.0
+    inputs.hits.bounding_box:
+      min: 0.0
+      max: 751.18103
+      mean: 257.666488
+      stddev: 240.636147
+    inputs.hits.page_refs.bbox:
+      min: 0.0
+      max: 751.18103
+      mean: 260.842019
+      stddev: 241.472186
+    inputs.hits.page_refs.page_number:
+      min: 1.0
+      max: 102.0
+      mean: 30.091603
+      stddev: 25.429877
+    inputs.hits.provenance_chain.steps.bbox:
+      min: 0.0
+      max: 751.18103
+      mean: 260.842019
+      stddev: 241.472186
+    inputs.hits.provenance_chain.steps.page_number:
+      min: 1.0
+      max: 102.0
+      mean: 30.091603
+      stddev: 25.429877
+    inputs.hits.token_count:
+      min: 4.0
+      max: 908.0
+      mean: 140.0
+      stddev: 174.056129
+    inputs.metrics.total_cost_usd:
+      min: 0.0
+      max: 0.0
+      mean: 0.0
+      stddev: 0.0
+    inputs.metrics.total_llm_calls:
+      min: 0.0
+      max: 1.0
+      mean: 0.378378
+      stddev: 0.484983
+    inputs.metrics.total_nodes_executed:
+      min: 0.0
+      max: 6.0
+      mean: 2.648649
+      stddev: 2.196019
+    inputs.metrics.total_tokens_used:
+      min: 0.0
+      max: 0.0
+      mean: 0.0
+      stddev: 0.0
+    inputs.pre_extracted_evidence./tmp/pytest-of-nurye/pytest-0/test_submit_workflow_uses_refi0/company-a.txt.facts.net_income:
+      min: 180000.0
+      max: 180000.0
+      mean: 180000.0
+      stddev: 0.0
+    ? inputs.pre_extracted_evidence./tmp/pytest-of-nurye/pytest-0/test_submit_workflow_uses_refi0/company-a.txt.facts.total_assets
+    : min: 2100000.0
+      max: 2100000.0
+      mean: 2100000.0
+      stddev: 0.0
+    ? inputs.pre_extracted_evidence./tmp/pytest-of-nurye/pytest-0/test_submit_workflow_uses_refi0/company-a.txt.facts.total_revenue
+    : min: 1000000.0
+      max: 1000000.0
+      mean: 1000000.0
+      stddev: 0.0
+    outputs.append_result.events.event_version:
+      min: 1.0
+      max: 1.0
+      mean: 1.0
+      stddev: 0.0
+    outputs.append_result.events.global_position:
+      min: 14.0
+      max: 22.0
+      mean: 19.0
+      stddev: 3.559026
+    outputs.append_result.events.payload.analysis_duration_ms:
+      min: 145.0
+      max: 145.0
+      mean: 145.0
+      stddev: 0.0
+    outputs.append_result.events.payload.confidence_score:
+      min: 0.87
+      max: 0.87
+      mean: 0.87
+      stddev: 0.0
+    outputs.append_result.events.payload.recommended_limit_usd:
+      min: 95000.0
+      max: 95000.0
+      mean: 95000.0
+      stddev: 0.0
+    outputs.append_result.events.stream_position:
+      min: 4.0
+      max: 11.0
+      mean: 6.666667
+      stddev: 3.091206
+    outputs.append_result.new_stream_version:
+      min: 5.0
+      max: 11.0
+      mean: 8.0
+      stddev: 3.0
+    outputs.command.analysis_duration_ms:
+      min: 145.0
+      max: 145.0
+      mean: 145.0
+      stddev: 0.0
+    outputs.command.confidence_score:
+      min: 0.87
+      max: 0.87
+      mean: 0.87
+      stddev: 0.0
+    outputs.command.fraud_score:
+      min: 0.15
+      max: 0.15
+      mean: 0.15
+      stddev: 0.0
+    outputs.command.recommended_limit_usd:
+      min: 95000.0
+      max: 95000.0
+      mean: 95000.0
+      stddev: 0.0
+    outputs.command.requested_amount_usd:
+      min: 500000.0
+      max: 500000.0
+      mean: 500000.0
+      stddev: 0.0
+    outputs.confidence:
+      min: 0.45
+      max: 0.72
+      mean: 0.70898
+      stddev: 0.053423
+    outputs.context_snapshot.credit_analysis.confidence_score:
+      min: 0.87
+      max: 0.87
+      mean: 0.87
+      stddev: 0.0
+    outputs.context_snapshot.credit_analysis.recommended_limit_usd:
+      min: 95000.0
+      max: 95000.0
+      mean: 95000.0
+      stddev: 0.0
+    outputs.context_snapshot.docpkg_event_count:
+      min: 0.0
+      max: 0.0
+      mean: 0.0
+      stddev: 0.0
+    outputs.context_snapshot.document_count:
+      min: 1.0
+      max: 1.0
+      mean: 1.0
+      stddev: 0.0
+    outputs.context_snapshot.existing_loan_events:
+      min: 0.0
+      max: 0.0
+      mean: 0.0
+      stddev: 0.0
+    outputs.context_snapshot.loan_event_count:
+      min: 3.0
+      max: 3.0
+      mean: 3.0
+      stddev: 0.0
+    outputs.context_snapshot.refinery_document_count:
+      min: 1.0
+      max: 1.0
+      mean: 1.0
+      stddev: 0.0
+    outputs.context_snapshot.refinery_plan.document_count:
+      min: 1.0
+      max: 1.0
+      mean: 1.0
+      stddev: 0.0
+    outputs.evidence.line_range:
+      min: 1.0
+      max: 708.0
+      mean: 31.311765
+      stddev: 113.543811
+    outputs.hits.bounding_box:
+      min: 0.0
+      max: 751.18103
+      mean: 258.138777
+      stddev: 240.811256
+    outputs.hits.page_refs.bbox:
+      min: 0.0
+      max: 751.18103
+      mean: 261.994357
+      stddev: 241.546948
+    outputs.hits.page_refs.page_number:
+      min: 1.0
+      max: 102.0
+      mean: 30.208494
+      stddev: 26.015494
+    outputs.hits.provenance_chain.steps.bbox:
+      min: 0.0
+      max: 751.18103
+      mean: 261.994357
+      stddev: 241.546948
+    outputs.hits.provenance_chain.steps.page_number:
+      min: 1.0
+      max: 102.0
+      mean: 30.208494
+      stddev: 26.015494
+    outputs.hits.token_count:
+      min: 4.0
+      max: 908.0
+      mean: 145.044898
+      stddev: 178.455717
+    outputs.judicial_verdict.final_score:
+      min: 2.0
+      max: 4.0
+      mean: 3.4
+      stddev: 0.8
+    outputs.judicial_verdict.judge_opinions.score:
+      min: 2.0
+      max: 5.0
+      mean: 3.733333
+      stddev: 0.928559
+    outputs.metrics.total_cost_usd:
+      min: 0.0
+      max: 0.0
+      mean: 0.0
+      stddev: 0.0
+    outputs.metrics.total_llm_calls:
+      min: 0.0
+      max: 1.0
+      mean: 0.4
+      stddev: 0.489898
+    outputs.metrics.total_nodes_executed:
+      min: 0.0
+      max: 6.0
+      mean: 2.742857
+      stddev: 2.221233
+    outputs.metrics.total_tokens_used:
+      min: 0.0
+      max: 0.0
+      mean: 0.0
+      stddev: 0.0
+    ? outputs.pre_extracted_evidence./tmp/pytest-of-nurye/pytest-0/test_submit_workflow_uses_refi0/company-a.txt.facts.net_income
+    : min: 180000.0
+      max: 180000.0
+      mean: 180000.0
+      stddev: 0.0
+    ? outputs.pre_extracted_evidence./tmp/pytest-of-nurye/pytest-0/test_submit_workflow_uses_refi0/company-a.txt.facts.total_assets
+    : min: 2100000.0
+      max: 2100000.0
+      mean: 2100000.0
+      stddev: 0.0
+    ? outputs.pre_extracted_evidence./tmp/pytest-of-nurye/pytest-0/test_submit_workflow_uses_refi0/company-a.txt.facts.total_revenue
+    : min: 1000000.0
+      max: 1000000.0
+      mean: 1000000.0
+      stddev: 0.0
+    outputs.provenance_chain.bbox:
+      min: 0.0
+      max: 751.18103
+      mean: 269.356723
+      stddev: 248.688224
+    outputs.provenance_chain.page_number:
+      min: 1.0
+      max: 102.0
+      mean: 26.72619
+      stddev: 27.486079
+    outputs.result.complexity:
+      min: 11.0
+      max: 28.0
+      mean: 19.5
+      stddev: 8.5
+    outputs.result.evidence.line_range:
+      min: 1.0
+      max: 708.0
+      mean: 31.311765
+      stddev: 113.543811
+    outputs.result.evidence_contract.confidence:
+      min: 0.5
+      max: 0.5
+      mean: 0.5
+      stddev: 0.0
+    outputs.result.evidence_contract.line_range:
+      min: 1.0
+      max: 708.0
+      mean: 31.311765
+      stddev: 113.543811
+    outputs.result.impact_count:
+      min: 147.0
+      max: 147.0
+      mean: 147.0
+      stddev: 0.0
+    outputs.result.impacted_nodes.depth:
+      min: 1.0
+      max: 7.0
+      mean: 3.095238
+      stddev: 1.411003
+    outputs.result.impacted_nodes.evidence.line_range:
+      min: 1.0
+      max: 1.0
+      mean: 1.0
+      stddev: 0.0
+    outputs.result.judicial_verdict.final_score:
+      min: 2.0
+      max: 4.0
+      mean: 3.4
+      stddev: 0.8
+    outputs.result.judicial_verdict.judge_opinions.score:
+      min: 2.0
+      max: 5.0
+      mean: 3.733333
+      stddev: 0.928559
+    outputs.result.match_count:
+      min: 20.0
+      max: 20.0
+      mean: 20.0
+      stddev: 0.0
+    outputs.result.matches.evidence.line_range:
+      min: 1.0
+      max: 708.0
+      mean: 237.625
+      stddev: 224.188725
+    outputs.result.matches.similarity_score:
+      min: 0.265428
+      max: 0.358167
+      mean: 0.28588
+      stddev: 0.024339
+    outputs.result.node_count:
+      min: 0.0
+      max: 0.0
+      mean: 0.0
+      stddev: 0.0
+    prompt_tokens:
+      min: 0.0
+      max: 0.0
+      mean: 0.0
+      stddev: 0.0
+    total_cost:
+      min: 0.0
+      max: 0.0
+      mean: 0.0
+      stddev: 0.0
+    total_tokens:
+      min: 0.0
+      max: 0.0
+      mean: 0.0
+      stddev: 0.0
+  baseline_files:
+    per_contract: schema_snapshots/real/langsmith-trace-records_baseline.json
+    aggregate: schema_snapshots/real/baselines.json
+  llm_annotations:
+  - field: inputs.result
+    provider: local_heuristic_fallback
+    model: offline-column-annotator
+    prompt: 'Annotate ambiguous contract field ''inputs.result'' with type ''string''.
+      Reason: Field name ''result'' is generic and benefits from semantic clarification..
+      Sample values: [''<none>''].'
+    annotation: 'LLM review: treat ''inputs.result'' as a business-semantic field
+      and document allowed meanings before new downstream consumers rely on it.'
+    reason: Field name 'result' is generic and benefits from semantic clarification.
+  - field: name
+    provider: local_heuristic_fallback
+    model: offline-column-annotator
+    prompt: 'Annotate ambiguous contract field ''name'' with type ''string''. Reason:
+      Field name ''name'' is generic and benefits from semantic clarification.. Sample
+      values: [''execute'', ''route'', ''LangGraph''].'
+    annotation: 'LLM review: treat ''name'' as a business-semantic field and document
+      allowed meanings before new downstream consumers rely on it.'
+    reason: Field name 'name' is generic and benefits from semantic clarification.
+  - field: outputs.judicial_verdict.judge_opinions.score
+    provider: local_heuristic_fallback
+    model: offline-column-annotator
+    prompt: 'Annotate ambiguous contract field ''outputs.judicial_verdict.judge_opinions.score''
+      with type ''integer''. Reason: Field name ''score'' is generic and benefits
+      from semantic clarification.. Sample values: [''3'', ''2'', ''5''].'
+    annotation: 'LLM review: treat ''outputs.judicial_verdict.judge_opinions.score''
+      as a business-semantic field and document allowed meanings before new downstream
+      consumers rely on it.'
+    reason: Field name 'score' is generic and benefits from semantic clarification.
+  - field: outputs.result
+    provider: local_heuristic_fallback
+    model: offline-column-annotator
+    prompt: 'Annotate ambiguous contract field ''outputs.result'' with type ''string''.
+      Reason: Field name ''result'' is generic and benefits from semantic clarification..
+      Sample values: [''<none>''].'
+    annotation: 'LLM review: treat ''outputs.result'' as a business-semantic field
+      and document allowed meanings before new downstream consumers rely on it.'
+    reason: Field name 'result' is generic and benefits from semantic clarification.
+  - field: outputs.result.judicial_verdict.judge_opinions.score
+    provider: local_heuristic_fallback
+    model: offline-column-annotator
+    prompt: 'Annotate ambiguous contract field ''outputs.result.judicial_verdict.judge_opinions.score''
+      with type ''integer''. Reason: Field name ''score'' is generic and benefits
+      from semantic clarification.. Sample values: [''3'', ''2'', ''5''].'
+    annotation: 'LLM review: treat ''outputs.result.judicial_verdict.judge_opinions.score''
+      as a business-semantic field and document allowed meanings before new downstream
+      consumers rely on it.'
+    reason: Field name 'score' is generic and benefits from semantic clarification.
+clauses:
+- id: traces.id_uuid
+  category: identifier
+  severity: error
+  description: Every trace record must expose a UUID id.
+  rule:
+    type: field_format
+    field: id
+    format: uuid
+- id: traces.start_end_temporal_order
+  category: temporal
+  severity: error
+  description: end_time must be strictly after start_time.
+  rule:
+    type: temporal_order
+    left_field: start_time
+    right_field: end_time
+    operator: <
+- id: traces.total_tokens_sum
+  category: quality
+  severity: error
+  description: total_tokens must equal prompt_tokens + completion_tokens.
+  rule:
+    type: sum_equals
+    fields:
+    - prompt_tokens
+    - completion_tokens
+    output_field: total_tokens
+    tolerance: 0.0
+- id: traces.run_type_enum
+  category: domain
+  severity: error
+  description: run_type must be one of llm, chain, tool, retriever, embedding.
+  rule:
+    type: field_enum
+    field: run_type
+    allowed:
+    - llm
+    - chain
+    - tool
+    - retriever
+    - embedding
+- id: traces.total_cost_non_negative
+  category: quality
+  severity: error
+  description: total_cost values must be non-negative USD amounts.
+  rule:
+    type: numeric_range
+    field: total_cost
+    minimum: 0.0
 quality:
   type: GeneratedChecks
   minimum_clause_count: 8
-  semantic_clause_count: 0
+  semantic_clause_count: 5
 cross_checks:
 - id: traces.end_after_start
   type: record_rule
@@ -1729,7 +3394,20 @@ cross_checks:
 lineage:
   upstream: []
   downstream:
-  - id: week7-ai-contract-extension
+  - &id002
+    id: service::week7-ai-contract-extension
+    kind: SERVICE
+    label: week7-ai-contract-extension
+    path: services/week7-ai-contract-extension/main.py
+    relationship: CONSUMES
+    hops: 1
+    source: lineage_graph
+    via: []
+    relationship_path:
+    - CONSUMES
+    confidence: 0.95
+  - &id003
+    id: week7-ai-contract-extension
     kind: SUBSCRIBER
     relationship: CONSUMED_BY
     hops: 1
@@ -1755,9 +3433,13 @@ lineage:
       reason: temporal ordering checks require valid end_time >= start_time.
     contact: week7-ai@local
     validation_mode: AUDIT
-  graph_seeds: []
+  graph_seeds:
+  - dataset::outputs/traces/runs.jsonl
+downstream_consumers:
+- *id002
+- *id003
 registry:
-  path: contract_registry/subscriptions.yaml
+  path: /home/nurye/Desktop/TRP1/week7/DataContractEnforcer/contract_registry/subscriptions.yaml
   subscriber_count: 1
   subscriber_ids:
   - week7-ai-contract-extension

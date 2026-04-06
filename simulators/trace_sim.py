@@ -69,7 +69,11 @@ def generate_trace_records(
                 "name": "load_document_context",
                 "run_type": "retriever",
                 "parent_run_id": root_id,
-                "inputs": {"source_path": extraction.get("source_path", ""), "application_id": app.application_id},
+                "inputs": {
+                    "source_path": extraction.get("source_path", ""),
+                    "application_id": app.application_id,
+                    "doc_id": extraction.get("doc_id", ""),
+                },
                 "outputs": {"facts_loaded": len(extraction.get("extracted_facts", []))},
                 "prompt_tokens": 0,
                 "completion_tokens": 0,
@@ -91,19 +95,37 @@ def generate_trace_records(
                 "name": "score_submission",
                 "run_type": "llm",
                 "parent_run_id": root_id,
-                "inputs": {"target_ref": verdict.get("target_ref", ""), "application_id": app.application_id},
-                "outputs": {"overall_verdict": verdict.get("overall_verdict", "PASS")},
+                "inputs": {
+                    "target_ref": verdict.get("target_ref", ""),
+                    "application_id": app.application_id,
+                    "arg": verdict.get("target_ref", ""),
+                },
+                "outputs": {
+                    "overall_verdict": verdict.get("overall_verdict", "PASS"),
+                    "result": verdict.get("overall_verdict", "PASS"),
+                },
                 "prompt_tokens": 810 + session_index * 13,
                 "completion_tokens": 145 + session_index * 9,
-                "tags": ["week2", "llm", "score"],
+                "tags": ["week4", "llm", "score"],
                 "duration_seconds": 4,
             },
             {
-                "name": "append_event_store",
+                "name": "write_output",
                 "run_type": "tool",
                 "parent_run_id": root_id,
-                "inputs": {"event_type": event.get("event_type", ""), "aggregate_id": event.get("aggregate_id", "")},
-                "outputs": {"event_id": event.get("event_id", ""), "write_status": "committed"},
+                "inputs": {
+                    "event_type": event.get("event_type", ""),
+                    "aggregate_id": event.get("aggregate_id", ""),
+                    "command": "append_event",
+                },
+                "outputs": {
+                    "event_id": event.get("event_id", ""),
+                    "write_status": "committed",
+                    "append_result": {
+                        "event_id": event.get("event_id", ""),
+                        "status": "ok",
+                    },
+                },
                 "prompt_tokens": 0,
                 "completion_tokens": 0,
                 "tags": ["week5", "tool", "event-store"],
@@ -114,10 +136,10 @@ def generate_trace_records(
                 "run_type": "embedding",
                 "parent_run_id": root_id,
                 "inputs": {"session_id": session_id, "application_id": app.application_id},
-                "outputs": {"vector_count": 1, "index_name": "simulated-review-summaries"},
+                "outputs": {"vector_count": 1, "index_name": "simulated-review-summaries", "result": "indexed"},
                 "prompt_tokens": 430 + session_index * 7,
                 "completion_tokens": 0,
-                "tags": ["week7", "embedding", "langsmith"],
+                "tags": ["week4", "embedding", "langsmith"],
                 "duration_seconds": 3,
             },
         ]
@@ -174,4 +196,3 @@ def apply_trace_violations(records: list[JsonDict], violations: list[ViolationSp
             else:
                 raise ValueError(f"unsupported trace violation: {violation.type}")
     return mutated
-

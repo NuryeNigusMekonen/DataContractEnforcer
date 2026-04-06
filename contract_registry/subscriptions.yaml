@@ -16,22 +16,107 @@ subscriptions:
     registered_at: "2026-04-02T15:10:00Z"
     contact: week2-team@local
 
+  - contract_id: week1-intent-records
+    subscriber_id: week7-validation-runner
+    fields_consumed:
+      - intent_id
+      - code_refs.file
+      - code_refs.confidence
+      - created_at
+    breaking_fields:
+      - field: code_refs.file
+        reason: traceability validation fails if referenced file paths are missing or renamed.
+      - field: intent_id
+        reason: contract-level identity checks rely on stable intent identifiers.
+    validation_mode: AUDIT
+    registered_at: "2026-04-04T20:45:00Z"
+    contact: week7-team@local
+
+  - contract_id: week2-verdict-records
+    subscriber_id: week7-ai-contract-extension
+    fields_consumed:
+      - verdict_id
+      - scores
+      - overall_verdict
+      - overall_score
+      - confidence
+      - evaluated_at
+    breaking_fields:
+      - field: overall_verdict
+        reason: output schema violation-rate metric depends on stable PASS|FAIL|WARN enum.
+      - field: scores.score
+        reason: rubric-level score validation fails if nested score structure changes.
+    validation_mode: AUDIT
+    registered_at: "2026-04-02T15:10:00Z"
+    contact: week7-ai@local
+
+  - contract_id: week2-verdict-records
+    subscriber_id: week7-validation-runner
+    fields_consumed:
+      - overall_verdict
+      - scores.score
+      - overall_score
+      - confidence
+      - evaluated_at
+    breaking_fields:
+      - field: overall_verdict
+        reason: verdict contract validation rules require a stable PASS|FAIL|WARN enum.
+      - field: scores.score
+        reason: score-range and weighted-mean checks fail if nested score shape changes.
+    validation_mode: AUDIT
+    registered_at: "2026-04-04T20:45:00Z"
+    contact: week7-team@local
+
   - contract_id: week3-document-refinery-extractions
-    subscriber_id: week4-brownfield-cartographer
+    subscriber_id: week5-ledger
+    fields_consumed:
+      - doc_id
+      - extracted_facts.confidence
+      - extracted_facts.entity_refs
+      - extracted_at
+    breaking_fields:
+      - field: extracted_facts.confidence
+        reason: extraction-to-event projection logic breaks when confidence scale drifts.
+      - field: doc_id
+        reason: extraction history cannot be linked into immutable event streams without stable document ids.
+    validation_mode: AUDIT
+    registered_at: "2026-04-04T20:45:00Z"
+    contact: week5-team@local
+
+  - contract_id: week3-document-refinery-extractions
+    subscriber_id: week7-validation-runner
     fields_consumed:
       - doc_id
       - extracted_facts.confidence
       - extracted_facts.entity_refs
       - entities.entity_id
-      - extracted_at
+      - processing_time_ms
     breaking_fields:
       - field: extracted_facts.confidence
-        reason: scale drift from 0.0-1.0 to 0-100 breaks ranking and threshold logic.
+        reason: confidence range and drift checks fail when values shift from 0.0-1.0 to percentages.
       - field: doc_id
-        reason: lineage node identity and cross-system joins depend on stable document IDs.
+        reason: identity and lineage join checks depend on stable doc ids.
     validation_mode: AUDIT
-    registered_at: "2026-04-02T15:10:00Z"
-    contact: week4-team@local
+    registered_at: "2026-04-04T20:45:00Z"
+    contact: week7-team@local
+
+  - contract_id: week4-lineage-snapshots
+    subscriber_id: week2-digital-courtroom
+    fields_consumed:
+      - nodes.node_id
+      - edges.source
+      - edges.target
+      - edges.relationship
+    breaking_fields:
+      - field: nodes.node_id
+        reason: forensic cross-referencing of architecture artifacts depends on stable node ids.
+      - field: edges.source
+        reason: upstream dependency trace checks fail if lineage edge sources are invalid.
+      - field: edges.target
+        reason: downstream dependency trace checks fail if lineage edge targets are invalid.
+    validation_mode: AUDIT
+    registered_at: "2026-04-04T20:45:00Z"
+    contact: week2-team@local
 
   - contract_id: week4-lineage-snapshots
     subscriber_id: week7-violation-attributor
@@ -91,24 +176,6 @@ subscriptions:
         reason: statistical drift and usage-risk metrics depend on token totals.
       - field: end_time
         reason: temporal ordering checks require valid end_time >= start_time.
-    validation_mode: AUDIT
-    registered_at: "2026-04-02T15:10:00Z"
-    contact: week7-ai@local
-
-  - contract_id: week2-verdict-records
-    subscriber_id: week7-ai-contract-extension
-    fields_consumed:
-      - verdict_id
-      - scores
-      - overall_verdict
-      - overall_score
-      - confidence
-      - evaluated_at
-    breaking_fields:
-      - field: overall_verdict
-        reason: output schema violation-rate metric depends on stable PASS|FAIL|WARN enum.
-      - field: scores.score
-        reason: rubric-level score validation fails if nested score structure changes.
     validation_mode: AUDIT
     registered_at: "2026-04-02T15:10:00Z"
     contact: week7-ai@local

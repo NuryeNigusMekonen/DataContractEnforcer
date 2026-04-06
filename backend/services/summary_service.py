@@ -9,6 +9,7 @@ from .common import (
     WEEK_CONTRACTS,
     best_timestamp,
     combine_status,
+    count_critical_violations,
     compute_health_score,
     latest_report_by_contract,
     load_ai_report,
@@ -46,42 +47,51 @@ def _latest_validation_time(weeks: list[dict[str, Any]]) -> str | None:
 def _build_traces_status() -> dict[str, Any]:
     latest_reports = latest_report_by_contract()
     traces_report = latest_reports.get(TRACE_CONTRACT["contract_id"])
-    if traces_report:
-        return {
-            "key": "traces",
-            "week_name": "Traces",
-            "status": traces_report.get("overall_status", "PASS"),
-            "checks_passed": traces_report.get("passed", 0),
-            "checks_failed": traces_report.get("failed", 0),
-            "checks_warned": traces_report.get("warned", 0),
-            "total_checks": traces_report.get("total_checks", 0),
-            "last_updated": traces_report.get("_timestamp"),
-            "details": [],
-        }
-
     ai_report = load_ai_report()
+    ai_checks: list[dict[str, Any]] = []
     if ai_report:
-        checks: list[dict[str, Any]] = []
-        for key in ("embedding_drift", "prompt_input_validation", "llm_output_schema_rate"):
+        for key in (
+            "embedding_drift",
+            "prompt_input_validation",
+            "structured_llm_output_enforcement",
+            "langsmith_trace_schema_contracts",
+        ):
             payload = ai_report.get(key)
             if isinstance(payload, dict):
-                checks.append({"name": key, "status": payload.get("status", "PASS")})
+                ai_checks.append({"name": key, "status": payload.get("status", "PASS")})
 
-        statuses = [check["status"] for check in checks]
-        passed = sum(1 for status in statuses if str(status).upper() in {"PASS", "BASELINE_SET"})
-        failed = sum(1 for status in statuses if str(status).upper() in {"FAIL", "ERROR"})
-        warned = sum(1 for status in statuses if str(status).upper() == "WARN")
-        last_updated = timestamp_to_iso(best_timestamp(ai_report))
+    ai_statuses = [check["status"] for check in ai_checks]
+    ai_passed = sum(1 for status in ai_statuses if str(status).upper() in {"PASS", "BASELINE_SET"})
+    ai_failed = sum(1 for status in ai_statuses if str(status).upper() in {"FAIL", "ERROR"})
+    ai_warned = sum(1 for status in ai_statuses if str(status).upper() == "WARN")
+
+    if traces_report:
+        base_status = traces_report.get("overall_status", "PASS")
+        statuses = [base_status, *ai_statuses] if ai_checks else [base_status]
         return {
             "key": "traces",
             "week_name": "Traces",
             "status": combine_status(statuses),
-            "checks_passed": passed,
-            "checks_failed": failed,
-            "checks_warned": warned,
-            "total_checks": len(checks),
+            "checks_passed": int(traces_report.get("passed", 0) or 0) + ai_passed,
+            "checks_failed": int(traces_report.get("failed", 0) or 0) + ai_failed,
+            "checks_warned": int(traces_report.get("warned", 0) or 0) + ai_warned,
+            "total_checks": int(traces_report.get("total_checks", 0) or 0) + len(ai_checks),
+            "last_updated": traces_report.get("_timestamp"),
+            "details": ai_checks,
+        }
+
+    if ai_report:
+        last_updated = timestamp_to_iso(best_timestamp(ai_report))
+        return {
+            "key": "traces",
+            "week_name": "Traces",
+            "status": combine_status(ai_statuses),
+            "checks_passed": ai_passed,
+            "checks_failed": ai_failed,
+            "checks_warned": ai_warned,
+            "total_checks": len(ai_checks),
             "last_updated": last_updated,
-            "details": checks,
+            "details": ai_checks,
         }
 
     runs = read_jsonl_file(RUNS_FILE)
@@ -147,6 +157,7 @@ def get_weeks_status() -> list[dict[str, Any]]:
 
 def get_summary() -> dict[str, Any]:
     weeks = get_weeks_status()
+    latest_reports = latest_report_by_contract()
     violations = load_violations()
     watcher_state = get_watcher().snapshot_state()
 
@@ -154,9 +165,14 @@ def get_summary() -> dict[str, Any]:
     passed = sum(int(week.get("checks_passed", 0) or 0) for week in weeks)
     failed = sum(int(week.get("checks_failed", 0) or 0) for week in weeks)
     warned = sum(int(week.get("checks_warned", 0) or 0) for week in weeks)
+    critical_violations = sum(
+        count_critical_violations(report.get("results"))
+        for report in latest_reports.values()
+        if isinstance(report, dict)
+    )
 
     last_updated = _latest_validation_time(weeks)
-    health_score = compute_health_score(total_checks, passed, warned)
+    health_score = compute_health_score(total_checks, passed, critical_violations)
     if failed:
         narrative = f"Health score is {health_score}/100 with live contract failures requiring attention."
     elif warned:
@@ -178,6 +194,7 @@ def get_summary() -> dict[str, Any]:
         "pass": passed,
         "fail": failed,
         "warn": warned,
+        "critical_violations": critical_violations,
         "last_updated": last_updated,
         "last_validation_time": last_updated,
         "health_narrative": narrative,

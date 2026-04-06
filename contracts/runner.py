@@ -12,6 +12,7 @@ import yaml
 from jsonschema import ValidationError, validate
 
 ROOT = Path(__file__).resolve().parents[1]
+ROOT_RESOLVED = ROOT.resolve()
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
@@ -29,6 +30,7 @@ from contracts.common import (
     load_jsonl,
     profile_records,
     parse_timestamp,
+    schema_snapshots_dir,
     sha256_file,
     stringify,
     utc_now,
@@ -52,6 +54,105 @@ SEVERITY_BY_CHECK_TYPE = {
 }
 
 
+TRACE_ALLOWED_RUN_TYPES = {"llm", "chain", "tool", "retriever", "embedding"}
+
+TRACE_PRODUCER_RULES: dict[str, dict[str, tuple[str, ...] | set[str]]] = {
+    "week3": {
+        "week_tags": ("week3",),
+        "marker_paths": (
+            "inputs.doc_id",
+            "inputs.doc_batch",
+            "inputs.question",
+            "inputs.semantic_query",
+            "inputs.strategy",
+            "inputs.hits",
+            "inputs.navigation_sections",
+            "outputs.answer",
+            "outputs.route",
+            "outputs.semantic_query",
+            "outputs.facts",
+            "outputs.vectors",
+            "outputs.chunks",
+            "outputs.citations",
+            "outputs.provenance_chain",
+        ),
+        "marker_names": {
+            "execute",
+            "finalize",
+            "week3-extractor",
+            "week3-refinery-session",
+            "triage-retriever",
+            "fact-embedding-writer",
+            "citation-builder",
+            "refinery-quality-gate",
+        },
+        "error_fragments": (
+            "/week3/",
+            "document-intelligence-refinery",
+        ),
+    },
+    "week4": {
+        "week_tags": ("week4",),
+        "marker_paths": (
+            "inputs.arg",
+            "inputs.tool",
+            "inputs.direction",
+            "inputs.evidence",
+            "inputs.judicial_verdict",
+            "inputs.result",
+            "outputs.arg",
+            "outputs.tool",
+            "outputs.direction",
+            "outputs.evidence",
+            "outputs.judicial_verdict",
+            "outputs.result",
+            "outputs.output",
+        ),
+        "marker_names": {
+            "trace_lineage",
+            "explain_module",
+            "blast_radius",
+            "find_implementation",
+            "_route_decision",
+        },
+        "error_fragments": (
+            "/week4/",
+            "brownfield-cartographer",
+        ),
+    },
+    "week5": {
+        "week_tags": ("week5",),
+        "marker_paths": (
+            "inputs.command",
+            "inputs.append_result",
+            "inputs.context_snapshot",
+            "inputs.metrics",
+            "inputs.pre_extracted_evidence",
+            "inputs.writer",
+            "inputs.document_paths",
+            "outputs.command",
+            "outputs.append_result",
+            "outputs.context_snapshot",
+        ),
+        "marker_names": {
+            "_write",
+            "validate_inputs",
+            "load_context",
+            "prepare_output",
+            "write_output",
+            "analyze_credit",
+            "plan_analysis",
+            "plan_refinery",
+            "run_refinery",
+        },
+        "error_fragments": (
+            "/week5/",
+            "ledger-agentic-event-store",
+        ),
+    },
+}
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Validate JSONL data against a generated contract.")
     parser.add_argument("--contract", required=True, help="Path to a YAML contract.")
@@ -63,6 +164,11 @@ def parse_args() -> argparse.Namespace:
         help="Validation mode: AUDIT logs only, WARN blocks on CRITICAL failures, ENFORCE blocks on CRITICAL/HIGH failures.",
     )
     parser.add_argument("--output", required=False, help="Path for the validation report.")
+    parser.add_argument(
+        "--no-adapter",
+        action="store_true",
+        help="Disable schema adaptation and validate the raw incoming records as-is.",
+    )
     return parser.parse_args()
 
 
@@ -151,6 +257,44 @@ def scalar_values_for_path(record: dict[str, Any], field_path: str) -> list[Any]
 def first_scalar_for_path(record: dict[str, Any], field_path: str) -> Any:
     values = scalar_values_for_path(record, field_path)
     return values[0] if values else None
+
+
+def repo_relative_file_exists(value: str) -> bool:
+    if not isinstance(value, str):
+        return False
+    cleaned = value.strip()
+    if not cleaned:
+        return False
+    candidate = Path(cleaned)
+    if candidate.is_absolute():
+        return False
+    resolved = (ROOT / candidate).resolve()
+    try:
+        resolved.relative_to(ROOT_RESOLVED)
+    except ValueError:
+        return False
+    return resolved.exists() and resolved.is_file()
+
+
+def weighted_score_mean(scores_payload: Any, *, score_field: str = "score", weight_field: str = "weight") -> float | None:
+    if not isinstance(scores_payload, dict):
+        return None
+    weighted_total = 0.0
+    total_weight = 0.0
+    for value in scores_payload.values():
+        if not isinstance(value, dict):
+            continue
+        score = value.get(score_field)
+        if not isinstance(score, (int, float)):
+            continue
+        weight = value.get(weight_field, 1.0)
+        if not isinstance(weight, (int, float)) or float(weight) <= 0:
+            weight = 1.0
+        weighted_total += float(score) * float(weight)
+        total_weight += float(weight)
+    if total_weight <= 0:
+        return None
+    return weighted_total / total_weight
 
 
 def record_matches_condition(record: dict[str, Any], condition: dict[str, Any] | None) -> bool:
@@ -365,18 +509,28 @@ def validate_contract_clauses(clauses: list[dict[str, Any]], records: list[dict[
         if rule_type == "temporal_order":
             left_field = str(rule["left_field"])
             right_field = str(rule["right_field"])
+            operator = str(rule.get("operator", "<="))
             failing = []
             for index, record in enumerate(records):
                 left = parse_timestamp(first_scalar_for_path(record, left_field))
                 right = parse_timestamp(first_scalar_for_path(record, right_field))
-                if left is None or right is None or right < left:
+                if left is None or right is None:
+                    failing.append(f"record[{index}]")
+                    continue
+                valid = {
+                    "<=": left <= right,
+                    "<": left < right,
+                    ">=": left >= right,
+                    ">": left > right,
+                }.get(operator, left <= right)
+                if not valid:
                     failing.append(f"record[{index}]")
             results.append(
                 clause_result(
                     clause,
                     column_name=f"{left_field},{right_field}",
                     status="PASS" if not failing else "FAIL",
-                    expected={rule.get("operator", "<="): [left_field, right_field]},
+                    expected={operator: [left_field, right_field]},
                     actual_value="all conforming" if not failing else f"{len(failing)} records invalid",
                     records_failing=len(failing),
                     samples=failing[:5],
@@ -470,6 +624,139 @@ def validate_contract_clauses(clauses: list[dict[str, Any]], records: list[dict[
                     records_failing=len(failing),
                     samples=failing[:5],
                     message=str(clause.get("description", "Conditional pattern clause.")),
+                )
+            )
+            continue
+        if rule_type == "repo_path_exists":
+            field = str(rule["field"])
+            failing = []
+            for index, record in enumerate(records):
+                observed = scalar_values_for_path(record, field)
+                if not observed:
+                    failing.append(f"record[{index}] missing {field}")
+                    continue
+                for value in observed:
+                    if not isinstance(value, str) or not repo_relative_file_exists(value):
+                        failing.append(f"record[{index}]={stringify(value)}")
+            results.append(
+                clause_result(
+                    clause,
+                    column_name=field,
+                    status="PASS" if not failing else "FAIL",
+                    expected="relative file path under repository root that exists on disk",
+                    actual_value="all conforming" if not failing else failing[0],
+                    records_failing=len(failing),
+                    samples=failing[:5],
+                    message=str(clause.get("description", "Repository file existence clause.")),
+                )
+            )
+            continue
+        if rule_type == "weighted_mean_equals":
+            scores_field = str(rule.get("scores_field", "scores"))
+            output_field = str(rule["output_field"])
+            score_field = str(rule.get("score_field", "score"))
+            weight_field = str(rule.get("weight_field", "weight"))
+            tolerance = float(rule.get("tolerance", 0.001))
+            failing = []
+            for index, record in enumerate(records):
+                expected = weighted_score_mean(
+                    first_scalar_for_path(record, scores_field),
+                    score_field=score_field,
+                    weight_field=weight_field,
+                )
+                actual = first_scalar_for_path(record, output_field)
+                if expected is None or not isinstance(actual, (int, float)):
+                    failing.append(f"record[{index}] expected={stringify(expected)} actual={stringify(actual)}")
+                    continue
+                if abs(float(actual) - float(expected)) > tolerance:
+                    failing.append(
+                        f"record[{index}] expected={expected:.3f} actual={float(actual):.3f}"
+                    )
+            results.append(
+                clause_result(
+                    clause,
+                    column_name=output_field,
+                    status="PASS" if not failing else "FAIL",
+                    expected={
+                        "scores_field": scores_field,
+                        "score_field": score_field,
+                        "weight_field": weight_field,
+                        "tolerance": tolerance,
+                    },
+                    actual_value="all conforming" if not failing else failing[0],
+                    records_failing=len(failing),
+                    samples=failing[:5],
+                    message=str(clause.get("description", "Weighted mean consistency clause.")),
+                )
+            )
+            continue
+        if rule_type == "sum_equals":
+            fields = [str(field) for field in rule.get("fields", [])]
+            output_field = str(rule["output_field"])
+            tolerance = float(rule.get("tolerance", 0.0))
+            failing = []
+            for index, record in enumerate(records):
+                parts: list[float] = []
+                invalid = False
+                for field in fields:
+                    value = first_scalar_for_path(record, field)
+                    if not isinstance(value, (int, float)):
+                        invalid = True
+                        break
+                    parts.append(float(value))
+                output_value = first_scalar_for_path(record, output_field)
+                if invalid or not isinstance(output_value, (int, float)):
+                    failing.append(f"record[{index}] non-numeric components")
+                    continue
+                if abs(sum(parts) - float(output_value)) > tolerance:
+                    failing.append(
+                        f"record[{index}] expected={sum(parts):.3f} actual={float(output_value):.3f}"
+                    )
+            results.append(
+                clause_result(
+                    clause,
+                    column_name=output_field,
+                    status="PASS" if not failing else "FAIL",
+                    expected={"fields": fields, "equals": output_field, "tolerance": tolerance},
+                    actual_value="all conforming" if not failing else failing[0],
+                    records_failing=len(failing),
+                    samples=failing[:5],
+                    message=str(clause.get("description", "Field sum equality clause.")),
+                )
+            )
+            continue
+        if rule_type == "edge_endpoints_exist":
+            nodes_field = str(rule.get("nodes_field", "nodes"))
+            edges_field = str(rule.get("edges_field", "edges"))
+            node_id_field = str(rule.get("node_id_field", "node_id"))
+            source_field = str(rule.get("source_field", "source"))
+            target_field = str(rule.get("target_field", "target"))
+            failing = []
+            for index, record in enumerate(records):
+                nodes = record.get(nodes_field, [])
+                edges = record.get(edges_field, [])
+                node_ids = {
+                    node.get(node_id_field)
+                    for node in nodes
+                    if isinstance(node, dict) and node.get(node_id_field) is not None
+                }
+                for edge in edges if isinstance(edges, list) else []:
+                    if not isinstance(edge, dict):
+                        failing.append(f"record[{index}] malformed edge")
+                        continue
+                    for endpoint in (edge.get(source_field), edge.get(target_field)):
+                        if endpoint not in node_ids:
+                            failing.append(f"record[{index}] missing endpoint {stringify(endpoint)}")
+            results.append(
+                clause_result(
+                    clause,
+                    column_name=edges_field,
+                    status="PASS" if not failing else "FAIL",
+                    expected="every edge endpoint references an in-record node_id",
+                    actual_value="all conforming" if not failing else failing[0],
+                    records_failing=len(failing),
+                    samples=failing[:5],
+                    message=str(clause.get("description", "Edge endpoint reference clause.")),
                 )
             )
             continue
@@ -618,6 +905,18 @@ def find_rubric_path(rubric_id: str) -> Path | None:
     return None
 
 
+def find_extraction_rules_path() -> Path | None:
+    candidates = [
+        ROOT / "artifacts" / "week3" / "extraction_rules.yaml",
+        Path("artifacts/week3/extraction_rules.yaml"),
+        Path("extraction_rules.yaml"),
+    ]
+    for path in candidates:
+        if path.exists() and path.is_file():
+            return path
+    return None
+
+
 def validate_week2(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
     results: list[dict[str, Any]] = []
     hash_failures = 0
@@ -630,18 +929,18 @@ def validate_week2(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
         if not rubric_id or find_rubric_path(rubric_id) is None:
             hash_failures += 1
             hash_samples.append(rubric_id)
-        score_values = []
         for criterion, item in record.get("scores", {}).items():
             if not isinstance(item, dict):
                 continue
             score = item.get("score")
-            score_values.append(score)
             if not isinstance(score, int) or not 1 <= score <= 5:
                 score_range_failures += 1
                 score_range_samples.append(f"{criterion}={stringify(score)}")
-        expected = round(sum(score_values) / len(score_values), 3) if score_values else None
-        actual = round(float(record.get("overall_score", 0)), 3)
-        if expected is None or expected != actual:
+        expected = weighted_score_mean(record.get("scores", {}))
+        actual_value = record.get("overall_score")
+        actual = round(float(actual_value), 3) if isinstance(actual_value, (int, float)) else None
+        expected_rounded = round(expected, 3) if expected is not None else None
+        if expected_rounded is None or actual is None or expected_rounded != actual:
             score_failures += 1
     results.append(
         make_result(
@@ -675,10 +974,10 @@ def validate_week2(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
             check_type="cross_record",
             column_name="overall_score",
             status="PASS" if score_failures == 0 else "FAIL",
-            expected="overall_score equals the arithmetic mean of score values",
+            expected="overall_score equals the weighted mean of scores.*.score (default weight 1.0)",
             actual_value=f"{score_failures} mismatches",
             records_failing=score_failures,
-            message="Overall score must align to the per-criterion scores.",
+            message="Overall score must align to the weighted mean of per-criterion scores.",
         )
     )
     return results
@@ -687,9 +986,11 @@ def validate_week2(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
 def validate_week1(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
     empty_code_ref_failures = 0
     missing_file_failures = 0
+    line_bounds_failures = 0
     confidence_failures = 0
     samples_empty: list[str] = []
     samples_missing: list[str] = []
+    samples_line_bounds: list[str] = []
     samples_confidence: list[str] = []
     for index, record in enumerate(records):
         code_refs = record.get("code_refs")
@@ -699,9 +1000,21 @@ def validate_week1(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
             continue
         for code_ref in code_refs:
             file_path = code_ref.get("file") if isinstance(code_ref, dict) else None
-            if not isinstance(file_path, str) or not file_path.strip():
+            if not isinstance(file_path, str) or not repo_relative_file_exists(file_path):
                 missing_file_failures += 1
-                samples_missing.append(f"record[{index}]")
+                samples_missing.append(f"record[{index}]={stringify(file_path)}")
+            line_start = code_ref.get("line_start") if isinstance(code_ref, dict) else None
+            line_end = code_ref.get("line_end") if isinstance(code_ref, dict) else None
+            if (
+                not isinstance(line_start, int)
+                or not isinstance(line_end, int)
+                or line_start < 1
+                or line_end < line_start
+            ):
+                line_bounds_failures += 1
+                samples_line_bounds.append(
+                    f"record[{index}] line_start={stringify(line_start)} line_end={stringify(line_end)}"
+                )
             confidence = code_ref.get("confidence") if isinstance(code_ref, dict) else None
             if not isinstance(confidence, (int, float)) or float(confidence) < 0.0 or float(confidence) > 1.0:
                 confidence_failures += 1
@@ -723,11 +1036,22 @@ def validate_week1(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
             check_type="cross_record",
             column_name="code_refs.file",
             status="PASS" if missing_file_failures == 0 else "FAIL",
-            expected="Every code_ref contains a non-empty file path",
-            actual_value="all matched" if missing_file_failures == 0 else f"{missing_file_failures} missing file paths",
+            expected="Every code_ref contains an existing repo-relative file path",
+            actual_value="all matched" if missing_file_failures == 0 else f"{missing_file_failures} missing or invalid file paths",
             records_failing=missing_file_failures,
             samples=samples_missing[:5],
-            message="Each referenced code location must keep its file path.",
+            message="Each referenced code location must point to a file that exists inside this repository.",
+        ),
+        make_result(
+            check_id="week1.code_ref_line_bounds",
+            check_type="cross_record",
+            column_name="code_refs.line_end",
+            status="PASS" if line_bounds_failures == 0 else "FAIL",
+            expected="line_start is >= 1 and line_end is >= line_start",
+            actual_value="all matched" if line_bounds_failures == 0 else f"{line_bounds_failures} invalid line ranges",
+            records_failing=line_bounds_failures,
+            samples=samples_line_bounds[:5],
+            message="Code reference line ranges must be valid 1-indexed spans.",
         ),
         make_result(
             check_id="week1.code_ref_confidence_scale",
@@ -744,28 +1068,82 @@ def validate_week1(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
 
 
 def validate_week3(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    failures = 0
-    samples: list[str] = []
+    entity_ref_failures = 0
+    entity_samples: list[str] = []
+    hash_failures = 0
+    hash_field_observed = False
+    hash_samples: list[str] = []
+
+    rules_path = find_extraction_rules_path()
+    expected_rules_hash = sha256_file(rules_path) if rules_path else None
+
     for record in records:
         entity_ids = {entity.get("entity_id") for entity in record.get("entities", [])}
         for fact in record.get("extracted_facts", []):
             missing_refs = [entity_ref for entity_ref in fact.get("entity_refs", []) if entity_ref not in entity_ids]
             if missing_refs:
-                failures += len(missing_refs)
-                samples.extend(missing_refs)
-    return [
+                entity_ref_failures += len(missing_refs)
+                entity_samples.extend(missing_refs)
+        if expected_rules_hash is not None:
+            observed_hash = record.get("extraction_rules_hash")
+            if observed_hash is not None:
+                hash_field_observed = True
+                if not isinstance(observed_hash, str) or observed_hash != expected_rules_hash:
+                    hash_failures += 1
+                    hash_samples.append(stringify(observed_hash))
+
+    results = [
         make_result(
             check_id="week3.entity_refs_exist",
             check_type="cross_record",
             column_name="extracted_facts.entity_refs",
-            status="PASS" if failures == 0 else "FAIL",
+            status="PASS" if entity_ref_failures == 0 else "FAIL",
             expected="Every entity_ref exists in the sibling entities array",
-            actual_value="all refs resolved" if failures == 0 else f"{failures} missing refs",
-            records_failing=failures,
-            samples=samples[:5],
+            actual_value="all refs resolved" if entity_ref_failures == 0 else f"{entity_ref_failures} missing refs",
+            records_failing=entity_ref_failures,
+            samples=entity_samples[:5],
             message="Nested entity references must resolve within the same record.",
         )
     ]
+    if expected_rules_hash is None:
+        results.append(
+            make_result(
+                check_id="week3.extraction_rules_hash_exists",
+                check_type="cross_dataset",
+                column_name="extraction_rules_hash",
+                status="ERROR",
+                expected="artifacts/week3/extraction_rules.yaml must exist for hash comparison",
+                actual_value="missing reference file",
+                records_failing=len(records),
+                message="Cannot verify extraction_rules_hash because extraction_rules.yaml was not found.",
+            )
+        )
+    else:
+        if rules_path and rules_path.is_absolute():
+            try:
+                rules_hint = str(rules_path.relative_to(ROOT))
+            except ValueError:
+                rules_hint = str(rules_path)
+        else:
+            rules_hint = str(rules_path)
+        results.append(
+            make_result(
+                check_id="week3.extraction_rules_hash_exists",
+                check_type="cross_dataset",
+                column_name="extraction_rules_hash",
+                status="PASS" if hash_failures == 0 else "FAIL",
+                expected=f"If present, extraction_rules_hash equals SHA-256 of {rules_hint}",
+                actual_value=(
+                    "field absent; optional check skipped"
+                    if not hash_field_observed
+                    else ("all matched" if hash_failures == 0 else f"{hash_failures} mismatched records")
+                ),
+                records_failing=hash_failures,
+                samples=hash_samples[:5],
+                message="Each extraction record must pin the exact extraction_rules.yaml hash.",
+            )
+        )
+    return results
 
 
 def validate_week4(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -796,7 +1174,16 @@ def validate_week4(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
 def event_schema_path(record: dict[str, Any]) -> Path:
     event_type = record.get("event_type", "")
     schema_version = record.get("schema_version", "")
-    return Path("schemas/events") / f"{event_type}-{schema_version}.json"
+    filename = f"{event_type}-{schema_version}.json"
+    candidates = [
+        Path("outputs/week5/schemas/events") / filename,
+        Path("artifacts/week5/schemas/events") / filename,
+        Path("schemas/events") / filename,
+    ]
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate
+    return candidates[0]
 
 
 def validate_week5(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -860,9 +1247,114 @@ def validate_week5(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
     ]
 
 
+def trace_tags(record: dict[str, Any]) -> list[str]:
+    tags = record.get("tags", [])
+    if not isinstance(tags, list):
+        return []
+    return [str(tag).strip().lower() for tag in tags if str(tag).strip()]
+
+
+def trace_name(record: dict[str, Any]) -> str:
+    return str(record.get("name", "")).strip().lower()
+
+
+def trace_has_any_path(record: dict[str, Any], paths: tuple[str, ...]) -> bool:
+    return any(raw_values_for_path(record, path) for path in paths)
+
+
+def trace_error_text(record: dict[str, Any]) -> str:
+    return str(record.get("error", "") or "").lower()
+
+
+def classify_trace_producer(record: dict[str, Any]) -> str:
+    tags = set(trace_tags(record))
+    for producer, rule in TRACE_PRODUCER_RULES.items():
+        week_tags = set(rule["week_tags"])
+        if tags & week_tags:
+            return producer
+
+    for producer in ("week5", "week4", "week3"):
+        rule = TRACE_PRODUCER_RULES[producer]
+        if trace_has_any_path(record, tuple(rule["marker_paths"])):
+            return producer
+
+    name = trace_name(record)
+    for producer in ("week5", "week4", "week3"):
+        marker_names = {value.lower() for value in TRACE_PRODUCER_RULES[producer]["marker_names"]}
+        if name in marker_names:
+            return producer
+
+    error_text = trace_error_text(record)
+    for producer in ("week5", "week4", "week3"):
+        fragments = tuple(str(value).lower() for value in TRACE_PRODUCER_RULES[producer]["error_fragments"])
+        if any(fragment in error_text for fragment in fragments):
+            return producer
+    return "other"
+
+
+def trace_record_matches_producer(record: dict[str, Any], producer: str) -> bool:
+    rule = TRACE_PRODUCER_RULES[producer]
+    if trace_has_any_path(record, tuple(rule["marker_paths"])):
+        return True
+
+    name = trace_name(record)
+    marker_names = {value.lower() for value in rule["marker_names"]}
+    if name in marker_names:
+        return True
+
+    error_text = trace_error_text(record)
+    fragments = tuple(str(value).lower() for value in rule["error_fragments"])
+    return any(fragment in error_text for fragment in fragments)
+
+
+def validate_trace_producer_rules(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    producer_records: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    for record in records:
+        producer_records[classify_trace_producer(record)].append(record)
+
+    classification_counts = {
+        producer: len(producer_records.get(producer, []))
+        for producer in ("week3", "week4", "week5", "other")
+    }
+    results = [
+        make_result(
+            check_id="traces.producer_classification.coverage",
+            check_type="cross_record",
+            column_name="tags",
+            status="PASS" if classification_counts["other"] == 0 else "WARN",
+            expected="Trace rows should expose enough producer signals for week3/week4/week5 routing",
+            actual_value=classification_counts,
+            records_failing=classification_counts["other"],
+            message="Producer-aware trace enforcement uses week tags first, then row-shape fallbacks when tags are not explicit.",
+            severity="MEDIUM",
+        )
+    ]
+
+    for producer in ("week3", "week4", "week5"):
+        subset = producer_records.get(producer, [])
+        invalid = [record for record in subset if not trace_record_matches_producer(record, producer)]
+        results.append(
+            make_result(
+                check_id=f"traces.{producer}.row_shape",
+                check_type="cross_record",
+                column_name="inputs",
+                status="PASS" if not invalid else "FAIL",
+                expected=f"{producer} rows contain recognizable producer-specific payload markers",
+                actual_value={"classified_rows": len(subset), "invalid_rows": len(invalid)},
+                records_failing=len(invalid),
+                samples=[trace_name(record) or stringify(record.get("tags", [])) for record in invalid[:5]],
+                message=f"Rows classified as {producer} must carry producer-specific trace signals before downstream checks rely on them.",
+                severity="HIGH",
+            )
+        )
+    return results
+
+
 def validate_traces(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
     time_failures = 0
     token_failures = 0
+    run_type_failures = 0
+    total_cost_failures = 0
     for record in records:
         start = parse_timestamp(record.get("start_time"))
         end = parse_timestamp(record.get("end_time"))
@@ -873,6 +1365,14 @@ def validate_traces(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
         completion = int(record.get("completion_tokens", 0))
         if total != prompt + completion:
             token_failures += 1
+        if str(record.get("run_type", "")).strip().lower() not in TRACE_ALLOWED_RUN_TYPES:
+            run_type_failures += 1
+        try:
+            total_cost = float(record.get("total_cost", 0.0))
+        except (TypeError, ValueError):
+            total_cost = -1.0
+        if total_cost < 0.0:
+            total_cost_failures += 1
     return [
         make_result(
             check_id="traces.end_after_start",
@@ -894,15 +1394,36 @@ def validate_traces(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
             records_failing=token_failures,
             message="Token accounting must balance.",
         ),
+        make_result(
+            check_id="traces.run_type_allowed",
+            check_type="cross_record",
+            column_name="run_type",
+            status="PASS" if run_type_failures == 0 else "FAIL",
+            expected=sorted(TRACE_ALLOWED_RUN_TYPES),
+            actual_value=f"{run_type_failures} invalid runs",
+            records_failing=run_type_failures,
+            message="Trace run_type values must stay within the LangSmith trace schema enum.",
+        ),
+        make_result(
+            check_id="traces.total_cost_non_negative",
+            check_type="cross_record",
+            column_name="total_cost",
+            status="PASS" if total_cost_failures == 0 else "FAIL",
+            expected="total_cost >= 0",
+            actual_value=f"{total_cost_failures} invalid runs",
+            records_failing=total_cost_failures,
+            message="Trace cost accounting must never go negative.",
+        ),
+        *validate_trace_producer_rules(records),
     ]
 
 
 def numeric_baseline_path(contract_id: str) -> Path:
-    return Path("schema_snapshots") / f"{normalize_contract_filename(contract_id)}_baseline.json"
+    return schema_snapshots_dir() / f"{normalize_contract_filename(contract_id)}_baseline.json"
 
 
 def aggregated_baseline_path() -> Path:
-    return Path("schema_snapshots") / "baselines.json"
+    return schema_snapshots_dir() / "baselines.json"
 
 
 def compute_numeric_stats(records: list[dict[str, Any]]) -> dict[str, dict[str, float]]:
@@ -1272,7 +1793,7 @@ def main() -> int:
         raw_records,
         mode=mode,
         data_path=args.data,
-        attempt_adapter=True,
+        attempt_adapter=not args.no_adapter,
         persist_baselines=True,
     )
     report = build_validation_report(contract, evaluation, data_path=args.data, snapshot_id=sha256_file(args.data))
